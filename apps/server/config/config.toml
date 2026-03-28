@@ -1,0 +1,22 @@
+[application]
+port = 8000
+host = "0.0.0.0"
+
+[middlewares]
+body-limit = { max-size = "5MB", display = true }
+request-timeout = { enabled = true, timeout = "15s", display = true }
+
+[postgres-db]
+uri = "${POSTGRES_DATABASE_URL}"
+migrations_path = "config/migrations"
+min_connections = 1
+max_connections = 10
+acquire_timeout_ms = 5000
+
+[auth]
+ldap_url = "${LDAP_URL}"
+ldap_base_dn = "${LDAP_BASE_DN}"
+jwt_secret = "${JWT_SECRET}"
+access_exp_minutes = 15
+refresh_exp_days = 7
+session_exp_days = 30

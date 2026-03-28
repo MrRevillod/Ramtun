@@ -1,0 +1,24 @@
+name: Rust
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".github/workflows/cd/**"
+      - "apps/server/cli/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".github/workflows/cd/**"
+      - "apps/server/cli/**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+      - run: cargo test

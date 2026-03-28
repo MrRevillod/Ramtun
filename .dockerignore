@@ -1,0 +1,8 @@
+**/*.rs.bk
+target/
+**/target
+**/.git
+**/node_modules
+
+**/build
+**/README.md

@@ -1,0 +1,32 @@
+target/
+.env
+node_modules
+dist/
+**/node-compile-cache
+data/
+presharedkey
+privatekey
+**/.svelte-kit
+apps/client/.svelte-kit
+
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+**/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

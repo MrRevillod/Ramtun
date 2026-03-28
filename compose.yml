@@ -1,0 +1,98 @@
+services:
+  server:
+    container_name: questions-server
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+      target: dev
+    env_file:
+      - .env
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    privileged: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "nc -z localhost 8000 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 600s
+    ports:
+      - "8000"
+    networks:
+      - questions-network
+    volumes:
+      - ./:/app
+      - server_target:/app/target
+
+  nginx:
+    container_name: questions-nginx
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      server:
+        condition: service_healthy
+      client:
+        condition: service_healthy
+    networks:
+      - questions-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: questions-postgres
+    command: postgres -c log_min_messages=ERROR -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1 -c log_checkpoints=off
+    ports:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB_NAME}
+    networks:
+      - questions-network
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB_NAME}'" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+    container_name: questions-client
+    env_file:
+      - .env
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./apps/client:/app
+      - /app/node_modules
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://127.0.0.1:5173 >/dev/null || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - questions-network
+
+networks:
+  questions-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  server_target:
+  cargo_cache:

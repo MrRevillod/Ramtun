@@ -1,0 +1,12 @@
+node_modules/
+
+build/
+dist/
+static/
+
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+*.min.js
+*.bundle.js

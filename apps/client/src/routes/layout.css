@@ -1,0 +1,190 @@
+@import url('https://fonts.cdnfonts.com/css/palatino');
+@import 'tailwindcss';
+
+:root {
+	--paper: #ffffff;
+	--paper-soft: #fbfbfa;
+	--paper-muted: #f4f4f2;
+	--ink: #111111;
+	--ink-soft: #27272a;
+	--ink-muted: #3f3f46;
+	--line: #d4d4d8;
+	--line-strong: #a1a1aa;
+	--accent: #18181b;
+	--accent-soft: #3f3f46;
+	--shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.045);
+	--shadow-float: 0 18px 40px rgba(15, 23, 42, 0.08);
+	font-family: 'Palatino', sans-serif;
+	color: var(--ink);
+	background: var(--paper);
+}
+
+html,
+body {
+	height: 100%;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+@layer base {
+	body {
+		@apply text-zinc-900;
+		margin: 0;
+		min-height: 100dvh;
+		background:
+			radial-gradient(circle at top, rgba(244, 244, 242, 0.9), transparent 38%),
+			linear-gradient(180deg, var(--paper-soft) 0%, var(--paper) 22%, var(--paper) 100%);
+		font-family: 'Palatino', 'Palatino Linotype', 'Book Antiqua', serif;
+		font-size: 17px;
+		font-weight: 400;
+		line-height: 1.45;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: auto;
+		-moz-osx-font-smoothing: auto;
+	}
+
+	h1,
+	h2,
+	h3 {
+		@apply font-normal text-black;
+		letter-spacing: 0;
+	}
+
+	input,
+	select,
+	textarea,
+	button {
+		font: inherit;
+	}
+
+	button,
+	a,
+	input,
+	select,
+	textarea {
+		@apply transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out;
+	}
+
+	button:focus-visible,
+	a:focus-visible,
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible {
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.12);
+	}
+}
+
+@layer components {
+	.app-shell {
+		@apply mx-auto flex min-h-dvh w-full max-w-6xl flex-col p-3 sm:p-4 lg:p-6;
+	}
+
+	.panel-surface {
+		@apply rounded-sm border bg-white;
+		border-color: color-mix(in srgb, var(--line) 88%, white);
+		box-shadow: var(--shadow-soft);
+	}
+
+	.panel-muted {
+		@apply rounded-sm border;
+		border-color: color-mix(in srgb, var(--line) 88%, white);
+		background: linear-gradient(180deg, var(--paper-soft) 0%, var(--paper-muted) 100%);
+	}
+
+	.input-base {
+		@apply w-full rounded-[4px] border bg-white px-3.5 py-2.5 text-[0.97rem] leading-6 text-zinc-900;
+		border-color: var(--line-strong);
+		min-height: 44px;
+	}
+
+	.input-base::placeholder {
+		color: color-mix(in srgb, var(--ink-muted) 82%, white);
+	}
+
+	.input-base:hover {
+		border-color: color-mix(in srgb, var(--ink-muted) 45%, white);
+	}
+
+	.input-base:focus-visible {
+		border-color: var(--accent);
+		box-shadow:
+			0 0 0 1px var(--accent),
+			0 0 0 4px rgba(24, 24, 27, 0.08);
+	}
+
+	.btn-base {
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
+		min-height: 42px;
+	}
+
+	.btn-base:active,
+	.btn-primary:active,
+	.btn-secondary:active,
+	.btn-tertiary:active,
+	.action-tab:active {
+		transform: translateY(1px);
+	}
+
+	.btn-base:disabled,
+	.btn-primary:disabled,
+	.btn-secondary:disabled,
+	.btn-tertiary:disabled,
+	.action-tab:disabled {
+		@apply cursor-not-allowed opacity-60;
+		transform: none;
+	}
+
+	.btn-primary {
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border border-black bg-black px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-white;
+		min-height: 42px;
+	}
+
+	.btn-primary:hover:not(:disabled) {
+		background: color-mix(in srgb, black 86%, white);
+	}
+
+	.btn-secondary {
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-black;
+		border-color: color-mix(in srgb, var(--ink) 88%, white);
+		min-height: 42px;
+	}
+
+	.btn-secondary:hover:not(:disabled) {
+		background: var(--paper-soft);
+	}
+
+	.btn-tertiary {
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-zinc-800;
+		min-height: 42px;
+	}
+
+	.btn-tertiary:hover:not(:disabled) {
+		background: var(--paper-soft);
+		border-color: color-mix(in srgb, var(--line-strong) 90%, white);
+	}
+
+	.action-tab {
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-black sm:px-5;
+		border-color: color-mix(in srgb, var(--ink) 88%, white);
+		min-height: 46px;
+	}
+
+	.action-tab[data-active='true'] {
+		@apply border-black bg-black text-white;
+		box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+	}
+
+	.code-chip {
+		@apply inline-flex items-center rounded-[4px] border px-2.5 py-1 font-mono text-sm;
+		border-color: color-mix(in srgb, var(--line-strong) 92%, white);
+		background: var(--paper-soft);
+		color: var(--ink-soft);
+	}
+
+	.section-kicker {
+		@apply text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-600;
+	}
+}

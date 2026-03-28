@@ -1,0 +1,63 @@
+{
+	"tab_size": 4,
+	"hard_tabs": true,
+	"format_on_save": "on",
+	"formatter": "language_server",
+	"file_scan_exclusions": [
+		"**/.git/**",
+		"**/node_modules/**",
+		"**/target/**",
+		"**/routeTree.gen.ts",
+		"**/.svelte-kit/**",
+		"**/dist/**"
+	],
+	"languages": {
+		"YAML": {
+			"formatter": "language_server",
+			"tab_size": 2
+		},
+		"Rust": {
+			"formatter": "language_server",
+			"enable_language_server": true,
+		},
+		"TypeScript": {
+			"formatter": "prettier",
+			"enable_language_server": true,
+		},
+		"JavaScript": {
+			"formatter": "prettier",
+			"enable_language_server": true,
+		},
+		"CSS": {
+			"formatter": "prettier",
+		},
+		"HTML": {
+			"formatter": "prettier",
+		},
+		"JSON": {
+			"formatter": "prettier",
+		},
+		"TOML": {
+			"formatter": "language_server",
+		},
+		"Svelte": {
+			"formatter": "prettier",
+			"enable_language_server": true,
+		},
+	},
+	"lsp": {
+		"rust-analyzer": {
+			"initialization_options": {
+				"cargo": {
+					"features": "all",
+				},
+				"procMacro": {
+					"enable": true,
+				},
+				"diagnostics": {
+					"enable": true,
+				},
+			},
+		},
+	},
+}

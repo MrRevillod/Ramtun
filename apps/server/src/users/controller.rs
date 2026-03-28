@@ -1,0 +1,76 @@
+use crate::auth::{SessionCheck, SessionClaims};
+use crate::authz::{AuthzAction, AuthzGuard};
+use crate::users::*;
+
+use std::sync::Arc;
+use sword::prelude::*;
+use uuid::Uuid;
+
+#[controller("/users")]
+#[interceptor(SessionCheck)]
+pub struct UsersController {
+    users: Arc<UserRepository>,
+    service: Arc<UsersService>,
+}
+
+impl UsersController {
+    #[get("/me")]
+    pub async fn get_me(&self, req: Request) -> HttpResult {
+        let claims = extract_claims(&req)?;
+        let user = self
+            .users
+            .find_by_id(&claims.user_id)
+            .await?
+            .ok_or_else(|| UsersError::NotFound(claims.user_id.to_string()))?;
+
+        Ok(JsonResponse::Ok().data(user))
+    }
+
+    #[get("/")]
+    #[interceptor(AuthzGuard, config = AuthzAction::ListUsersAdmin)]
+    pub async fn list_users(&self, req: Request) -> HttpResult {
+        let query: SearchUsersQuery = req.query()?.unwrap_or_default();
+        let users = self.service.list_users_admin(query).await?;
+
+        Ok(JsonResponse::Ok().data(users))
+    }
+
+    #[get("/collaborator-candidates")]
+    #[interceptor(AuthzGuard, config = AuthzAction::ListCollaboratorCandidates)]
+    pub async fn list_collaborator_candidates(&self, req: Request) -> HttpResult {
+        let query: SearchUsersQuery = req.query()?.unwrap_or_default();
+        let users = self.service.list_collaborator_candidates(query).await?;
+
+        Ok(JsonResponse::Ok().data(users))
+    }
+
+    #[patch("/{userId}/role")]
+    #[interceptor(AuthzGuard, config = AuthzAction::ManageAssistants)]
+    pub async fn set_user_role(&self, req: Request) -> HttpResult {
+        let user_id = req
+            .param::<Uuid>("userId")
+            .map_err(|_| JsonResponse::BadRequest())?;
+        let current_user = extract_current_user(&req)?;
+        let input = req.body_validator::<UpdateUserRoleRequest>()?;
+        let updated_user = self
+            .service
+            .update_role(&current_user, &user_id, input)
+            .await?;
+
+        Ok(JsonResponse::Ok().data(updated_user))
+    }
+}
+
+fn extract_current_user(req: &Request) -> Result<User, JsonResponse> {
+    req.extensions
+        .get::<User>()
+        .cloned()
+        .ok_or_else(JsonResponse::Unauthorized)
+}
+
+fn extract_claims(req: &Request) -> Result<SessionClaims, JsonResponse> {
+    req.extensions
+        .get::<SessionClaims>()
+        .cloned()
+        .ok_or_else(JsonResponse::Unauthorized)
+}
