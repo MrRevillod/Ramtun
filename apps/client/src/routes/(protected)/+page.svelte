@@ -9,6 +9,7 @@
 	import AssistantManager from '$lib/features/users/components/AssistantManager.svelte'
 	import QuizFormatModal from '$lib/features/quiz/components/QuizFormatModal.svelte'
 	import QuizJoinCodeModal from '$lib/features/quiz/components/QuizJoinCodeModal.svelte'
+	import AttemptSubmittedModal from '$lib/features/quiz/components/AttemptSubmittedModal.svelte'
 	import { authStore } from '$lib/features/auth/auth.store.svelte'
 	import { quizUiStore } from '$lib/features/quiz/quiz.store.svelte'
 
@@ -71,6 +72,7 @@
 		</div>
 	</section>
 
-	<QuizFormatModal />
-	<QuizJoinCodeModal />
+		<QuizFormatModal />
+		<QuizJoinCodeModal />
+		<AttemptSubmittedModal />
 {/if}

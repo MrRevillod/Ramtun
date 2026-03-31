@@ -47,6 +47,7 @@ class AuthStore {
 	isAuthenticated = () => Boolean(this.accessToken && this.refreshToken && this.user)
 
 	setSession = (session: LoginResponse) => {
+		quizUiStore.clearAllStores()
 		this.#tokens.current = {
 			accessToken: session.accessToken,
 			refreshToken: session.refreshToken

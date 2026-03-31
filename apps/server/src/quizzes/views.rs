@@ -49,6 +49,7 @@ pub struct JoinQuizPreviewView {
     pub title: String,
     pub kind: QuizKind,
     pub question_count: usize,
+    pub certainly_table: Option<CertainlyTable>,
     pub start_time: DateTime<Utc>,
     pub attempt_duration_minutes: i32,
 }
@@ -105,6 +106,7 @@ impl From<&QuizEntity> for JoinQuizPreviewView {
             title: quiz.title.clone(),
             kind: quiz.kind.clone(),
             question_count: quiz.questions.len(),
+            certainly_table: quiz.certainly_table.clone(),
             start_time: quiz.start_time,
             attempt_duration_minutes: quiz.attempt_duration_minutes,
         }

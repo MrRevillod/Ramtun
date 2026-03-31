@@ -1,16 +1,46 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import { createMutation } from '@tanstack/svelte-query'
 	import { ClipboardCheck, Play, TimerReset } from 'lucide-svelte'
 	import { toast } from 'svelte-sonner'
 	import { quizService } from '$lib/features/quiz/quiz.service'
 	import { quizUiStore } from '$lib/features/quiz/quiz.store.svelte'
 	import { toUserMessage } from '$lib/shared/errors'
+	import type { CertaintyConfig } from '$lib/features/quiz/types'
+
+	type PreviewWithOptionalCertaintyTable = {
+		certaintyTable?: CertaintyConfig | null
+		certainlyTable?: CertaintyConfig | null
+	}
 
 	const preview = $derived(quizUiStore.joinPreview)
+	let now = $state(Date.now())
+	const certaintyTable = $derived.by(() => {
+		const currentPreview = preview as PreviewWithOptionalCertaintyTable | null
+
+		return currentPreview?.certaintyTable ?? currentPreview?.certainlyTable ?? null
+	})
 
 	const startAttemptMutation = createMutation(() => ({
 		mutationFn: (quizId: string) => quizService.startAttempt(quizId)
 	}))
+	const canStart = $derived.by(() => {
+		if (!preview) {
+			return false
+		}
+
+		return new Date(preview.startTime).getTime() <= now
+	})
+
+	onMount(() => {
+		const interval = window.setInterval(() => {
+			now = Date.now()
+		}, 1000)
+
+		return () => {
+			window.clearInterval(interval)
+		}
+	})
 
 	const formatDate = (value: string) =>
 		new Intl.DateTimeFormat('es-CL', {
@@ -19,7 +49,7 @@
 		}).format(new Date(value))
 
 	const handleStart = async () => {
-		if (!preview) {
+		if (!preview || !canStart) {
 			return
 		}
 
@@ -31,7 +61,6 @@
 		}
 
 		quizUiStore.startQuizAttempt(value)
-		toast.success('Intento iniciado correctamente.')
 	}
 </script>
 
@@ -41,8 +70,8 @@
 			<p class="section-kicker m-0">Instrucciones</p>
 			<h3 class="m-0 text-2xl text-black">{preview.title}</h3>
 			<p class="max-w-3xl text-sm leading-relaxed text-zinc-700 sm:text-base">
-				Revisa los detalles antes de comenzar. Una vez iniciado el intento, las preguntas se mostraran
-				en orden aleatorio y el tiempo lo controla el servidor.
+				Revisa los detalles antes de comenzar. Cuando inicies, responde cada pregunta y finaliza al
+				terminar.
 			</p>
 		</div>
 
@@ -71,19 +100,65 @@
 			<ul class="space-y-2 pl-5 text-sm leading-relaxed text-zinc-700">
 				<li>Inicio programado: {formatDate(preview.startTime)}</li>
 				<li>Solo tienes un intento total para este quiz.</li>
-				<li>Tus respuestas se guardan de forma incremental mientras avanzas.</li>
-				<li>Si recargas la pagina, el sistema intentara reanudar tu intento en curso.</li>
+				<li>El intento se entrega automaticamente si se agota el tiempo.</li>
 			</ul>
 		</div>
+
+		{#if preview.kind === 'Certainly' && certaintyTable}
+			<div class="panel-muted space-y-3 p-5">
+				<p class="m-0 text-base font-medium text-black">Puntajes de certeza</p>
+				<p class="m-0 text-sm leading-relaxed text-zinc-700">
+					Este quiz usa niveles de certeza. Durante el intento solo veras las opciones Baja, Media y
+					Alta; los puntajes configurados son los siguientes.
+				</p>
+				<div class="overflow-x-auto">
+					<table class="w-full table-fixed border-collapse text-sm">
+						<colgroup>
+							<col class="w-[22%]" />
+							<col class="w-[39%]" />
+							<col class="w-[39%]" />
+						</colgroup>
+						<thead>
+							<tr class="text-left text-zinc-700">
+								<th class="border border-zinc-300 bg-white p-2 text-xs font-semibold">Nivel</th>
+								<th class="border border-zinc-300 bg-white p-2 text-xs font-semibold">Correcta</th>
+								<th class="border border-zinc-300 bg-white p-2 text-xs font-semibold">Incorrecta</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">Baja</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.low.correct}</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.low.incorrect}</td>
+							</tr>
+							<tr>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">Media</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.medium.correct}</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.medium.incorrect}</td>
+							</tr>
+							<tr>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">Alta</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.high.correct}</td>
+								<td class="border border-zinc-300 bg-white p-2 text-sm text-zinc-800">{certaintyTable.high.incorrect}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		{/if}
 
 		<div class="mt-auto flex flex-wrap items-center justify-between gap-3">
 			<button class="btn-tertiary" type="button" onclick={() => quizUiStore.clearJoinPreview()}>
 				<TimerReset size={14} class="mr-1 inline" />
 				Volver
 			</button>
-			<button class="btn-primary" type="button" onclick={handleStart} disabled={startAttemptMutation.isPending}>
+			<button class="btn-primary" type="button" onclick={handleStart} disabled={startAttemptMutation.isPending || !canStart}>
 				<Play size={14} class="mr-1 inline" />
-				{startAttemptMutation.isPending ? 'Iniciando...' : 'Comenzar intento'}
+				{startAttemptMutation.isPending
+					? 'Iniciando...'
+					: canStart
+						? 'Comenzar intento'
+						: 'Disponible pronto'}
 			</button>
 		</div>
 	</section>

@@ -1,6 +1,12 @@
 import { PersistedState } from 'runed'
 import type { AttemptAnswer, AttemptSnapshot, JoinQuizPreview } from '$lib/features/quiz/types'
 
+type AttemptSubmittedSummary = {
+	studentName: string
+	joinCode: string | null
+	submittedAtLabel: string
+}
+
 class QuizUiStore {
 	#activeAttempt = new PersistedState<AttemptSnapshot | null>('quiz-active-attempt', null, {
 		storage: 'local',
@@ -12,6 +18,9 @@ class QuizUiStore {
 	isJoinCodeModalOpen = $state(false)
 	createdQuizJoinCode = $state<string | null>(null)
 	joinPreview = $state<JoinQuizPreview | null>(null)
+	participantJoinCode = $state<string | null>(null)
+	isAttemptSubmittedModalOpen = $state(false)
+	attemptSubmittedSummary = $state<AttemptSubmittedSummary | null>(null)
 	currentQuestionIndex = $state(0)
 
 	get activeAttempt() {
@@ -48,8 +57,9 @@ class QuizUiStore {
 		this.createdQuizJoinCode = null
 	}
 
-	showJoinPreview = (preview: JoinQuizPreview) => {
+	showJoinPreview = (preview: JoinQuizPreview, joinCode?: string) => {
 		this.joinPreview = preview
+		this.participantJoinCode = joinCode ?? null
 		this.currentQuestionIndex = 0
 		this.activePanel = 'join'
 	}
@@ -61,22 +71,43 @@ class QuizUiStore {
 		this.activePanel = 'join'
 	}
 
+	syncActiveAttempt = (attempt: AttemptSnapshot) => {
+		this.#activeAttempt.current = attempt
+		this.joinPreview = null
+		this.activePanel = 'join'
+	}
+
 	leaveQuizAttempt = () => {
 		this.#activeAttempt.current = null
 		this.joinPreview = null
+		this.participantJoinCode = null
 		this.currentQuestionIndex = 0
 		this.activePanel = 'join'
 	}
 
 	clearJoinPreview = () => {
 		this.joinPreview = null
+		this.participantJoinCode = null
+	}
+
+	openAttemptSubmittedModal = (summary: AttemptSubmittedSummary) => {
+		this.attemptSubmittedSummary = summary
+		this.isAttemptSubmittedModalOpen = true
+	}
+
+	closeAttemptSubmittedModal = () => {
+		this.isAttemptSubmittedModalOpen = false
+		this.attemptSubmittedSummary = null
 	}
 
 	clearAllStores = () => {
 		this.#activeAttempt.current = null
 		this.joinPreview = null
+		this.participantJoinCode = null
 		this.createdQuizJoinCode = null
 		this.isJoinCodeModalOpen = false
+		this.attemptSubmittedSummary = null
+		this.isAttemptSubmittedModalOpen = false
 		this.currentQuestionIndex = 0
 		this.activePanel = 'join'
 	}

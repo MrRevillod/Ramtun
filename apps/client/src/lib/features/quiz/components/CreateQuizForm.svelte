@@ -200,7 +200,6 @@
 			quizUiStore.openJoinCodeModal(joinCode)
 		}
 
-		toast.success('Quiz creado correctamente.')
 		handleReset()
 	}
 
@@ -320,7 +319,7 @@
 						<div class="grid gap-3 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
 						<Field of={createQuizForm} path={['startTimeLocal']}>
 							{#snippet children(field)}
-								<label class="grid min-w-0 gap-1.5">
+								<label class="grid min-w-0 content-start gap-1.5">
 									<span class="flex min-h-[20px] items-center gap-1.5 text-sm text-zinc-800">
 										<CalendarDays size={15} class="text-black" />
 										Fecha y hora de inicio
@@ -342,7 +341,7 @@
 
 						<Field of={createQuizForm} path={['attemptDurationMinutes']}>
 							{#snippet children(field)}
-								<label class="grid min-w-0 gap-1.5">
+								<label class="grid min-w-0 content-start gap-1.5">
 									<span class="flex min-h-[20px] items-center gap-1.5 text-sm text-zinc-800">
 										<Clock3 size={15} class="text-black" />
 										Duracion (min)
@@ -354,6 +353,9 @@
 										min="1"
 										value={field.input}
 									/>
+									<p class="m-0 text-xs leading-4 text-transparent" aria-hidden="true">
+										No se permiten fechas ni horas en el pasado.
+									</p>
 									<p class="m-0 min-h-4 text-xs leading-4 text-red-700">{field.errors?.[0] ?? ''}</p>
 								</label>
 							{/snippet}

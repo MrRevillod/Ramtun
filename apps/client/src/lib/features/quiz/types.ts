@@ -61,6 +61,7 @@ export type QuizDetail = {
 	joinCode: string
 	questions: QuizDetailQuestion[]
 	certaintyTable: CertaintyConfig | null
+	certainlyTable?: CertaintyConfig | null
 	startTime: string
 	attemptDurationMinutes: number
 	createdAt: string
@@ -72,6 +73,8 @@ export type JoinQuizPreview = {
 	title: string
 	kind: QuizKind
 	questionCount: number
+	certaintyTable: CertaintyConfig | null
+	certainlyTable?: CertaintyConfig | null
 	startTime: string
 	attemptDurationMinutes: number
 }
@@ -89,6 +92,7 @@ export type QuizParticipant = {
 	kind: QuizKind
 	questions: QuizParticipantQuestion[]
 	certaintyTable: CertaintyConfig | null
+	certainlyTable?: CertaintyConfig | null
 	startTime: string
 	attemptDurationMinutes: number
 }

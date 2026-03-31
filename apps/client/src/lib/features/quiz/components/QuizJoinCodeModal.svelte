@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Copy, Hash } from 'lucide-svelte'
-	import { toast } from 'svelte-sonner'
+	import { Check, Copy, Hash } from 'lucide-svelte'
 	import { quizUiStore } from '$lib/features/quiz/quiz.store.svelte'
 
 	const joinCode = $derived(quizUiStore.createdQuizJoinCode)
+	let hasCopied = $state(false)
+	let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
 	const copyCode = async () => {
 		if (!joinCode) {
@@ -11,8 +12,25 @@
 		}
 
 		await navigator.clipboard.writeText(joinCode)
-		toast.success('Codigo copiado al portapapeles.')
+		hasCopied = true
+
+		if (copiedTimer) {
+			clearTimeout(copiedTimer)
+		}
+
+		copiedTimer = setTimeout(() => {
+			hasCopied = false
+			copiedTimer = null
+		}, 1800)
 	}
+
+	$effect(() => {
+		return () => {
+			if (copiedTimer) {
+				clearTimeout(copiedTimer)
+			}
+		}
+	})
 </script>
 
 {#if quizUiStore.isJoinCodeModalOpen && joinCode}
@@ -36,8 +54,13 @@
 					{joinCode}
 				</div>
 				<button class="btn-primary" type="button" onclick={copyCode}>
-					<Copy size={14} class="mr-1 inline" />
-					Copiar codigo
+					{#if hasCopied}
+						<Check size={14} class="mr-1 inline" />
+						Copiado
+					{:else}
+						<Copy size={14} class="mr-1 inline" />
+						Copiar codigo
+					{/if}
 				</button>
 			</div>
 		</div>

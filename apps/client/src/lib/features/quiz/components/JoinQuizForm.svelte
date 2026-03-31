@@ -22,8 +22,7 @@
 			return
 		}
 
-		quizUiStore.showJoinPreview(value)
-		toast.success('Codigo valido. Revisa las instrucciones antes de comenzar.')
+		quizUiStore.showJoinPreview(value, output.code.trim())
 	}
 </script>
 
