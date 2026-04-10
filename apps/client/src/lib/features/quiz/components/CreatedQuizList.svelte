@@ -7,6 +7,10 @@
 	import type { QuizSummary } from "$lib/features/quiz/types"
 	import { toUserMessage } from "$lib/shared/errors"
 
+	type QuizUiStoreExtended = {
+		openManagedAttemptsPanel: (quizId: string, title: string) => void
+	}
+
 	let quizzes = $state<QuizSummary[]>([])
 	let isLoading = $state(true)
 
@@ -25,14 +29,11 @@
 	}
 
 	const openAttempts = (quiz: QuizSummary) => {
-		;(quizUiStore as Record<string, any>).openManagedAttemptsPanel(
+		;(quizUiStore as unknown as QuizUiStoreExtended).openManagedAttemptsPanel(
 			quiz.id,
 			quiz.title
 		)
 	}
-
-	const getClosedAt = (quiz: QuizSummary) =>
-		(quiz as unknown as { closedAt?: string | null }).closedAt ?? null
 
 	const loadQuizzes = async () => {
 		isLoading = true
@@ -75,7 +76,7 @@
 	{:else}
 		<div class="min-h-0 overflow-y-auto pr-1">
 			<div class="grid gap-3">
-				{#each quizzes as quiz}
+				{#each quizzes as quiz (quiz.id)}
 					<article class="panel-muted p-4 sm:p-5">
 						<div class="flex flex-wrap items-start justify-between gap-3">
 							<div class="space-y-1.5">
@@ -83,7 +84,7 @@
 									{quiz.title}
 								</p>
 								<p class="m-0 text-sm text-zinc-700">
-									{quiz.kind === "Certainly" ? "Certeza" : "Tradicional"} - {quiz.questionCount}{" "}
+									{quiz.kind === "Certainly" ? "Certeza" : "Tradicional"} - {quiz.questionCount}
 									preguntas
 								</p>
 								<p class="m-0 text-sm text-zinc-600">
@@ -95,7 +96,7 @@
 									)}
 								</p>
 								<p class="m-0 text-sm text-zinc-700">
-									Estado: {getQuizStatus(getClosedAt(quiz))}
+									Estado: {getQuizStatus(quiz.closedAt)}
 								</p>
 							</div>
 

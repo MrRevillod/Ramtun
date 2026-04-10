@@ -2,8 +2,9 @@
 	import { BarChart3, CheckCircle2, CircleX, Trophy } from "lucide-svelte"
 	import QuestionRichText from "$lib/features/quiz/components/QuestionRichText.svelte"
 	import { quizUiStore } from "$lib/features/quiz/quiz.store.svelte"
+	import type { AttemptResult } from "$lib/features/quiz/types"
 
-	const result = $derived((quizUiStore as Record<string, any>).attemptResult ?? null)
+	const result = $derived(quizUiStore.currentAttemptResult as AttemptResult | null)
 
 	const gradeLabel = $derived.by(() => {
 		if (!result) return "1,0"
@@ -99,7 +100,7 @@
 		</div>
 
 		<div class="min-h-0 space-y-4 overflow-auto pr-1">
-			{#each result.questions as question, index}
+			{#each result.questions as question, index (question.questionId)}
 				<article class="panel-muted p-4 sm:p-5">
 					<div class="flex flex-wrap items-start justify-between gap-2">
 						<p class="m-0 text-sm font-medium text-zinc-700">Pregunta {index + 1}</p>
@@ -120,7 +121,7 @@
 
 					{#if question.images.length > 0}
 						<div class="mt-4 grid gap-3 sm:grid-cols-2">
-							{#each question.images as imageUrl}
+							{#each question.images as imageUrl (imageUrl)}
 								<img
 									class="w-full rounded-[4px] border border-zinc-300 bg-white"
 									src={imageUrl}
@@ -131,7 +132,7 @@
 					{/if}
 
 					<div class="mt-4 grid gap-2.5">
-						{#each question.options as option, optionIndex}
+						{#each question.options as option, optionIndex (`${question.questionId}-${optionIndex}`)}
 							<div
 								class={`rounded-[4px] border px-4 py-3 text-left text-base leading-relaxed ${getOptionClass(optionIndex, question.correctAnswerIndex, question.answerIndex)}`}
 							>

@@ -432,7 +432,7 @@
 								<div
 									class="panel-surface absolute z-20 mt-1 max-h-48 w-full overflow-auto p-1 shadow-none"
 								>
-									{#each filteredCollaboratorCandidates as user}
+									{#each filteredCollaboratorCandidates as user (user.id)}
 										<button
 											class="block w-full rounded-[4px] px-2.5 py-2 text-left text-sm text-zinc-800 hover:bg-zinc-100"
 											type="button"
@@ -459,7 +459,7 @@
 							</p>
 						{:else}
 							<div class="flex flex-wrap gap-2">
-								{#each selectedCollaborators as user}
+								{#each selectedCollaborators as user (user.id)}
 									<button
 										class="rounded-[4px] border border-zinc-300 bg-zinc-100 px-2.5 py-1.5 text-xs text-zinc-800 hover:bg-zinc-200"
 										type="button"

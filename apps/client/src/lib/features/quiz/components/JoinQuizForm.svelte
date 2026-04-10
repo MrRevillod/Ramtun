@@ -6,8 +6,20 @@
 	import { quizService } from "$lib/features/quiz/quiz.service"
 	import { quizUiStore } from "$lib/features/quiz/quiz.store.svelte"
 	import { JoinQuizSchema, type JoinQuizInput } from "$lib/features/quiz/schema"
+	import type { AttemptResult } from "$lib/features/quiz/types"
 	import type { AppError } from "$lib/shared/errors"
 	import { toUserMessage } from "$lib/shared/errors"
+
+	type QuizServiceExtended = {
+		getMyAttemptResultByCode: (code: string) => Promise<{
+			value: AttemptResult | null
+			error: AppError | null
+		}>
+	}
+
+	type QuizUiStoreExtended = {
+		showAttemptResult: (result: AttemptResult) => void
+	}
 
 	const joinForm = createForm({ schema: JoinQuizSchema })
 
@@ -22,10 +34,10 @@
 
 		if (submitAction === "result") {
 			const resultResponse = await (
-				quizService as Record<string, any>
+				quizService as unknown as QuizServiceExtended
 			).getMyAttemptResultByCode(joinCode)
 			const { value: result, error: resultError } = resultResponse as {
-				value: unknown
+				value: AttemptResult | null
 				error: AppError | null
 			}
 
@@ -34,7 +46,12 @@
 				return
 			}
 
-			;(quizUiStore as Record<string, any>).showAttemptResult(result)
+			if (!result) {
+				toast.error("No se pudo obtener el resultado del intento.")
+				return
+			}
+
+			;(quizUiStore as unknown as QuizUiStoreExtended).showAttemptResult(result)
 			return
 		}
 

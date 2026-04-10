@@ -100,12 +100,14 @@
 	})
 
 	$effect(() => {
-		activeAttemptId
-		isRevalidatingAttempt = true
-	})
+		if (activeAttemptId) {
+			isRevalidatingAttempt = true
+			autoSubmitStarted = false
+			submissionStarted = false
+			return
+		}
 
-	$effect(() => {
-		activeAttemptId
+		isRevalidatingAttempt = true
 		autoSubmitStarted = false
 		submissionStarted = false
 	})
@@ -341,7 +343,7 @@
 
 			{#if currentQuestion.images.length > 0}
 				<div class="mt-4 grid gap-3 sm:grid-cols-2">
-					{#each currentQuestion.images as imageUrl}
+					{#each currentQuestion.images as imageUrl (imageUrl)}
 						<img
 							class="w-full rounded-[4px] border border-zinc-300 bg-white"
 							src={imageUrl}
@@ -352,7 +354,7 @@
 			{/if}
 
 			<div class="mt-5 grid gap-2.5">
-				{#each currentQuestion.options as option, optionIndex}
+				{#each currentQuestion.options as option, optionIndex (`${optionIndex}:${option}`)}
 					<button
 						class={`rounded-[4px] border px-4 py-3 text-left text-base leading-relaxed transition ${
 							selectedAnswer === optionIndex
@@ -377,7 +379,7 @@
 						</p>
 					</div>
 					<div class="grid gap-2 sm:grid-cols-3">
-						{#each [{ level: "low", label: "Baja" }, { level: "medium", label: "Media" }, { level: "high", label: "Alta" }] as item}
+						{#each [{ level: "low", label: "Baja" }, { level: "medium", label: "Media" }, { level: "high", label: "Alta" }] as item (item.level)}
 							<button
 								class={`rounded-[4px] border px-4 py-3 text-left transition ${
 									selectedCertainty === item.level

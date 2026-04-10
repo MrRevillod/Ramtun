@@ -96,7 +96,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each filteredUsers as user}
+					{#each filteredUsers as user (user.id)}
 						<tr class="border-t border-zinc-200 bg-white/80">
 							<td class="px-3 py-2 font-medium text-zinc-900">{user.username}</td>
 							<td class="px-3 py-2 text-zinc-800">{user.name}</td>

@@ -11,38 +11,11 @@
 	import { toast } from "svelte-sonner"
 	import { quizService } from "$lib/features/quiz/quiz.service"
 	import { quizUiStore } from "$lib/features/quiz/quiz.store.svelte"
-	import type { AppError } from "$lib/shared/errors"
+	import type { ManagedAttemptSummary } from "$lib/features/quiz/types"
 	import { toUserMessage } from "$lib/shared/errors"
 
-	type ManagedAttemptSummary = {
-		attemptId: string
-		quizId: string
-		studentId: string
-		studentName: string
-		studentUsername: string
-		startedAt: string
-		expiresAt: string
-		submittedAt: string | null
-		scorePoints: number | null
-		scorePointsMax: number | null
-		grade: number | null
-		resultsReleasedAt: string | null
-		resultsViewedAt: string | null
-	}
-
-	type FinalizeAndPublishSummary = {
-		quizId: string
-		finalizedAttempts: number
-		publishedAttempts: number
-	}
-
-	const panel = $derived(
-		(quizUiStore as unknown as Record<string, any>).managedAttemptsPanel ?? null
-	)
-	const attempts = $derived(
-		((quizUiStore as unknown as Record<string, any>).managedAttempts ??
-			[]) as ManagedAttemptSummary[]
-	)
+	const panel = $derived(quizUiStore.currentManagedAttemptsPanel)
+	const attempts = $derived(quizUiStore.currentManagedAttempts)
 
 	let isLoading = $state(false)
 
@@ -124,9 +97,7 @@
 		}
 
 		isLoading = true
-		const { value, error } = await (
-			quizService as Record<string, any>
-		).getManagedAttempts(panel.quizId)
+		const { value, error } = await quizService.getManagedAttempts(panel.quizId)
 
 		if (error) {
 			toast.error(toUserMessage(error))
@@ -134,7 +105,7 @@
 			return
 		}
 
-		;(quizUiStore as Record<string, any>).setManagedAttempts(value ?? [])
+		quizUiStore.setManagedAttempts(value ?? [])
 		isLoading = false
 	}
 
@@ -153,14 +124,7 @@
 
 		isFinalizingAndPublishing = true
 
-		const response = await (quizService as Record<string, any>).finalizeAndPublish(
-			panel.quizId
-		)
-
-		const { value, error } = response as {
-			value: FinalizeAndPublishSummary | null
-			error: AppError | null
-		}
+		const { value, error } = await quizService.finalizeAndPublish(panel.quizId)
 
 		isFinalizingAndPublishing = false
 
@@ -252,10 +216,7 @@
 				<button
 					class="btn-tertiary"
 					type="button"
-					onclick={() =>
-						(
-							quizUiStore as unknown as Record<string, any>
-						).closeManagedAttemptsPanel()}
+					onclick={() => quizUiStore.closeManagedAttemptsPanel()}
 				>
 					Volver
 				</button>
@@ -281,7 +242,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						{#each attempts as attempt}
+						{#each attempts as attempt (attempt.attemptId)}
 							<tr>
 								<td class="border border-zinc-300 bg-white p-2 text-zinc-800">
 									<div class="flex items-center gap-2">

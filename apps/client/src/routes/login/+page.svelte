@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 	import { authService } from "$lib/features/auth/auth.service"
 	import type { LoginInput } from "$lib/features/auth/types"
@@ -21,7 +22,7 @@
 		const result = await loginMutation.mutateAsync({ username, password })
 
 		if (result.value) {
-			await goto("/")
+			await goto(resolve("/"))
 			return
 		}
 

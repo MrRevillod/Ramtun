@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 	import { authService } from "$lib/features/auth/auth.service"
 	import { authStore } from "$lib/features/auth/auth.store.svelte"
@@ -14,7 +15,7 @@
 			toast.error(toUserMessage(result.error))
 		}
 
-		await goto("/login")
+		await goto(resolve("/login"))
 	}
 
 	const roleLabel = $derived.by(() => {

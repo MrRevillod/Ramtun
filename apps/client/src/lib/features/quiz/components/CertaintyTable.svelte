@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Field } from "@formisch/svelte"
+	import { Field, type FormStore } from "@formisch/svelte"
+	import { CreateQuizSchema } from "$lib/features/quiz/schema"
 
-	let { form } = $props<{ form: any }>()
+	let { form } = $props<{ form: FormStore<typeof CreateQuizSchema> }>()
 </script>
 
 <div class="panel-muted mt-6 space-y-3 p-4 sm:p-5">
@@ -35,7 +36,7 @@
 						>Baja</td
 					>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "low", "correct"] as any}>
+						<Field of={form} path={["certainty", "low", "correct"] as unknown as []}>
 							{#snippet children(field)}
 								<input
 									{...field.props}
@@ -49,7 +50,10 @@
 						</Field>
 					</td>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "low", "incorrect"] as any}>
+						<Field
+							of={form}
+							path={["certainty", "low", "incorrect"] as unknown as []}
+						>
 							{#snippet children(field)}
 								<input
 									{...field.props}
@@ -68,7 +72,10 @@
 						>Media</td
 					>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "medium", "correct"] as any}>
+						<Field
+							of={form}
+							path={["certainty", "medium", "correct"] as unknown as []}
+						>
 							{#snippet children(field)}
 								<input
 									{...field.props}
@@ -82,7 +89,10 @@
 						</Field>
 					</td>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "medium", "incorrect"] as any}>
+						<Field
+							of={form}
+							path={["certainty", "medium", "incorrect"] as unknown as []}
+						>
 							{#snippet children(field)}
 								<input
 									{...field.props}
@@ -101,7 +111,10 @@
 						>Alta</td
 					>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "high", "correct"] as any}>
+						<Field
+							of={form}
+							path={["certainty", "high", "correct"] as unknown as []}
+						>
 							{#snippet children(field)}
 								<input
 									{...field.props}
@@ -115,7 +128,10 @@
 						</Field>
 					</td>
 					<td class="border border-zinc-300 bg-white p-2">
-						<Field of={form} path={["certainty", "high", "incorrect"] as any}>
+						<Field
+							of={form}
+							path={["certainty", "high", "incorrect"] as unknown as []}
+						>
 							{#snippet children(field)}
 								<input
 									{...field.props}

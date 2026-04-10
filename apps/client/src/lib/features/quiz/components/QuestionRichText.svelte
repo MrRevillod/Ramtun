@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/no-at-html-tags */
 	import DOMPurify from "dompurify"
 	import katex from "katex"
 	import "katex/dist/katex.min.css"
