@@ -1,21 +1,30 @@
 services:
   server:
-    image: ${DOCKERHUB_USERNAME}/ramtun-server:latest
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
       target: prod
-    volumes: []
+    container_name: ramtun-server
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ramtun-network
 
   client:
-    image: ${DOCKERHUB_USERNAME}/ramtun-client:latest
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
       target: prod
-    user: root
-    volumes: []
-    environment: []
+    ports:
+      - "80:80"
+    depends_on:
+      server:
+        condition: service_started
+    networks:
+      - ramtun-network
 
   postgres:
     image: postgres:16-alpine
@@ -25,12 +34,20 @@ services:
       - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgresql.conf:/etc/postgresql/postgresql.conf
     env_file:
       - .env
+    networks:
+      - ramtun-network
     healthcheck:
       test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+networks:
+  ramtun-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
