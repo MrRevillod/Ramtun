@@ -1,55 +1,29 @@
-name: Docker Images
-# Trigger marker: minimal change for workflow run
+name: GHCR Images
 
 on:
-  push:
+  workflow_run:
+    workflows: [ "Rust CI" ]
+    types: [ completed ]
     branches: [ main ]
-    tags: [ "v*" ]
-    paths-ignore:
-      - "README.md"
-      - "LICENSE"
-      - "Makefile"
-      - ".diagrams/**"
-      - "**/*.md"
-      - "**/*.txt"
-      - "**/.prettier*"
-      - "**/.editorconfig"
-      - ".gitignore"
-      - ".gitattributes"
-      - "docs/**"
-      - ".docs/**"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE*"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
-  group: docker-images-${{ github.ref }}
+  group: ghcr-images-${{ github.event.workflow_run.head_sha || github.sha }}
   cancel-in-progress: true
 
 jobs:
-  server-ci:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust fmt check
-        run: cargo fmt --check
-
-      - name: Rust clippy
-        run: cargo clippy -- -D warnings
-
-      - name: Rust tests
-        run: cargo test
-
   client-ci:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -72,7 +46,8 @@ jobs:
         working-directory: apps/client
 
   build-and-push:
-    needs: [ server-ci, client-ci ]
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    needs: [ client-ci ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -80,14 +55,20 @@ jobs:
         include:
           - service: server
             dockerfile: ./apps/server/Dockerfile
-            image_suffix: ramtun-server
+            image_name: ramtun-server
           - service: client
             dockerfile: ./apps/client/Dockerfile
-            image_suffix: ramtun-client
+            image_name: ramtun-client
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set lowercase owner
+        id: owner
+        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -95,22 +76,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract image metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image_suffix }}
+          images: ghcr.io/${{ steps.owner.outputs.value }}/${{ matrix.image_name }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
             type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v6

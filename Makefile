@@ -9,13 +9,15 @@ app ?= "server"
 pkg ?=
 service ?= $(app)
 file ?=
+deploy_cmd ?= deploy
+kubeconfig ?= /workspace/config/deployer/kubectl/kubeconfig
 DIAGRAMS_DIR ?= .diagrams
 RENDER_DIR ?= $(DIAGRAMS_DIR)/render
 KROKI ?= kroki
 MMDC ?= mmdc
 
 .DEFAULT_GOAL := run
-.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup puml mmd
+.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup puml mmd deploy
 
 setup:
 	rm -rf $(CLIENT)/node_modules
@@ -80,3 +82,7 @@ mmd:
 	@mkdir -p "$(RENDER_DIR)"
 	@"$(MMDC)" -i "$(DIAGRAMS_DIR)/$(file).mmd" -o "$(RENDER_DIR)/$(file).png" -b white
 	@echo "Generado $(RENDER_DIR)/$(file).png"
+
+deploy:
+	docker build -f config/deployer/Dockerfile -t questions-deployer:local .
+	docker run --rm -it --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env -e KUBECONFIG="$(kubeconfig)" -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(deploy_cmd)
