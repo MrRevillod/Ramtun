@@ -11,6 +11,7 @@ on:
     paths-ignore:
       - ".github/workflows/cd/**"
       - "apps/server/cli/**"
+      - "config/deployer/**"
 
 jobs:
   check:

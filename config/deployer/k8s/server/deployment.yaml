@@ -27,6 +27,8 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: username
+            - name: POSTGRES_PORT
+              value: "5432"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -34,16 +36,11 @@ spec:
                   key: password
             - name: POSTGRES_DB_NAME
               value: ramtun
-            - name: POSTGRES_DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: ramtun-env
-                  key: POSTGRES_DATABASE_URL
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: ramtun-secret
-                  key: secret
+                  key: jwt-secret
             - name: LDAP_URL
               value: ldap://ldap.dvizama.svc.cluster.local:389
             - name: LDAP_BASE_DN
