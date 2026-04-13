@@ -11,7 +11,11 @@ pub struct Database {
 #[config(key = "postgres-db")]
 #[derive(Clone, Deserialize)]
 pub struct DatabaseConfig {
-    pub uri: String,
+    pub user: String,
+    pub password: String,
+    pub database: String,
+    pub port: String,
+    pub host: String,
     pub migrations_path: String,
     pub min_connections: u8,
     pub max_connections: u8,
@@ -24,7 +28,7 @@ impl Database {
             .min_connections(db_conf.min_connections.into())
             .max_connections(db_conf.max_connections.into())
             .acquire_timeout(Duration::from_millis(db_conf.acquire_timeout_ms))
-            .connect(&db_conf.uri)
+            .connect(&Self::create_uri(&db_conf))
             .await
             .inspect_err(|err| {
                 tracing::error!("Failed to connect to PostgreSQL database: {}", err);
@@ -43,6 +47,13 @@ impl Database {
         Self {
             pool: Arc::new(pool),
         }
+    }
+
+    pub fn create_uri(db_conf: &DatabaseConfig) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            db_conf.user, db_conf.password, db_conf.host, db_conf.port, db_conf.database
+        )
     }
 
     pub fn get_pool(&self) -> &PgPool {

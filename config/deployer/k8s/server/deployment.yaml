@@ -2,9 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ramtun-server
+  namespace: ramtun
+  labels:
+    app: ramtun-server
 spec:
   replicas: 1
-  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: ramtun-server
@@ -15,28 +17,34 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/mrrevillod/ramtun-server:latest
-          imagePullPolicy: Always
+          image: ghcr.io/mrrevillod/ramtun-server@sha256:fe03f9b1de9bc467e680028a88c65ac4abc160471189c279de9ac9c731070fd3
           ports:
             - containerPort: 8000
               name: http
-          envFrom:
-            - secretRef:
-                name: ramtun-env
-          readinessProbe:
-            tcpSocket:
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            tcpSocket:
-              port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_DB_NAME
+              value: ramtun
+            - name: POSTGRES_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ramtun-env
+                  key: POSTGRES_DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ramtun-secret
+                  key: secret
+            - name: LDAP_URL
+              value: ldap://ldap.dvizama.svc.cluster.local:389
+            - name: LDAP_BASE_DN
+              value: dc=inf,dc=uct,dc=cl

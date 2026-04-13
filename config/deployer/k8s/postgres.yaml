@@ -1,0 +1,25 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+  namespace: ramtun
+spec:
+  instances: 1
+  bootstrap:
+    initdb:
+      database: ramtun
+      owner: user
+      secret:
+        name: postgres-secret
+  managed:
+    services:
+      disabledDefaultServices: ["ro", "r"]
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: csi-cephfs-sc
+      volumeMode: Filesystem

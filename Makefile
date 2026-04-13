@@ -10,7 +10,6 @@ pkg ?=
 service ?= $(app)
 file ?=
 deploy_cmd ?= deploy
-kubeconfig ?= /workspace/config/deployer/kubectl/kubeconfig
 DIAGRAMS_DIR ?= .diagrams
 RENDER_DIR ?= $(DIAGRAMS_DIR)/render
 KROKI ?= kroki
@@ -85,4 +84,4 @@ mmd:
 
 deploy:
 	docker build -f config/deployer/Dockerfile -t questions-deployer:local .
-	docker run --rm -it --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env -e KUBECONFIG="$(kubeconfig)" -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(deploy_cmd)
+	docker run --rm --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env.prod -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(deploy_cmd)

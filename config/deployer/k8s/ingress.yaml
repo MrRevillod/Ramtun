@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: questions
+  namespace: questions
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    external-dns.alpha.kubernetes.io/hostname: ramtun.inf.uct.cl
+    external-dns.alpha.kubernetes.io/target: proxy.inf.uct.cl
+    external-dns.alpha.kubernetes.io/ttl: "1"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [ ramtun.inf.uct.cl ]
+      secretName: inf-uct-cl-tls
+  rules:
+    - host: ramtun.inf.uct.cl
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: server
+                port:
+                  number: 8000
