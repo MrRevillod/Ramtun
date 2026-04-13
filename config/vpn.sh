@@ -1,24 +1,12 @@
 #!/usr/bin/env bash
 
-normalize_env() {
-    local value="$1"
-
-    value="${value%$'\r'}"
-
-    while [[ "$value" =~ ^\".*\"$ ]] || [[ "$value" =~ ^\'.*\'$ ]]; do
-        value="${value:1:${#value}-2}"
-    done
-
-    printf '%s' "$value"
-}
-
-privatekey="$(normalize_env "${WIREGUARD_PRIVATE_KEY:-}")"
-presharedkey="$(normalize_env "${WIREGUARD_PRESHARED_KEY:-}")"
-wireguard_ip="$(normalize_env "${WIREGUARD_IP:-}")"
-wireguard_peer="$(normalize_env "${WIREGUARD_PEER:-}")"
-wireguard_endpoint="$(normalize_env "${WIREGUARD_ENDPOINT:-}")"
-ldap_endpoint="$(normalize_env "${LDAP_ENDPOINT:-}")"
-kubernetes_endpoint="$(normalize_env "${KUBERNETES_ENDPOINT:-}")"
+privatekey="$WIREGUARD_PRIVATE_KEY"
+presharedkey="$WIREGUARD_PRESHARED_KEY"
+wireguard_ip="$WIREGUARD_IP"
+wireguard_peer="$WIREGUARD_PEER"
+wireguard_endpoint="$WIREGUARD_ENDPOINT"
+ldap_endpoint="$LDAP_ENDPOINT"
+kubernetes_endpoint="$KUBERNETES_ENDPOINT"
 
 tmp_privatekey="$(mktemp /tmp/wg-privatekey.XXXXXX)"
 tmp_presharedkey="$(mktemp /tmp/wg-presharedkey.XXXXXX)"

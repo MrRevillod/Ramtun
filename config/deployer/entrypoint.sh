@@ -26,7 +26,7 @@ ensure_k8s_host_resolution() {
 		return
 	fi
 
-	endpoint=$(printf '%s' "${KUBERNETES_ENDPOINT:-}" | sed -e 's/\r$//' -e ':a;s/^"\(.*\)"$/\1/;ta' -e ":b;s/^'\(.*\)'$/\1/;tb")
+	endpoint="${KUBERNETES_ENDPOINT:-}"
 	endpoint_ip=$(printf '%s' "$endpoint" | cut -d/ -f1)
 
 	if [ -z "${endpoint_ip:-}" ]; then
@@ -38,65 +38,87 @@ ensure_k8s_host_resolution() {
 	echo "${endpoint_ip} ${server_host}" >> /etc/hosts
 }
 
-run_deploy() {
-	NAMESPACE="${K8S_NAMESPACE:-ramtun}"
-	MANIFESTS_DIR="${K8S_MANIFESTS_DIR:-/workspace/config/deployer/k8s}"
+namespace() {
+	printf '%s' "${K8S_NAMESPACE:-ramtun}"
+}
 
-	echo "[deploy] namespace: ${NAMESPACE}"
-	echo "[deploy] manifests: ${MANIFESTS_DIR}"
+manifests_dir() {
+	printf '%s' "${K8S_MANIFESTS_DIR:-/workspace/config/deployer/k8s}"
+}
 
-	if ! kubectl get namespace "${NAMESPACE}" >/dev/null 2>&1; then
-		echo "[deploy] namespace ${NAMESPACE} not found or no access" >&2
+ensure_namespace_access() {
+	ns=$(namespace)
+	if ! kubectl get namespace "$ns" >/dev/null 2>&1; then
+		echo "[deploy] namespace $ns not found or no access" >&2
 		exit 1
 	fi
+}
 
-	perm_missing=0
+pod_by_label() {
+	ns="$1"
+	label="$2"
+	pod=$(kubectl -n "$ns" get pod -l "$label" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+	if [ -z "$pod" ]; then
+		echo "[deploy] no pod found for label $label in namespace $ns" >&2
+		exit 1
+	fi
+	printf '%s' "$pod"
+}
 
-	while IFS= read -r perm; do
-		[ -z "$perm" ] && continue
-		verb=$(printf '%s' "$perm" | awk '{print $1}')
-		resource=$(printf '%s' "$perm" | awk '{print $2}')
-		if ! kubectl auth can-i "$verb" "$resource" -n "$NAMESPACE" >/dev/null 2>&1; then
-			echo "[deploy] missing permission: $verb $resource in namespace $NAMESPACE" >&2
-			perm_missing=1
-		fi
-	done <<'EOF'
-create deployments.apps
-create services
-create ingresses.networking.k8s.io
-get secrets
-create secrets
-get clusters.postgresql.cnpg.io
-create clusters.postgresql.cnpg.io
+rollout_with_logs() {
+	ns="$1"
+	deploy_name="$2"
+	label="$3"
+	if ! kubectl -n "$ns" rollout status "deployment/$deploy_name" --timeout=180s; then
+		echo "[deploy] rollout failed for $deploy_name" >&2
+		kubectl -n "$ns" get pods -l "$label" -o wide || true
+		kubectl -n "$ns" logs "deployment/$deploy_name" --tail=120 || true
+		exit 1
+	fi
+}
+
+cmd_deploy() {
+	ns=$(namespace)
+	md=$(manifests_dir)
+
+	echo "[deploy] namespace: $ns"
+	echo "[deploy] manifests: $md"
+
+	ensure_namespace_access
+	kubectl apply -R -f "$md"
+	kubectl -n "$ns" rollout restart deployment/ramtun-server deployment/ramtun-client
+	rollout_with_logs "$ns" ramtun-server app=ramtun-server
+	rollout_with_logs "$ns" ramtun-client app=ramtun-client
+	kubectl -n "$ns" get deploy,svc,ingress,pods
+}
+
+cmd_db() {
+	ns=$(namespace)
+	ensure_namespace_access
+	cluster_name="${POSTGRES_CLUSTER_NAME:-postgres-cluster}"
+	secret_name="${POSTGRES_SECRET_NAME:-postgres-secret}"
+	db_name="${POSTGRES_DB:-ramtun}"
+	pod=$(pod_by_label "$ns" "cnpg.io/cluster=$cluster_name")
+	user=$(kubectl -n "$ns" get secret "$secret_name" -o jsonpath='{.data.username}' | base64 -d)
+	pass=$(kubectl -n "$ns" get secret "$secret_name" -o jsonpath='{.data.password}' | base64 -d)
+
+	if [ -t 0 ] && [ -t 1 ]; then
+		kubectl -n "$ns" exec -it "$pod" -- env PGPASSWORD="$pass" psql -h 127.0.0.1 -U "$user" -d "$db_name" "$@"
+	else
+		kubectl -n "$ns" exec -i "$pod" -- env PGPASSWORD="$pass" psql -h 127.0.0.1 -U "$user" -d "$db_name" "$@"
+	fi
+}
+
+cmd_usage() {
+	cat <<'EOF'
+usage: deployer <command>
+
+commands:
+  deploy                       apply manifests and rollout app
+  db [psql args...]            run psql against postgres-cluster
+  sh                           open shell in deployer container
+  kubectl <args...>            passthrough kubectl command
 EOF
-
-	if [ "$perm_missing" -ne 0 ]; then
-		echo "[deploy] insufficient RBAC permissions; aborting before apply" >&2
-		exit 1
-	fi
-
-	echo "[deploy] applying manifests"
-	kubectl apply -R -f "${MANIFESTS_DIR}"
-
-	echo "[deploy] restarting deployments to pick up secret changes"
-	kubectl -n "${NAMESPACE}" rollout restart deployment/ramtun-server deployment/ramtun-client
-
-	if ! kubectl -n "${NAMESPACE}" rollout status deployment/ramtun-server --timeout=180s; then
-		echo "[deploy] rollout failed for ramtun-server" >&2
-		kubectl -n "${NAMESPACE}" get pods -l app=ramtun-server -o wide || true
-		kubectl -n "${NAMESPACE}" logs deployment/ramtun-server --tail=120 || true
-		exit 1
-	fi
-
-	if ! kubectl -n "${NAMESPACE}" rollout status deployment/ramtun-client --timeout=180s; then
-		echo "[deploy] rollout failed for ramtun-client" >&2
-		kubectl -n "${NAMESPACE}" get pods -l app=ramtun-client -o wide || true
-		kubectl -n "${NAMESPACE}" logs deployment/ramtun-client --tail=120 || true
-		exit 1
-	fi
-
-	echo "[deploy] current resources"
-	kubectl -n "${NAMESPACE}" get deploy,svc,ingress,pods
 }
 
 connect_vpn
@@ -104,13 +126,31 @@ if [ ! -f "$KUBECONFIG_PATH" ]; then
 	echo "[deploy] kubeconfig not found at $KUBECONFIG_PATH" >&2
 	exit 1
 fi
-
 export KUBECONFIG="$KUBECONFIG_PATH"
 ensure_k8s_host_resolution
 
-if [ "$#" -eq 0 ] || [ "$1" = "deploy" ]; then
-	run_deploy
-	exit 0
-fi
+cmd="${1:-deploy}"
+[ "$#" -gt 0 ] && shift
 
-exec "$@"
+case "$cmd" in
+	deploy)
+		cmd_deploy "$@"
+		;;
+	sh)
+		exec sh "$@"
+		;;
+	db)
+		cmd_db "$@"
+		;;
+	kubectl|k)
+		exec kubectl "$@"
+		;;
+	help|-h|--help)
+		cmd_usage
+		;;
+	*)
+		echo "unknown command: $cmd" >&2
+		cmd_usage
+		exit 1
+		;;
+esac

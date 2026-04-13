@@ -5,12 +5,11 @@ on:
     branches: [ main ]
     paths-ignore:
       - ".github/workflows/cd/**"
-      - "apps/server/cli/**"
+      - "config/deployer/**"
   pull_request:
     branches: [ main ]
     paths-ignore:
       - ".github/workflows/cd/**"
-      - "apps/server/cli/**"
       - "config/deployer/**"
 
 jobs:

@@ -9,14 +9,16 @@ app ?= "server"
 pkg ?=
 service ?= $(app)
 file ?=
-deploy_cmd ?= deploy
+cmd ?= deploy
+args ?=
+docker_tty ?= -it
 DIAGRAMS_DIR ?= .diagrams
 RENDER_DIR ?= $(DIAGRAMS_DIR)/render
 KROKI ?= kroki
 MMDC ?= mmdc
 
 .DEFAULT_GOAL := run
-.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup puml mmd deploy
+.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup puml mmd deployer
 
 setup:
 	rm -rf $(CLIENT)/node_modules
@@ -82,6 +84,6 @@ mmd:
 	@"$(MMDC)" -i "$(DIAGRAMS_DIR)/$(file).mmd" -o "$(RENDER_DIR)/$(file).png" -b white
 	@echo "Generado $(RENDER_DIR)/$(file).png"
 
-deploy:
+deployer:
 	docker build -f config/deployer/Dockerfile -t questions-deployer:local .
-	docker run --rm --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env.prod -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(deploy_cmd)
+	docker run --rm $(docker_tty) --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env.prod -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(cmd) $(args)

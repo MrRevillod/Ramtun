@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: client
-          image: ghcr.io/mrrevillod/ramtun-client:sha-bfd4907
+          image: ghcr.io/mrrevillod/ramtun-client:sha-01d19b2
           ports:
             - containerPort: 80
               name: http

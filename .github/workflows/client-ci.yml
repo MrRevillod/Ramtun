@@ -1,0 +1,33 @@
+name: Client CI
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "config/deployer/**"
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - "config/deployer/**"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - run: corepack enable
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: apps/client
+
+      - run: pnpm run lint
+        working-directory: apps/client
+
+      - run: pnpm run check
+        working-directory: apps/client

@@ -16,38 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  client-ci:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Install client deps
-        run: pnpm install --frozen-lockfile --ignore-scripts
-        working-directory: apps/client
-
-      - name: Client lint
-        run: pnpm run lint
-        working-directory: apps/client
-
-      - name: Client check
-        run: pnpm run check
-        working-directory: apps/client
-
   build-and-push:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    needs: [ client-ci ]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
