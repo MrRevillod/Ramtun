@@ -6,7 +6,7 @@ port = 8000
 host = "0.0.0.0"
 body-limit = "5MB"
 request-timeout = { enabled = true, timeout = "15s" }
-route-prefix = "/api"
+router-prefix = "/api"
 
 [postgres-db]
 user = "${POSTGRES_USER}"
