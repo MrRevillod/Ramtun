@@ -18,6 +18,7 @@ spec:
       containers:
         - name: server
           image: ghcr.io/mrrevillod/ramtun-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
               name: http
@@ -49,7 +50,7 @@ spec:
               value: ldap://ldap.dvizama.svc.cluster.local:389
             - name: LDAP_BASE_DN
               value: dc=inf,dc=uct,dc=cl
-            - name: LDAP_ADMIN_USERNAME
+            - name: LDAP_ADMIN_USER
               value: cn=admin
             - name: LDAP_ADMIN_PASSWORD
               valueFrom:

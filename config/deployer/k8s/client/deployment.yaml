@@ -18,6 +18,7 @@ spec:
       containers:
         - name: client
           image: ghcr.io/mrrevillod/ramtun-client:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               name: http
