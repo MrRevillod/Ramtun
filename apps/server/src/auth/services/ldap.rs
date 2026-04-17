@@ -94,7 +94,7 @@ impl LdapClient {
             .iter()
             .map(|entry| SearchEntry::construct(entry.clone()).dn)
             .collect::<Vec<String>>()
-            .get(0)
+            .first()
             .ok_or_else(|| {
                 tracing::error!("[!] No se pudo extraer DN para el usuario: {}", username);
                 AppError::LdapUsernameNotFound(username.to_string())
@@ -127,9 +127,7 @@ impl LdapClient {
             .success()?;
 
         let entry = results.into_iter().next().ok_or_else(|| {
-            tracing::error!(
-                "[!] no se encontró correo electrónico para el usuario: {username}"
-            );
+            tracing::error!("[!] no se encontró correo electrónico para el usuario: {username}");
 
             AppError::LdapEmailNotFound
         })?;
