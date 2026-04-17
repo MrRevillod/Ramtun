@@ -113,6 +113,21 @@ impl QuizRepository {
         Ok(updated)
     }
 
+    pub async fn has_attempts(&self, quiz_id: &Uuid) -> AppResult<bool> {
+        let has_attempts = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM quiz_attempts
+                WHERE quiz_id = $1
+            )",
+        )
+        .bind(quiz_id)
+        .fetch_one(self.db.get_pool())
+        .await?;
+
+        Ok(has_attempts)
+    }
+
     pub async fn add_collaborator(
         &self,
         quiz_id: &Uuid,

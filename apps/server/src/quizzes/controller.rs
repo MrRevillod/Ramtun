@@ -1,4 +1,4 @@
-use crate::attempts::AttemptService;
+use crate::attempts::{AttemptError, AttemptService};
 use crate::auth::SessionCheck;
 use crate::authz::{AuthzAction, AuthzGuard};
 use crate::quizzes::*;
@@ -149,6 +149,31 @@ impl QuizController {
             .await?;
 
         Ok(JsonResponse::Ok().data(attempts))
+    }
+
+    #[get("/{quizId}/attempts/{attemptId}/result")]
+    #[interceptor(AuthzGuard, config = AuthzAction::ListManagedQuizAttempts)]
+    pub async fn get_managed_attempt_result(&self, req: Request) -> WebResult {
+        let quiz_id = req
+            .param::<Uuid>("quizId")
+            .map_err(|_| QuizError::InvalidId)?;
+
+        let attempt_id = req
+            .param::<Uuid>("attemptId")
+            .map_err(|_| AttemptError::InvalidAttemptId)?;
+
+        let current_user = req
+            .extensions
+            .get::<User>()
+            .cloned()
+            .ok_or_else(JsonResponse::Unauthorized)?;
+
+        let result = self
+            .attempts
+            .get_result_for_managed_attempt(&current_user, &quiz_id, &attempt_id)
+            .await?;
+
+        Ok(JsonResponse::Ok().data(result))
     }
 
     #[get("/{quizId}/attempts/me")]

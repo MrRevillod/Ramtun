@@ -53,6 +53,13 @@ pub enum AttemptError {
     #[error("Invalid answer index for question")]
     InvalidAnswerIndex,
 
+    #[http(
+        code = 400,
+        message = "Certainty level is required for certainty quizzes."
+    )]
+    #[error("Missing certainty level for certainty quiz")]
+    CertaintyLevelRequired,
+
     #[http(code = 404, message = "Attempt result is not available yet.")]
     #[error("Attempt result not available")]
     ResultNotAvailable,

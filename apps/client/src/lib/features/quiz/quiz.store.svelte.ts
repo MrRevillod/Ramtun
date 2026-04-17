@@ -119,9 +119,20 @@ class QuizUiStore {
 	showAttemptResult = (result: AttemptResult) => {
 		this.#activeAttempt.current = null
 		this.joinPreview = null
-		this.managedAttemptsPanel = null
-		this.managedAttempts = []
 		this.attemptResult = result
+		this.currentQuestionIndex = 0
+		this.activePanel = "join"
+	}
+
+	closeAttemptResult = () => {
+		this.attemptResult = null
+
+		if (this.managedAttemptsPanel) {
+			this.activePanel = "mine"
+			return
+		}
+
+		this.joinPreview = null
 		this.currentQuestionIndex = 0
 		this.activePanel = "join"
 	}

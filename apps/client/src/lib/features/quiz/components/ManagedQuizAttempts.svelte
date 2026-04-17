@@ -18,6 +18,7 @@
 	const attempts = $derived(quizUiStore.currentManagedAttempts)
 
 	let isLoading = $state(false)
+	let loadingResultByAttemptId = $state<Record<string, boolean>>({})
 
 	let isFinalizingAndPublishing = $state(false)
 	const POLL_INTERVAL_MS = 10_000
@@ -140,6 +141,39 @@
 		}
 
 		await loadAttempts()
+	}
+
+	const handleViewResult = async (attempt: ManagedAttemptSummary) => {
+		if (!panel) {
+			return
+		}
+
+		loadingResultByAttemptId = {
+			...loadingResultByAttemptId,
+			[attempt.attemptId]: true,
+		}
+
+		const { value, error } = await quizService.getManagedAttemptResult(
+			panel.quizId,
+			attempt.attemptId
+		)
+
+		loadingResultByAttemptId = {
+			...loadingResultByAttemptId,
+			[attempt.attemptId]: false,
+		}
+
+		if (error) {
+			toast.error(toUserMessage(error))
+			return
+		}
+
+		if (!value) {
+			toast.error("No se pudo cargar la revision del intento.")
+			return
+		}
+
+		quizUiStore.showAttemptResult(value)
 	}
 
 	const getResultStatus = (attempt: ManagedAttemptSummary) => {
@@ -292,7 +326,25 @@
 									{/if}
 								</td>
 								<td class="border border-zinc-300 bg-white p-2">
-									<span class="text-xs text-zinc-500">Usa accion global</span>
+									{#if attempt.submittedAt && attempt.resultsReleasedAt}
+										<button
+											class="btn-secondary"
+											type="button"
+											onclick={() => handleViewResult(attempt)}
+											disabled={isLoading ||
+												isFinalizingAndPublishing ||
+												loadingResultByAttemptId[attempt.attemptId]}
+										>
+											<Eye size={14} class="mr-1 inline" />
+											{loadingResultByAttemptId[attempt.attemptId]
+												? "Abriendo..."
+												: "Ver revision"}
+										</button>
+									{:else if !attempt.submittedAt}
+										<span class="text-xs text-zinc-500">Aun no enviado</span>
+									{:else}
+										<span class="text-xs text-zinc-500">Esperando publicacion</span>
+									{/if}
 								</td>
 							</tr>
 						{/each}

@@ -3,12 +3,14 @@ name: Client CI
 on:
   push:
     branches: [ main ]
-    paths-ignore:
-      - "config/deployer/**"
+    paths:
+      - "apps/client/**"
+      - ".github/workflows/client-ci.yml"
   pull_request:
     branches: [ main ]
-    paths-ignore:
-      - "config/deployer/**"
+    paths:
+      - "apps/client/**"
+      - ".github/workflows/client-ci.yml"
 
 jobs:
   check:

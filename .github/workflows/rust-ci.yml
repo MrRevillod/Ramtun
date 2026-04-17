@@ -3,14 +3,18 @@ name: Rust CI
 on:
   push:
     branches: [ main ]
-    paths-ignore:
-      - ".github/workflows/cd/**"
-      - "config/deployer/**"
+    paths:
+      - "apps/server/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/rust-ci.yml"
   pull_request:
     branches: [ main ]
-    paths-ignore:
-      - ".github/workflows/cd/**"
-      - "config/deployer/**"
+    paths:
+      - "apps/server/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/rust-ci.yml"
 
 jobs:
   check:

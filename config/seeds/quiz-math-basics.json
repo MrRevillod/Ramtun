@@ -1,14 +1,4 @@
 {
-  "title": "Matematicas Basicas - Certeza",
-  "mode": "certainty",
-  "startTimeUtc": "2030-01-15T16:00:00Z",
-  "attemptDurationMinutes": 20,
-  "collaboratorIds": [],
-  "certaintyConfig": {
-    "low": { "correct": 1, "incorrect": 0 },
-    "medium": { "correct": 2, "incorrect": -1 },
-    "high": { "correct": 3, "incorrect": -2 }
-  },
   "questions": [
     {
       "question": "Resuelve \\(2x + 3 = 11\\). Cual es \\(x\\)?",

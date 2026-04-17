@@ -46,12 +46,11 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: ramtun-postgres
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    command: postgres -c log_min_messages=ERROR -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1 -c log_checkpoints=off
     ports:
       - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgresql.conf:/etc/postgresql/postgresql.conf
     env_file:
       - .env
     networks:

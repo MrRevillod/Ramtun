@@ -118,6 +118,11 @@ impl QuizService {
             .require_managed_quiz(current_user, quiz_id)
             .await?;
         self.policy.can_update_quiz(current_user, &quiz).await?;
+
+        if self.repository.has_attempts(quiz_id).await? {
+            return Err(QuizError::LockedForAttempts.into());
+        }
+
         input.apply_to_entity(&mut quiz);
 
         let quiz = self.repository.update(&quiz).await?;

@@ -47,4 +47,11 @@ pub enum QuizError {
     )]
     #[error("Quiz is closed")]
     Closed,
+
+    #[http(
+        code = 409,
+        message = "This quiz already has attempts and can no longer be edited."
+    )]
+    #[error("Quiz has attempts and is locked")]
+    LockedForAttempts,
 }

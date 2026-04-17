@@ -62,6 +62,15 @@ class QuizService {
 			url: `/quizzes/${quizId}/attempts`,
 		})
 
+	getManagedAttemptResult = async (
+		quizId: string,
+		attemptId: string
+	): PromiseResult<AttemptResult, AppError> =>
+		request<AttemptResult>({
+			method: "GET",
+			url: `/quizzes/${quizId}/attempts/${attemptId}/result`,
+		})
+
 	getMyAttemptResult = async (
 		quizId: string
 	): PromiseResult<AttemptResult, AppError> =>

@@ -124,6 +124,10 @@ impl AttemptService {
             return Err(AttemptError::QuestionNotInAttempt.into());
         };
 
+        if matches!(quiz.kind, QuizKind::Certainly) && command.certainty_level.is_none() {
+            return Err(AttemptError::CertaintyLevelRequired.into());
+        }
+
         let is_invalid_answer = match usize::try_from(command.answer_index) {
             Ok(answer_index) => answer_index >= question.options.len(),
             Err(_) => true,
@@ -260,6 +264,57 @@ impl AttemptService {
             .await?;
 
         self.attempts.list_for_quiz(quiz_id).await
+    }
+
+    pub async fn get_result_for_managed_attempt(
+        &self,
+        current_user: &User,
+        quiz_id: &Uuid,
+        attempt_id: &Uuid,
+    ) -> AppResult<AttemptResultView> {
+        let quiz = self
+            .quiz_policy
+            .require_managed_quiz(current_user, quiz_id)
+            .await?;
+
+        let Some(attempt) = self.attempts.find_by_id(attempt_id).await? else {
+            return Err(AttemptError::NotFound(attempt_id.to_string()).into());
+        };
+
+        if attempt.quiz_id != *quiz_id {
+            return Err(AttemptError::NotFound(attempt_id.to_string()).into());
+        }
+
+        if attempt.submitted_at.is_none() {
+            return Err(AttemptError::NotSubmitted.into());
+        }
+
+        if attempt.results_released_at.is_none() {
+            return Err(AttemptError::ResultNotAvailable.into());
+        }
+
+        let answers = self.attempts.list_answers(&attempt.id).await?;
+        let evaluation = self.evaluate_attempt(&quiz, &attempt, &answers);
+
+        let evaluated_attempt = if attempt.grade.is_none()
+            || attempt.score_points.is_none()
+            || attempt.score_points_max.is_none()
+            || attempt.evaluated_at.is_none()
+        {
+            self.attempts
+                .evaluate(
+                    &attempt.id,
+                    evaluation.score_points,
+                    evaluation.score_points_max,
+                    evaluation.grade,
+                    attempt.evaluated_by,
+                )
+                .await?
+        } else {
+            attempt
+        };
+
+        Ok(self.build_result_view(&quiz, &evaluated_attempt, &evaluation))
     }
 
     pub async fn get_result_for_student(
@@ -494,6 +549,12 @@ impl AttemptService {
                 .iter()
                 .find(|question| question.id == *question_id)
             else {
+                tracing::error!(
+                    quiz_id = %quiz.id,
+                    attempt_id = %attempt.id,
+                    question_id = %question_id,
+                    "Question from attempt order is missing in quiz payload"
+                );
                 continue;
             };
 

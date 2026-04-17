@@ -33,10 +33,10 @@
 				></pre>
 
 			<p class="mt-3 text-sm text-zinc-700">
-				`answer` es el indice de `options`. Si `images` contiene URLs, las imagenes
-				deben renderizarse en fila bajo el texto de la pregunta. Puedes incluir HTML
-				basico en `question` y `options`, y ecuaciones LaTeX inline usando
-				`\\(...\\)`.
+				`answer` es el indice base 0 de `options` (0 = primera alternativa, 1 =
+				segunda, etc.). Si `images` contiene URLs, las imagenes deben renderizarse en
+				fila bajo el texto de la pregunta. Puedes incluir HTML basico en `question` y
+				`options`, y ecuaciones LaTeX inline usando `\\(...\\)`.
 			</p>
 		</div>
 	</div>
