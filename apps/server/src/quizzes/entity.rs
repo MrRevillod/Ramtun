@@ -1,7 +1,25 @@
+use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 use uuid::Uuid;
+
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
+pub struct Quiz {
+    #[builder(default)]
+    pub id: Uuid,
+    pub owner_id: Uuid,
+    pub title: String,
+    pub kind: QuizKind,
+    pub join_code: String,
+    pub questions: Vec<QuizQuestion>,
+    pub certainly_table: Option<CertainlyTable>,
+    pub start_time: DateTime<Utc>,
+    pub attempt_duration_minutes: i32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub closed_at: Option<DateTime<Utc>>,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "quiz_kind")]
@@ -33,22 +51,6 @@ pub struct QuizQuestion {
     pub options: Vec<String>,
     pub answer: i16,
     pub images: Vec<String>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-pub struct QuizEntity {
-    pub id: Uuid,
-    pub owner_id: Uuid,
-    pub title: String,
-    pub kind: QuizKind,
-    pub join_code: String,
-    pub questions: Vec<QuizQuestion>,
-    pub certainly_table: Option<CertainlyTable>,
-    pub start_time: DateTime<Utc>,
-    pub attempt_duration_minutes: i32,
-    pub closed_at: Option<DateTime<Utc>>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]

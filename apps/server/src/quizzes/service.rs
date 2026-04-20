@@ -1,10 +1,10 @@
-use crate::quizzes::{
-    AddCollaboratorRequest, CreateQuizRequest, JoinQuizPreviewView, QuizDetailView, QuizError,
-    QuizPolicy, QuizRepository, QuizSummaryView, UpdateQuizRequest,
-};
+use std::str::FromStr;
+
+use crate::quizzes::*;
 use crate::shared::AppResult;
 use crate::users::{User, UserRepository, UserRole};
 
+use chrono::{DateTime, Utc};
 use rand::RngExt;
 use rand::distr::Alphanumeric;
 use sword::prelude::*;
@@ -60,7 +60,7 @@ impl QuizService {
         };
 
         if quiz.closed_at.is_some() {
-            return Err(QuizError::Closed.into());
+            return Err(QuizError::Closed)?;
         }
 
         Ok(JoinQuizPreviewView::from(&quiz))
@@ -87,14 +87,33 @@ impl QuizService {
         owner_id: Uuid,
     ) -> AppResult<QuizDetailView> {
         self.policy.can_create_quiz(current_user)?;
+
         self.validate_collaborators(&input.collaborator_ids, &owner_id)
             .await?;
-        let collaborator_ids = input.collaborator_ids.clone();
+
         let join_code = self.generate_unique_join_code().await?;
-        let quiz = input.into_entity(owner_id, join_code);
+        let now = Utc::now();
+
+        let quiz = Quiz::builder()
+            .owner_id(owner_id)
+            .title(input.title)
+            .kind(QuizKind::from_str(&input.mode)?)
+            .join_code(join_code)
+            .start_time(
+                DateTime::parse_from_rfc3339(&input.start_time_utc)
+                    .map_err(|_| QuizError::InvalidStartTime)?
+                    .with_timezone(&Utc),
+            )
+            .created_at(now)
+            .updated_at(now)
+            .questions(input.questions.iter().map(QuizQuestion::from).collect())
+            .attempt_duration_minutes(input.attempt_duration_minutes)
+            .maybe_certainly_table(input.certainty_config.map(CertainlyTable::from))
+            .build();
+
         let quiz = self.repository.create(quiz).await?;
 
-        for collaborator_id in collaborator_ids {
+        for collaborator_id in input.collaborator_ids {
             if collaborator_id == owner_id {
                 continue;
             }
@@ -117,13 +136,34 @@ impl QuizService {
             .policy
             .require_managed_quiz(current_user, quiz_id)
             .await?;
+
         self.policy.can_update_quiz(current_user, &quiz).await?;
 
         if self.repository.has_attempts(quiz_id).await? {
             return Err(QuizError::LockedForAttempts.into());
         }
 
-        input.apply_to_entity(&mut quiz);
+        if let Some(start_time_utc) = input.start_time_utc {
+            quiz.start_time = DateTime::parse_from_rfc3339(&start_time_utc)
+                .map_err(|_| QuizError::InvalidStartTime)?
+                .with_timezone(&Utc);
+        }
+
+        if let Some(title) = input.title {
+            quiz.title = title;
+        }
+
+        if let Some(attempt_duration_minutes) = input.attempt_duration_minutes {
+            quiz.attempt_duration_minutes = attempt_duration_minutes;
+        }
+
+        if let Some(certainly_config) = input.certainty_config {
+            quiz.certainly_table = Some(CertainlyTable::from(certainly_config));
+        }
+
+        if let Some(questions) = input.questions {
+            quiz.questions = questions.iter().map(QuizQuestion::from).collect();
+        }
 
         let quiz = self.repository.update(&quiz).await?;
 

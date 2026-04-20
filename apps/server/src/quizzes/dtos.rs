@@ -1,4 +1,5 @@
-use crate::quizzes::{CertainlyLevel, CertainlyTable, QuizEntity, QuizKind, QuizQuestion};
+use crate::quizzes::*;
+use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -15,14 +16,18 @@ pub struct CreateQuizRequest {
         message = "Title must be between 1 and 100 characters"
     ))]
     pub title: String,
+
     pub mode: String,
     pub start_time_utc: String,
+    pub collaborator_ids: Vec<Uuid>,
+
     #[validate(range(
         min = 1,
         max = 240,
         message = "Duration must be between 1 and 240 minutes"
     ))]
     pub attempt_duration_minutes: i32,
+
     #[validate(length(
         min = 1,
         max = 100,
@@ -30,7 +35,7 @@ pub struct CreateQuizRequest {
     ))]
     #[validate(nested)]
     pub questions: Vec<CreateQuizQuestionRequest>,
-    pub collaborator_ids: Vec<Uuid>,
+
     #[validate(nested)]
     pub certainty_config: Option<CertainlyTableRequest>,
 }
@@ -44,21 +49,24 @@ pub struct UpdateQuizRequest {
         max = 100,
         message = "Title must be between 1 and 100 characters"
     ))]
-    pub title: String,
-    pub start_time_utc: String,
+    pub title: Option<String>,
+    pub start_time_utc: Option<String>,
+
     #[validate(range(
         min = 1,
         max = 240,
         message = "Duration must be between 1 and 240 minutes"
     ))]
-    pub attempt_duration_minutes: i32,
+    pub attempt_duration_minutes: Option<i32>,
+
     #[validate(length(
         min = 1,
         max = 100,
         message = "There must be at least 1 question and at most 100 questions"
     ))]
     #[validate(nested)]
-    pub questions: Vec<UpdateQuizQuestionRequest>,
+    pub questions: Option<Vec<UpdateQuizQuestionRequest>>,
+
     #[validate(nested)]
     pub certainty_config: Option<CertainlyTableRequest>,
 }
@@ -93,14 +101,17 @@ pub struct CertainlyLevelRequest {
 #[validate(schema(function = "validate_answer_index", skip_on_field_errors = false))]
 pub struct CreateQuizQuestionRequest {
     pub answer: usize,
+
     #[validate(length(
         min = 1,
         max = 1000,
         message = "Question must be between 1 and 1000 characters"
     ))]
     pub question: String,
+
     #[validate(length(min = 2, max = 5, message = "There must be between 2 and 5 options"))]
     pub options: Vec<String>,
+
     #[validate(length(max = 5, message = "There can be at most 5 images per question"))]
     pub images: Vec<String>,
 }
@@ -145,7 +156,11 @@ fn validate_create_schema(request: &CreateQuizRequest) -> Result<(), ValidationE
 }
 
 fn validate_update_schema(request: &UpdateQuizRequest) -> Result<(), ValidationError> {
-    validate_start_time(&request.start_time_utc)
+    if let Some(time) = &request.start_time_utc {
+        validate_start_time(time)?
+    }
+
+    Ok(())
 }
 
 fn validate_start_time(start_time_utc: &str) -> Result<(), ValidationError> {
@@ -161,6 +176,7 @@ fn validate_start_time(start_time_utc: &str) -> Result<(), ValidationError> {
 
     let mut err = ValidationError::new("invalid_start_time_format");
     err.message = Some("startTimeUtc must be a valid RFC3339 datetime string".into());
+
     Err(err)
 }
 
@@ -193,15 +209,15 @@ fn validate_answer_index(question: &CreateQuizQuestionRequest) -> Result<(), Val
 
     let mut err = ValidationError::new("invalid_answer_index");
     err.message = Some("Answer must be a valid index of options".into());
+
     Err(err)
 }
 
-fn validate_question_id_and_answer(
-    question: &UpdateQuizQuestionRequest,
-) -> Result<(), ValidationError> {
-    if question.answer >= question.options.len() {
+fn validate_question_id_and_answer(q: &UpdateQuizQuestionRequest) -> Result<(), ValidationError> {
+    if q.answer >= q.options.len() {
         let mut err = ValidationError::new("invalid_answer_index");
         err.message = Some("Answer must be a valid index of options".into());
+
         return Err(err);
     }
 
@@ -227,61 +243,38 @@ impl From<CertainlyLevelRequest> for CertainlyLevel {
     }
 }
 
-impl CreateQuizRequest {
-    pub fn into_entity(self, owner_id: Uuid, join_code: String) -> QuizEntity {
-        let kind = match self.mode.as_str() {
-            "certainty" => QuizKind::Certainly,
-            _ => QuizKind::Traditional,
-        };
+impl FromStr for QuizKind {
+    type Err = QuizError;
 
-        QuizEntity {
-            id: Uuid::new_v4(),
-            owner_id,
-            title: self.title,
-            kind,
-            join_code,
-            questions: self
-                .questions
-                .into_iter()
-                .map(|question| QuizQuestion {
-                    id: Uuid::new_v4(),
-                    question: question.question,
-                    options: question.options,
-                    answer: question.answer as i16,
-                    images: question.images,
-                })
-                .collect(),
-            certainly_table: self.certainty_config.map(CertainlyTable::from),
-            start_time: DateTime::parse_from_rfc3339(&self.start_time_utc)
-                .unwrap()
-                .with_timezone(&Utc),
-            attempt_duration_minutes: self.attempt_duration_minutes,
-            closed_at: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "traditional" => Ok(QuizKind::Traditional),
+            "certainty" => Ok(QuizKind::Certainly),
+            _ => Err(QuizError::InvalidQuizMode),
         }
     }
 }
 
-impl UpdateQuizRequest {
-    pub fn apply_to_entity(self, quiz: &mut QuizEntity) {
-        quiz.title = self.title;
-        quiz.questions = self
-            .questions
-            .into_iter()
-            .map(|question| QuizQuestion {
-                id: question.question_id.unwrap_or_else(Uuid::new_v4),
-                question: question.question,
-                options: question.options,
-                answer: question.answer as i16,
-                images: question.images,
-            })
-            .collect();
-        quiz.certainly_table = self.certainty_config.map(CertainlyTable::from);
-        quiz.start_time = DateTime::parse_from_rfc3339(&self.start_time_utc)
-            .unwrap()
-            .with_timezone(&Utc);
-        quiz.attempt_duration_minutes = self.attempt_duration_minutes;
-        quiz.updated_at = Utc::now();
+impl From<&CreateQuizQuestionRequest> for QuizQuestion {
+    fn from(value: &CreateQuizQuestionRequest) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            question: value.question.clone(),
+            options: value.options.clone(),
+            answer: value.answer as i16,
+            images: value.images.clone(),
+        }
+    }
+}
+
+impl From<&UpdateQuizQuestionRequest> for QuizQuestion {
+    fn from(value: &UpdateQuizQuestionRequest) -> Self {
+        Self {
+            id: value.question_id.unwrap_or(Uuid::new_v4()),
+            question: value.question.clone(),
+            options: value.options.clone(),
+            answer: value.answer as i16,
+            images: value.images.clone(),
+        }
     }
 }

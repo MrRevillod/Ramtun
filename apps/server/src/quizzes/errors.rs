@@ -54,4 +54,12 @@ pub enum QuizError {
     )]
     #[error("Quiz has attempts and is locked")]
     LockedForAttempts,
+
+    #[http(code = 400, message = "The provided quiz mode is invalid.")]
+    #[error("Invalid quiz mode")]
+    InvalidQuizMode,
+
+    #[http(code = 400, message = "The provided start time is invalid.")]
+    #[error("Invalid start time")]
+    InvalidStartTime,
 }

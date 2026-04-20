@@ -439,7 +439,7 @@ impl AttemptService {
         Ok(self.build_result_view(&quiz, &evaluated_attempt, &evaluation))
     }
 
-    async fn require_quiz(&self, quiz_id: &Uuid) -> AppResult<QuizEntity> {
+    async fn require_quiz(&self, quiz_id: &Uuid) -> AppResult<Quiz> {
         let Some(quiz) = self.quizzes.find_by_id(quiz_id).await? else {
             return Err(AttemptError::NotFound(quiz_id.to_string()).into());
         };
@@ -463,7 +463,7 @@ impl AttemptService {
 
     fn build_snapshot(
         &self,
-        quiz: &QuizEntity,
+        quiz: &Quiz,
         attempt: AttemptEntity,
         answers: Vec<AttemptAnswerEntity>,
     ) -> AttemptSnapshotView {
@@ -507,7 +507,7 @@ impl AttemptService {
 
     fn evaluate_attempt(
         &self,
-        quiz: &QuizEntity,
+        quiz: &Quiz,
         attempt: &AttemptEntity,
         answers: &[AttemptAnswerEntity],
     ) -> AttemptEvaluation {
@@ -635,7 +635,7 @@ impl AttemptService {
 
     fn build_result_view(
         &self,
-        quiz: &QuizEntity,
+        quiz: &Quiz,
         attempt: &AttemptEntity,
         evaluation: &AttemptEvaluation,
     ) -> AttemptResultView {
@@ -677,7 +677,7 @@ fn round_two_decimals(value: f64) -> f64 {
     (value * 100.0).round() / 100.0
 }
 
-fn shuffled_question_order(quiz: &QuizEntity) -> Vec<Uuid> {
+fn shuffled_question_order(quiz: &Quiz) -> Vec<Uuid> {
     let mut question_order = quiz
         .questions
         .iter()

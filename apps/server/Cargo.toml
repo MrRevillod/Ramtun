@@ -37,3 +37,4 @@ ldap3 = { version = "0.12.1", features = ["tls"] }
 
 sha2 = "0.10.9"
 rand = "0.10.0"
+bon = "3.9.1"

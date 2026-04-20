@@ -1,4 +1,4 @@
-use crate::quizzes::{CertainlyTable, QuizEntity, QuizKind, QuizQuestion};
+use crate::quizzes::{CertainlyTable, Quiz, QuizKind, QuizQuestion};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -70,8 +70,8 @@ pub struct QuizParticipantView {
     pub closed_at: Option<DateTime<Utc>>,
 }
 
-impl From<QuizEntity> for QuizSummaryView {
-    fn from(quiz: QuizEntity) -> Self {
+impl From<Quiz> for QuizSummaryView {
+    fn from(quiz: Quiz) -> Self {
         Self {
             id: quiz.id,
             title: quiz.title,
@@ -86,8 +86,8 @@ impl From<QuizEntity> for QuizSummaryView {
     }
 }
 
-impl From<QuizEntity> for QuizDetailView {
-    fn from(quiz: QuizEntity) -> Self {
+impl From<Quiz> for QuizDetailView {
+    fn from(quiz: Quiz) -> Self {
         Self {
             id: quiz.id,
             owner_id: quiz.owner_id,
@@ -105,8 +105,8 @@ impl From<QuizEntity> for QuizDetailView {
     }
 }
 
-impl From<&QuizEntity> for JoinQuizPreviewView {
-    fn from(quiz: &QuizEntity) -> Self {
+impl From<&Quiz> for JoinQuizPreviewView {
+    fn from(quiz: &Quiz) -> Self {
         Self {
             id: quiz.id,
             title: quiz.title.clone(),
@@ -131,8 +131,8 @@ impl From<QuizQuestion> for QuizQuestionView {
     }
 }
 
-impl From<QuizEntity> for QuizParticipantView {
-    fn from(quiz: QuizEntity) -> Self {
+impl From<Quiz> for QuizParticipantView {
+    fn from(quiz: Quiz) -> Self {
         Self {
             id: quiz.id,
             title: quiz.title,

@@ -1,4 +1,4 @@
-use crate::quizzes::{QuizCollaboratorEntity, QuizEntity};
+use crate::quizzes::{Quiz, QuizCollaboratorEntity};
 use crate::shared::{AppResult, Database};
 use crate::users::User;
 
@@ -12,8 +12,8 @@ pub struct QuizRepository {
 }
 
 impl QuizRepository {
-    pub async fn find_by_id(&self, id: &Uuid) -> AppResult<Option<QuizEntity>> {
-        let quiz = sqlx::query_as::<_, QuizEntity>("SELECT * FROM quizzes WHERE id = $1")
+    pub async fn find_by_id(&self, id: &Uuid) -> AppResult<Option<Quiz>> {
+        let quiz = sqlx::query_as::<_, Quiz>("SELECT * FROM quizzes WHERE id = $1")
             .bind(id)
             .fetch_optional(self.db.get_pool())
             .await?;
@@ -21,8 +21,8 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn find_by_code(&self, code: &str) -> AppResult<Option<QuizEntity>> {
-        let quiz = sqlx::query_as::<_, QuizEntity>("SELECT * FROM quizzes WHERE join_code = $1")
+    pub async fn find_by_code(&self, code: &str) -> AppResult<Option<Quiz>> {
+        let quiz = sqlx::query_as::<_, Quiz>("SELECT * FROM quizzes WHERE join_code = $1")
             .bind(code)
             .fetch_optional(self.db.get_pool())
             .await?;
@@ -30,8 +30,8 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn list_managed_by_user(&self, user_id: &Uuid) -> AppResult<Vec<QuizEntity>> {
-        let quizzes = sqlx::query_as::<_, QuizEntity>(
+    pub async fn list_managed_by_user(&self, user_id: &Uuid) -> AppResult<Vec<Quiz>> {
+        let quizzes = sqlx::query_as::<_, Quiz>(
             "SELECT q.*
              FROM quizzes q
              WHERE q.owner_id = $1
@@ -49,8 +49,8 @@ impl QuizRepository {
         Ok(quizzes)
     }
 
-    pub async fn create(&self, quiz: QuizEntity) -> AppResult<QuizEntity> {
-        let quiz = sqlx::query_as::<_, QuizEntity>(
+    pub async fn create(&self, quiz: Quiz) -> AppResult<Quiz> {
+        let quiz = sqlx::query_as::<_, Quiz>(
             "INSERT INTO quizzes (
                 id,
                 owner_id,
@@ -86,8 +86,8 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn update(&self, quiz: &QuizEntity) -> AppResult<QuizEntity> {
-        let updated = sqlx::query_as::<_, QuizEntity>(
+    pub async fn update(&self, quiz: &Quiz) -> AppResult<Quiz> {
+        let updated = sqlx::query_as::<_, Quiz>(
             "UPDATE quizzes
              SET title = $2,
                   questions = $3,
@@ -191,10 +191,10 @@ impl QuizRepository {
         Ok(users)
     }
 
-    pub async fn close_quiz(&self, quiz_id: &Uuid) -> AppResult<QuizEntity> {
+    pub async fn close_quiz(&self, quiz_id: &Uuid) -> AppResult<Quiz> {
         let now = Utc::now();
 
-        let quiz = sqlx::query_as::<_, QuizEntity>(
+        let quiz = sqlx::query_as::<_, Quiz>(
             "UPDATE quizzes
              SET closed_at = COALESCE(closed_at, $2),
                  updated_at = $2
