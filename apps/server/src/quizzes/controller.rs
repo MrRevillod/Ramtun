@@ -28,10 +28,9 @@ impl QuizController {
         let current_user = req
             .extensions
             .get::<User>()
-            .cloned()
             .ok_or_else(JsonResponse::Unauthorized)?;
 
-        let quiz = self.service.get_detail(&current_user, &quiz_id).await?;
+        let quiz = self.service.get_detail(current_user, &quiz_id).await?;
 
         Ok(JsonResponse::Ok().data(quiz))
     }
@@ -58,14 +57,13 @@ impl QuizController {
         let current_user = req
             .extensions
             .get::<User>()
-            .cloned()
             .ok_or_else(JsonResponse::Unauthorized)?;
 
         let input = req.body_validator::<CreateQuizRequest>()?;
 
         let quiz = self
             .service
-            .create(&current_user, input, current_user.id)
+            .create(current_user, input, current_user.id)
             .await?;
 
         Ok(JsonResponse::Created().data(quiz))
@@ -82,11 +80,10 @@ impl QuizController {
         let current_user = req
             .extensions
             .get::<User>()
-            .cloned()
             .ok_or_else(JsonResponse::Unauthorized)?;
 
         let input = req.body_validator::<UpdateQuizRequest>()?;
-        let quiz = self.service.update(&current_user, &quiz_id, input).await?;
+        let quiz = self.service.update(current_user, &quiz_id, input).await?;
 
         Ok(JsonResponse::Ok().data(quiz))
     }
@@ -102,10 +99,9 @@ impl QuizController {
         let current_user = req
             .extensions
             .get::<User>()
-            .cloned()
             .ok_or_else(JsonResponse::Unauthorized)?;
 
-        self.service.delete_quiz(&current_user, &quiz_id).await?;
+        self.service.delete_quiz(current_user, &quiz_id).await?;
 
         Ok(JsonResponse::Ok().message("Quiz deleted successfully"))
     }

@@ -336,71 +336,73 @@
 			</div>
 		</div>
 
-		<article class="panel-muted min-h-0 flex-1 overflow-auto p-4 sm:p-5">
-			<div class="m-0 text-lg text-black sm:text-xl">
-				<QuestionRichText text={currentQuestion.question} />
-			</div>
-
-			{#if currentQuestion.images.length > 0}
-				<div class="mt-4 grid gap-3 sm:grid-cols-2">
-					{#each currentQuestion.images as imageUrl (imageUrl)}
-						<img
-							class="w-full rounded-sm border border-zinc-300 bg-white"
-							src={imageUrl}
-							alt="Imagen de apoyo"
-						/>
-					{/each}
+		{#key currentQuestion.questionId}
+			<article class="panel-muted min-h-0 flex-1 overflow-auto p-4 sm:p-5">
+				<div class="m-0 text-lg text-black sm:text-xl">
+					<QuestionRichText text={currentQuestion.question} />
 				</div>
-			{/if}
 
-			<div class="mt-5 grid gap-2.5">
-				{#each currentQuestion.options as option, optionIndex (`${optionIndex}:${option}`)}
-					<button
-						class={`rounded-sm border px-4 py-3 text-left text-base leading-relaxed transition ${
-							selectedAnswer === optionIndex
-								? "border-black bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.08)]"
-								: "border-zinc-300 bg-white text-black hover:border-zinc-400 hover:bg-zinc-50"
-						}`}
-						type="button"
-						onclick={() => handleOptionSelect(optionIndex)}
-						disabled={isExpired || submitMutation.isPending || submissionStarted}
-					>
-						<QuestionRichText text={option} />
-					</button>
-				{/each}
-			</div>
-
-			{#if isCertaintyQuiz}
-				<div class="mt-5 grid gap-3 border-t border-zinc-200 pt-5">
-					<div class="space-y-1">
-						<p class="m-0 text-sm font-medium text-black">Nivel de certeza</p>
-						<p class="m-0 text-sm text-zinc-600">
-							Indica cuanta seguridad tienes en la alternativa seleccionada.
-						</p>
-					</div>
-					<div class="grid gap-2 sm:grid-cols-3">
-						{#each [{ level: "low", label: "Baja" }, { level: "medium", label: "Media" }, { level: "high", label: "Alta" }] as item (item.level)}
-							<button
-								class={`rounded-sm border px-4 py-3 text-left transition ${
-									selectedCertainty === item.level
-										? "border-black bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.08)]"
-										: "border-zinc-300 bg-white text-black hover:border-zinc-400 hover:bg-zinc-50"
-								}`}
-								type="button"
-								onclick={() =>
-									handleCertaintySelect(item.level as AttemptCertaintyLevel)}
-								disabled={selectedAnswer === undefined ||
-									isExpired ||
-									submitMutation.isPending ||
-									submissionStarted}
-							>
-								<span class="block text-sm font-medium">{item.label}</span>
-							</button>
+				{#if currentQuestion.images.length > 0}
+					<div class="mt-4 grid gap-3 sm:grid-cols-2">
+						{#each currentQuestion.images as imageUrl (imageUrl)}
+							<img
+								class="w-full rounded-sm border border-zinc-300 bg-white"
+								src={imageUrl}
+								alt="Imagen de apoyo"
+							/>
 						{/each}
 					</div>
+				{/if}
+
+				<div class="mt-5 grid gap-2.5">
+					{#each currentQuestion.options as option, optionIndex (`${optionIndex}:${option}`)}
+						<button
+							class={`rounded-sm border px-4 py-3 text-left text-base leading-relaxed transition ${
+								selectedAnswer === optionIndex
+									? "border-black bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.08)]"
+									: "border-zinc-300 bg-white text-black hover:border-zinc-400 hover:bg-zinc-50"
+							}`}
+							type="button"
+							onclick={() => handleOptionSelect(optionIndex)}
+							disabled={isExpired || submitMutation.isPending || submissionStarted}
+						>
+							<QuestionRichText text={option} />
+						</button>
+					{/each}
 				</div>
-			{/if}
-		</article>
+
+				{#if isCertaintyQuiz}
+					<div class="mt-5 grid gap-3 border-t border-zinc-200 pt-5">
+						<div class="space-y-1">
+							<p class="m-0 text-sm font-medium text-black">Nivel de certeza</p>
+							<p class="m-0 text-sm text-zinc-600">
+								Indica cuanta seguridad tienes en la alternativa seleccionada.
+							</p>
+						</div>
+						<div class="grid gap-2 sm:grid-cols-3">
+							{#each [{ level: "low", label: "Baja" }, { level: "medium", label: "Media" }, { level: "high", label: "Alta" }] as item (item.level)}
+								<button
+									class={`rounded-sm border px-4 py-3 text-left transition ${
+										selectedCertainty === item.level
+											? "border-black bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.08)]"
+											: "border-zinc-300 bg-white text-black hover:border-zinc-400 hover:bg-zinc-50"
+									}`}
+									type="button"
+									onclick={() =>
+										handleCertaintySelect(item.level as AttemptCertaintyLevel)}
+									disabled={selectedAnswer === undefined ||
+										isExpired ||
+										submitMutation.isPending ||
+										submissionStarted}
+								>
+									<span class="block text-sm font-medium">{item.label}</span>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</article>
+		{/key}
 
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<p class="m-0 text-sm text-zinc-600">

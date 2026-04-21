@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
 pub struct Quiz {
-    #[builder(default)]
+    #[builder(default = Uuid::new_v4())]
     pub id: Uuid,
     pub owner_id: Uuid,
     pub title: String,
