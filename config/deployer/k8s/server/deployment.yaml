@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/mrrevillod/ramtun-server:sha-9fea634
+          image: ghcr.io/mrrevillod/ramtun-server:sha-a9d23d7
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

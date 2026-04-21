@@ -7,6 +7,7 @@ import { apiClient } from "$lib/shared/http/http"
 import type { ApiRequestConfig } from "$lib/shared/http/http"
 
 let refreshRequest: Promise<string | null> | null = null
+let teardownInterceptors: (() => void) | null = null
 
 const refreshAccessToken = async (): Promise<string | null> => {
 	if (!refreshRequest) {
@@ -47,6 +48,10 @@ const handleUnauthorized = async (originalConfig: ApiRequestConfig) => {
 }
 
 export const setupApiInterceptors = () => {
+	if (teardownInterceptors) {
+		return teardownInterceptors
+	}
+
 	const requestInterceptorId = apiClient.interceptors.request.use(config => {
 		const requestConfig = config as ApiRequestConfig
 
@@ -91,8 +96,11 @@ export const setupApiInterceptors = () => {
 		}
 	)
 
-	return () => {
+	teardownInterceptors = () => {
 		apiClient.interceptors.request.eject(requestInterceptorId)
 		apiClient.interceptors.response.eject(responseInterceptorId)
+		teardownInterceptors = null
 	}
+
+	return teardownInterceptors
 }

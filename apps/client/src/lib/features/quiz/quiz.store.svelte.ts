@@ -18,10 +18,26 @@ type AttemptSubmittedSummary = {
 	submittedAtLabel: string
 }
 
+type AttemptQuestionPosition = {
+	attemptId: string | null
+	questionIndex: number
+}
+
 class QuizUiStore {
 	#activeAttempt = new PersistedState<AttemptSnapshot | null>(
 		"quiz-active-attempt",
 		null,
+		{
+			storage: "local",
+			syncTabs: false,
+		}
+	)
+	#attemptQuestionPosition = new PersistedState<AttemptQuestionPosition>(
+		"quiz-active-question-position",
+		{
+			attemptId: null,
+			questionIndex: 0,
+		},
 		{
 			storage: "local",
 			syncTabs: false,
@@ -39,7 +55,51 @@ class QuizUiStore {
 	attemptResult = $state<AttemptResult | null>(null)
 	managedAttemptsPanel = $state<ManagedQuizAttemptsPanel | null>(null)
 	managedAttempts = $state<ManagedAttemptSummary[]>([])
-	currentQuestionIndex = $state(0)
+	currentQuestionIndex = $state(this.#attemptQuestionPosition.current.questionIndex)
+
+	constructor() {
+		this.#restoreCurrentQuestionIndex()
+	}
+
+	#clearPersistedQuestionPosition = () => {
+		this.#attemptQuestionPosition.current = {
+			attemptId: null,
+			questionIndex: 0,
+		}
+	}
+
+	#setCurrentQuestionIndex = (index: number) => {
+		if (!this.joinedQuiz || !this.attemptId) {
+			this.currentQuestionIndex = 0
+			this.#clearPersistedQuestionPosition()
+			return
+		}
+
+		const maxIndex = this.joinedQuiz.questions.length - 1
+		const normalizedIndex = Math.min(Math.max(index, 0), Math.max(maxIndex, 0))
+
+		this.currentQuestionIndex = normalizedIndex
+		this.#attemptQuestionPosition.current = {
+			attemptId: this.attemptId,
+			questionIndex: normalizedIndex,
+		}
+	}
+
+	#restoreCurrentQuestionIndex = () => {
+		if (!this.joinedQuiz || !this.attemptId) {
+			this.currentQuestionIndex = 0
+			return
+		}
+
+		const persisted = this.#attemptQuestionPosition.current
+
+		if (persisted.attemptId !== this.attemptId) {
+			this.#setCurrentQuestionIndex(0)
+			return
+		}
+
+		this.#setCurrentQuestionIndex(persisted.questionIndex)
+	}
 
 	get activeAttempt() {
 		return this.#activeAttempt.current
@@ -103,7 +163,14 @@ class QuizUiStore {
 		this.managedAttemptsPanel = null
 		this.managedAttempts = []
 		this.joinPreview = null
-		this.currentQuestionIndex = 0
+
+		const persistedPosition = this.#attemptQuestionPosition.current
+		const initialIndex =
+			persistedPosition.attemptId === attempt.attemptId
+				? persistedPosition.questionIndex
+				: 0
+
+		this.#setCurrentQuestionIndex(initialIndex)
 		this.activePanel = "join"
 	}
 
@@ -113,6 +180,7 @@ class QuizUiStore {
 		this.managedAttemptsPanel = null
 		this.managedAttempts = []
 		this.joinPreview = null
+		this.#restoreCurrentQuestionIndex()
 		this.activePanel = "join"
 	}
 
@@ -121,6 +189,7 @@ class QuizUiStore {
 		this.joinPreview = null
 		this.attemptResult = result
 		this.currentQuestionIndex = 0
+		this.#clearPersistedQuestionPosition()
 		this.activePanel = "join"
 	}
 
@@ -134,6 +203,7 @@ class QuizUiStore {
 
 		this.joinPreview = null
 		this.currentQuestionIndex = 0
+		this.#clearPersistedQuestionPosition()
 		this.activePanel = "join"
 	}
 
@@ -143,6 +213,7 @@ class QuizUiStore {
 		this.attemptResult = null
 		this.managedAttemptsPanel = { quizId, title }
 		this.managedAttempts = []
+		this.#clearPersistedQuestionPosition()
 		this.activePanel = "mine"
 	}
 
@@ -163,6 +234,7 @@ class QuizUiStore {
 		this.managedAttempts = []
 		this.participantJoinCode = null
 		this.currentQuestionIndex = 0
+		this.#clearPersistedQuestionPosition()
 		this.activePanel = "join"
 	}
 
@@ -172,6 +244,7 @@ class QuizUiStore {
 		this.managedAttemptsPanel = null
 		this.managedAttempts = []
 		this.participantJoinCode = null
+		this.#clearPersistedQuestionPosition()
 	}
 
 	openAttemptSubmittedModal = (summary: AttemptSubmittedSummary) => {
@@ -196,6 +269,7 @@ class QuizUiStore {
 		this.attemptSubmittedSummary = null
 		this.isAttemptSubmittedModalOpen = false
 		this.currentQuestionIndex = 0
+		this.#clearPersistedQuestionPosition()
 		this.activePanel = "join"
 	}
 
@@ -224,8 +298,7 @@ class QuizUiStore {
 			return
 		}
 
-		const maxIndex = this.joinedQuiz.questions.length - 1
-		this.currentQuestionIndex = Math.min(Math.max(index, 0), maxIndex)
+		this.#setCurrentQuestionIndex(index)
 	}
 }
 

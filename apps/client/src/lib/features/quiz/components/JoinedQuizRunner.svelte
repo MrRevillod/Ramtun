@@ -148,9 +148,16 @@
 			return
 		}
 
-		const { value, error } = await quizService.getMyActiveAttempt(
+		let { value, error } = await quizService.getMyActiveAttempt(
 			activeAttempt.quiz.id
 		)
+
+		if (error?.status === 401 && authStore.isAuthenticated()) {
+			await new Promise(resolve => window.setTimeout(resolve, 250))
+			const retryResult = await quizService.getMyActiveAttempt(activeAttempt.quiz.id)
+			value = retryResult.value
+			error = retryResult.error
+		}
 
 		if (error) {
 			if (isTerminalAttemptError(error)) {
@@ -159,7 +166,12 @@
 			}
 
 			toast.error(toUserMessage(error))
-			closeAttemptSilently()
+			isRevalidatingAttempt = false
+			return
+		}
+
+		if (!value) {
+			isRevalidatingAttempt = false
 			return
 		}
 

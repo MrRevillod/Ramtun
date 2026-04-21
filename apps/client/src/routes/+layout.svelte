@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte"
 	import { QueryClientProvider } from "@tanstack/svelte-query"
 	import { Toaster } from "svelte-sonner"
 	import "./layout.css"
@@ -8,7 +7,7 @@
 
 	let { children } = $props()
 
-	onMount(() => setupApiInterceptors())
+	setupApiInterceptors()
 </script>
 
 <QueryClientProvider client={queryClient}>
