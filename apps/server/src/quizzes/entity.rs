@@ -1,14 +1,20 @@
+use crate::{
+    shared::{Entity, Id},
+    users::UserId,
+};
 use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 use uuid::Uuid;
 
+pub type QuizId = Id<Quiz>;
+
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
 pub struct Quiz {
-    #[builder(default = Uuid::new_v4())]
-    pub id: Uuid,
-    pub owner_id: Uuid,
+    #[builder(default = QuizId::new())]
+    pub id: QuizId,
+    pub owner_id: UserId,
     pub title: String,
     pub kind: QuizKind,
     pub join_code: String,
@@ -20,6 +26,12 @@ pub struct Quiz {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub closed_at: Option<DateTime<Utc>>,
+}
+
+impl Entity for Quiz {
+    fn key_name() -> &'static str {
+        "quiz"
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]

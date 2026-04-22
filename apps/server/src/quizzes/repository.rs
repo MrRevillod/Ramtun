@@ -1,10 +1,9 @@
-use crate::quizzes::{Quiz, QuizCollaborator};
+use crate::quizzes::{Quiz, QuizCollaborator, QuizId};
 use crate::shared::{AppResult, Database};
-use crate::users::User;
+use crate::users::{User, UserId};
 
 use chrono::Utc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct QuizRepository {
@@ -12,7 +11,7 @@ pub struct QuizRepository {
 }
 
 impl QuizRepository {
-    pub async fn find_by_id(&self, id: &Uuid) -> AppResult<Option<Quiz>> {
+    pub async fn find_by_id(&self, id: &QuizId) -> AppResult<Option<Quiz>> {
         let quiz = sqlx::query_as::<_, Quiz>("SELECT * FROM quizzes WHERE id = $1")
             .bind(id)
             .fetch_optional(self.db.get_pool())
@@ -30,7 +29,7 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn list_managed_by_user(&self, user_id: &Uuid) -> AppResult<Vec<Quiz>> {
+    pub async fn list_managed_by_user(&self, user_id: &UserId) -> AppResult<Vec<Quiz>> {
         let quizzes = sqlx::query_as::<_, Quiz>(
             "SELECT q.*
              FROM quizzes q
@@ -117,7 +116,7 @@ impl QuizRepository {
         Ok(updated)
     }
 
-    pub async fn has_attempts(&self, quiz_id: &Uuid) -> AppResult<bool> {
+    pub async fn has_attempts(&self, quiz_id: &QuizId) -> AppResult<bool> {
         let has_attempts = sqlx::query_scalar::<_, bool>(
             "SELECT EXISTS(
                 SELECT 1
@@ -134,8 +133,8 @@ impl QuizRepository {
 
     pub async fn add_collaborator(
         &self,
-        quiz_id: &Uuid,
-        user_id: &Uuid,
+        quiz_id: &QuizId,
+        user_id: &UserId,
     ) -> AppResult<QuizCollaborator> {
         let collaborator = sqlx::query_as::<_, QuizCollaborator>(
             "INSERT INTO quiz_collaborators (quiz_id, user_id, created_at)
@@ -153,7 +152,7 @@ impl QuizRepository {
         Ok(collaborator)
     }
 
-    pub async fn remove_collaborator(&self, quiz_id: &Uuid, user_id: &Uuid) -> AppResult<bool> {
+    pub async fn remove_collaborator(&self, quiz_id: &QuizId, user_id: &UserId) -> AppResult<bool> {
         let result =
             sqlx::query("DELETE FROM quiz_collaborators WHERE quiz_id = $1 AND user_id = $2")
                 .bind(quiz_id)
@@ -164,7 +163,7 @@ impl QuizRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn is_collaborator(&self, quiz_id: &Uuid, user_id: &Uuid) -> AppResult<bool> {
+    pub async fn is_collaborator(&self, quiz_id: &QuizId, user_id: &UserId) -> AppResult<bool> {
         let exists = sqlx::query_scalar::<_, bool>(
             "SELECT EXISTS(
                 SELECT 1
@@ -180,7 +179,7 @@ impl QuizRepository {
         Ok(exists)
     }
 
-    pub async fn list_collaborator_users(&self, quiz_id: &Uuid) -> AppResult<Vec<User>> {
+    pub async fn list_collaborator_users(&self, quiz_id: &QuizId) -> AppResult<Vec<User>> {
         let users = sqlx::query_as::<_, User>(
             "SELECT u.*
              FROM users u
@@ -195,7 +194,7 @@ impl QuizRepository {
         Ok(users)
     }
 
-    pub async fn close_quiz(&self, quiz_id: &Uuid) -> AppResult<Quiz> {
+    pub async fn close_quiz(&self, quiz_id: &QuizId) -> AppResult<Quiz> {
         let now = Utc::now();
 
         let quiz = sqlx::query_as::<_, Quiz>(
@@ -213,7 +212,7 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn delete_by_id(&self, quiz_id: &Uuid) -> AppResult<bool> {
+    pub async fn delete_by_id(&self, quiz_id: &QuizId) -> AppResult<bool> {
         let result = sqlx::query("DELETE FROM quizzes WHERE id = $1")
             .bind(quiz_id)
             .execute(self.db.get_pool())

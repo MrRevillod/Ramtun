@@ -1,4 +1,4 @@
-use crate::attempts::{AttemptEntity, AttemptError};
+use crate::attempts::{Attempt, AttemptError};
 use crate::shared::AppResult;
 use crate::users::{User, UserRole};
 
@@ -14,40 +14,32 @@ impl AttemptPolicy {
             return Ok(());
         }
 
-        Err(AttemptError::Forbidden.into())
+        Err(AttemptError::Forbidden)?
     }
 
-    pub fn can_access_attempt(
-        &self,
-        current_user: &User,
-        attempt: &AttemptEntity,
-    ) -> AppResult<()> {
+    pub fn can_access_attempt(&self, current_user: &User, attempt: &Attempt) -> AppResult<()> {
         if attempt.student_id == current_user.id {
             return Ok(());
         }
 
-        Err(AttemptError::Forbidden.into())
+        Err(AttemptError::Forbidden)?
     }
 
-    pub fn can_submit_attempt(
-        &self,
-        current_user: &User,
-        attempt: &AttemptEntity,
-    ) -> AppResult<()> {
+    pub fn can_submit_attempt(&self, current_user: &User, attempt: &Attempt) -> AppResult<()> {
         self.can_access_attempt(current_user, attempt)?;
 
         if attempt.submitted_at.is_some() {
-            return Err(AttemptError::AlreadySubmitted.into());
+            return Err(AttemptError::AlreadySubmitted)?;
         }
 
         if Utc::now() > attempt.expires_at {
-            return Err(AttemptError::Expired.into());
+            return Err(AttemptError::Expired)?;
         }
 
         Ok(())
     }
 
-    pub fn can_save_answer(&self, current_user: &User, attempt: &AttemptEntity) -> AppResult<()> {
+    pub fn can_save_answer(&self, current_user: &User, attempt: &Attempt) -> AppResult<()> {
         self.can_submit_attempt(current_user, attempt)
     }
 }

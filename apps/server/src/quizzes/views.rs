@@ -1,4 +1,4 @@
-use crate::quizzes::{CertainlyTable, Quiz, QuizKind, QuizQuestion};
+use crate::{quizzes::*, users::UserId};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -7,8 +7,8 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuizSummaryView {
-    pub id: Uuid,
-    pub owner_id: Uuid,
+    pub id: QuizId,
+    pub owner_id: UserId,
     pub title: String,
     pub kind: QuizKind,
     pub join_code: String,
@@ -31,8 +31,8 @@ pub struct QuizQuestionView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuizDetailView {
-    pub id: Uuid,
-    pub owner_id: Uuid,
+    pub id: QuizId,
+    pub owner_id: UserId,
     pub title: String,
     pub kind: QuizKind,
     pub join_code: String,
@@ -48,7 +48,7 @@ pub struct QuizDetailView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinQuizPreviewView {
-    pub id: Uuid,
+    pub id: QuizId,
     pub title: String,
     pub kind: QuizKind,
     pub question_count: usize,
@@ -61,7 +61,7 @@ pub struct JoinQuizPreviewView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuizParticipantView {
-    pub id: Uuid,
+    pub id: QuizId,
     pub title: String,
     pub kind: QuizKind,
     pub questions: Vec<QuizQuestionView>,

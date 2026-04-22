@@ -3,14 +3,13 @@ mod ldap;
 use crate::{
     auth::*,
     shared::*,
-    users::{User, UserRepository},
+    users::{User, UserId, UserRepository},
 };
 
 use chrono::{Duration, Utc};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 pub use ldap::LdapClient;
 
@@ -35,7 +34,7 @@ impl AuthService {
             None => self.users.save(&incoming_user).await?,
         };
 
-        let session_id = Uuid::new_v4();
+        let session_id = SessionId::new();
         let access_token = self.generate_access_token(&session_id, &user.id)?;
         let refresh_token = self.generate_refresh_token(&session_id, &user.id)?;
         let now = Utc::now();
@@ -77,6 +76,7 @@ impl AuthService {
         if session.refresh_expires_at <= Utc::now() {
             session.revoked_at = Some(Utc::now());
             self.sessions.save(&session).await?;
+
             return Err(AppError::TokenNotFound);
         }
 
@@ -85,6 +85,7 @@ impl AuthService {
         if incoming_refresh_hash != session.refresh_token_hash {
             session.revoked_at = Some(Utc::now());
             self.sessions.save(&session).await?;
+
             return Err(AppError::InvalidToken);
         }
 
@@ -102,7 +103,7 @@ impl AuthService {
         })
     }
 
-    pub async fn logout(&self, session_id: &Uuid) -> AppResult<()> {
+    pub async fn logout(&self, session_id: &SessionId) -> AppResult<()> {
         if let Some(mut session) = self.sessions.find_active_by_id(session_id).await? {
             session.revoked_at = Some(Utc::now());
             self.sessions.save(&session).await?;
@@ -111,7 +112,7 @@ impl AuthService {
         Ok(())
     }
 
-    fn generate_access_token(&self, session_id: &Uuid, user_id: &Uuid) -> AppResult<String> {
+    fn generate_access_token(&self, session_id: &SessionId, user_id: &UserId) -> AppResult<String> {
         let claims = SessionClaims {
             session_id: *session_id,
             user_id: *user_id,
@@ -126,7 +127,11 @@ impl AuthService {
         Ok(token)
     }
 
-    fn generate_refresh_token(&self, session_id: &Uuid, user_id: &Uuid) -> AppResult<String> {
+    fn generate_refresh_token(
+        &self,
+        session_id: &SessionId,
+        user_id: &UserId,
+    ) -> AppResult<String> {
         let claims = SessionClaims {
             session_id: *session_id,
             user_id: *user_id,

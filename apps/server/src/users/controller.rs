@@ -1,11 +1,11 @@
-use crate::auth::{SessionCheck, SessionClaims};
+use crate::auth::SessionCheck;
 use crate::authz::{AuthzAction, AuthzGuard};
+use crate::shared::RequestExt;
 use crate::users::*;
 
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
-use uuid::Uuid;
 
 #[controller(kind = Controller::Web, path = "/users")]
 #[interceptor(SessionCheck)]
@@ -18,11 +18,7 @@ impl UsersController {
     #[get("/me")]
     #[doc = "Get the current authenticated user's information"]
     pub async fn get_me(&self, req: Request) -> WebResult {
-        let claims = req
-            .extensions
-            .get::<SessionClaims>()
-            .cloned()
-            .ok_or_else(JsonResponse::Unauthorized)?;
+        let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
 
         let user = self
             .users
@@ -57,21 +53,14 @@ impl UsersController {
     #[interceptor(AuthzGuard, config = AuthzAction::ManageAssistants)]
     #[doc = "Update a student role to 'assistant' (admin executable only)"]
     pub async fn set_user_role(&self, req: Request) -> WebResult {
-        let user_id = req
-            .param::<Uuid>("userId")
-            .map_err(|_| JsonResponse::BadRequest())?;
-
-        let current_user = req
-            .extensions
-            .get::<User>()
-            .cloned()
-            .ok_or_else(JsonResponse::Unauthorized)?;
+        let user_id = req.param::<UserId>("userId")?;
+        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
         let input = req.body_validator::<UpdateUserRoleRequest>()?;
 
         let updated_user = self
             .service
-            .update_role(&current_user, &user_id, input)
+            .update_role(current_user, &user_id, input)
             .await?;
 
         Ok(JsonResponse::Ok().data(updated_user))

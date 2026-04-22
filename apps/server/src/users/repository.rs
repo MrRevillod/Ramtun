@@ -1,6 +1,6 @@
 use crate::{
     shared::{AppResult, Database},
-    users::{User, UserRole},
+    users::{User, UserId, UserRole},
 };
 
 use sqlx::{Postgres, QueryBuilder};
@@ -13,7 +13,7 @@ pub struct UserRepository {
 }
 
 impl UserRepository {
-    pub async fn find_by_id(&self, user_id: &uuid::Uuid) -> AppResult<Option<User>> {
+    pub async fn find_by_id(&self, user_id: &UserId) -> AppResult<Option<User>> {
         let result = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = $1")
             .bind(user_id)
             .fetch_optional(self.db.get_pool())

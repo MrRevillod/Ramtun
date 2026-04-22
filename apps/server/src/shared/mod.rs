@@ -1,5 +1,7 @@
 mod database;
 mod errors;
+mod extensions;
+mod id;
 mod jsonwebtoken;
 
 use database::DatabaseConfig;
@@ -7,6 +9,8 @@ use sword::prelude::*;
 
 pub use database::Database;
 pub use errors::*;
+pub use extensions::*;
+pub use id::{Entity, Id};
 pub use jsonwebtoken::JsonWebTokenService;
 
 pub struct SharedModule;

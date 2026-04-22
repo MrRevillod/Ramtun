@@ -1,4 +1,6 @@
 use crate::auth::*;
+use crate::shared::RequestExt;
+
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
@@ -36,10 +38,7 @@ impl AuthController {
     #[post("/logout")]
     #[interceptor(SessionCheck)]
     pub async fn logout(&self, req: Request) -> WebResult {
-        let session_claims = req
-            .extensions
-            .get::<SessionClaims>()
-            .ok_or_else(JsonResponse::Unauthorized)?;
+        let session_claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
 
         self.auth_service.logout(&session_claims.session_id).await?;
 

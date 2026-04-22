@@ -1,4 +1,4 @@
-use crate::attempts::AttemptCertaintyLevel;
+use crate::attempts::{AttemptCertaintyLevel, AttemptId};
 
 use serde::Deserialize;
 use uuid::Uuid;
@@ -24,7 +24,7 @@ fn validate_answer_request(request: &SaveAnswerRequest) -> Result<(), Validation
 
 #[derive(Clone, Debug)]
 pub struct SaveAnswerCommand {
-    pub attempt_id: Uuid,
+    pub attempt_id: AttemptId,
     pub question_id: Uuid,
     pub answer_index: i16,
     pub certainty_level: Option<AttemptCertaintyLevel>,

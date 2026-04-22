@@ -1,6 +1,6 @@
+use crate::shared::{Entity, Id};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use uuid::Uuid;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "user_role", rename_all = "lowercase")]
@@ -11,19 +11,27 @@ pub enum UserRole {
     Assistant,
 }
 
+pub type UserId = Id<User>;
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, FromRow)]
 pub struct User {
-    pub id: Uuid,
+    pub id: UserId,
     pub username: String,
     pub name: String,
     pub email: String,
     pub role: UserRole,
 }
 
+impl Entity for User {
+    fn key_name() -> &'static str {
+        "user"
+    }
+}
+
 impl User {
     pub fn new(username: String, name: String, email: String, role: UserRole) -> Self {
         Self {
-            id: Uuid::new_v4(),
+            id: UserId::new(),
             username,
             name,
             email,

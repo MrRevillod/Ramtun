@@ -1,10 +1,9 @@
 use crate::{
-    auth::Session,
+    auth::{Session, SessionId},
     shared::{AppResult, Database},
 };
 use std::sync::Arc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct SessionRepository {
@@ -46,12 +45,10 @@ impl SessionRepository {
         Ok(session)
     }
 
-    pub async fn is_active(&self, id: &Uuid) -> AppResult<bool> {
+    pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
         let res = sqlx::query_as::<_, Session>(
             "SELECT * FROM sessions
-             WHERE id = $1
-             AND revoked_at IS NULL
-             AND expires_at > NOW()",
+             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
         )
         .bind(id)
         .fetch_optional(self.database.get_pool())
@@ -60,12 +57,10 @@ impl SessionRepository {
         Ok(res.is_some())
     }
 
-    pub async fn find_active_by_id(&self, id: &Uuid) -> AppResult<Option<Session>> {
+    pub async fn find_active_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
         let res = sqlx::query_as::<_, Session>(
             "SELECT * FROM sessions
-             WHERE id = $1
-             AND revoked_at IS NULL
-             AND expires_at > NOW()",
+             WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
         )
         .bind(id)
         .fetch_optional(self.database.get_pool())

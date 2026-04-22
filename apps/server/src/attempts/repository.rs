@@ -1,9 +1,10 @@
-use crate::attempts::{AttemptAnswerEntity, AttemptEntity, ManagedAttemptSummaryView};
+use crate::attempts::{Attempt, AttemptAnswerEntity, AttemptId, ManagedAttemptSummaryView};
+use crate::quizzes::QuizId;
 use crate::shared::{AppResult, Database};
+use crate::users::UserId;
 
 use chrono::Utc;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct AttemptRepository {
@@ -11,22 +12,21 @@ pub struct AttemptRepository {
 }
 
 impl AttemptRepository {
-    pub async fn find_by_id(&self, attempt_id: &Uuid) -> AppResult<Option<AttemptEntity>> {
-        let attempt =
-            sqlx::query_as::<_, AttemptEntity>("SELECT * FROM quiz_attempts WHERE id = $1")
-                .bind(attempt_id)
-                .fetch_optional(self.db.get_pool())
-                .await?;
+    pub async fn find_by_id(&self, attempt_id: &AttemptId) -> AppResult<Option<Attempt>> {
+        let attempt = sqlx::query_as::<_, Attempt>("SELECT * FROM quiz_attempts WHERE id = $1")
+            .bind(attempt_id)
+            .fetch_optional(self.db.get_pool())
+            .await?;
 
         Ok(attempt)
     }
 
     pub async fn find_active_for_quiz(
         &self,
-        quiz_id: &Uuid,
-        student_id: &Uuid,
-    ) -> AppResult<Option<AttemptEntity>> {
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
+        quiz_id: &QuizId,
+        student_id: &UserId,
+    ) -> AppResult<Option<Attempt>> {
+        let attempt = sqlx::query_as::<_, Attempt>(
             "SELECT *
              FROM quiz_attempts
              WHERE quiz_id = $1 AND student_id = $2 AND submitted_at IS NULL",
@@ -41,13 +41,11 @@ impl AttemptRepository {
 
     pub async fn find_by_quiz_and_student(
         &self,
-        quiz_id: &Uuid,
-        student_id: &Uuid,
-    ) -> AppResult<Option<AttemptEntity>> {
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
-            "SELECT *
-             FROM quiz_attempts
-             WHERE quiz_id = $1 AND student_id = $2",
+        quiz_id: &QuizId,
+        student_id: &UserId,
+    ) -> AppResult<Option<Attempt>> {
+        let attempt = sqlx::query_as::<_, Attempt>(
+            "SELECT * FROM quiz_attempts WHERE quiz_id = $1 AND student_id = $2",
         )
         .bind(quiz_id)
         .bind(student_id)
@@ -57,7 +55,10 @@ impl AttemptRepository {
         Ok(attempt)
     }
 
-    pub async fn list_for_quiz(&self, quiz_id: &Uuid) -> AppResult<Vec<ManagedAttemptSummaryView>> {
+    pub async fn list_for_quiz(
+        &self,
+        quiz_id: &QuizId,
+    ) -> AppResult<Vec<ManagedAttemptSummaryView>> {
         let attempts = sqlx::query_as::<_, ManagedAttemptSummaryView>(
             "SELECT
                 qa.id AS attempt_id,
@@ -85,8 +86,8 @@ impl AttemptRepository {
         Ok(attempts)
     }
 
-    pub async fn create(&self, attempt: AttemptEntity) -> AppResult<AttemptEntity> {
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
+    pub async fn create(&self, attempt: Attempt) -> AppResult<Attempt> {
+        let attempt = sqlx::query_as::<_, Attempt>(
             "INSERT INTO quiz_attempts (
                 id,
                 quiz_id,
@@ -118,7 +119,10 @@ impl AttemptRepository {
         Ok(attempt)
     }
 
-    pub async fn list_answers(&self, attempt_id: &Uuid) -> AppResult<Vec<AttemptAnswerEntity>> {
+    pub async fn list_answers(
+        &self,
+        attempt_id: &AttemptId,
+    ) -> AppResult<Vec<AttemptAnswerEntity>> {
         let answers = sqlx::query_as::<_, AttemptAnswerEntity>(
             "SELECT * FROM quiz_answers WHERE attempt_id = $1",
         )
@@ -156,13 +160,12 @@ impl AttemptRepository {
         Ok(answer)
     }
 
-    pub async fn submit(&self, attempt_id: &Uuid) -> AppResult<AttemptEntity> {
+    pub async fn submit(&self, attempt_id: &AttemptId) -> AppResult<Attempt> {
         let now = Utc::now();
 
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
+        let attempt = sqlx::query_as::<_, Attempt>(
             "UPDATE quiz_attempts
-             SET submitted_at = $2,
-                  updated_at = $2
+             SET submitted_at = $2, updated_at = $2
              WHERE id = $1 AND submitted_at IS NULL
              RETURNING *",
         )
@@ -176,15 +179,15 @@ impl AttemptRepository {
 
     pub async fn evaluate(
         &self,
-        attempt_id: &Uuid,
+        attempt_id: &AttemptId,
         score_points: f64,
         score_points_max: f64,
         grade: f64,
-        evaluated_by: Option<Uuid>,
-    ) -> AppResult<AttemptEntity> {
+        evaluated_by: Option<UserId>,
+    ) -> AppResult<Attempt> {
         let now = Utc::now();
 
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
+        let attempt = sqlx::query_as::<_, Attempt>(
             "UPDATE quiz_attempts
              SET score_points = $2,
                  score_points_max = $3,
@@ -207,15 +210,13 @@ impl AttemptRepository {
         Ok(attempt)
     }
 
-    pub async fn release_results_for_quiz(&self, quiz_id: &Uuid) -> AppResult<u64> {
+    pub async fn release_results_for_quiz(&self, quiz_id: &QuizId) -> AppResult<u64> {
         let now = Utc::now();
 
         let result = sqlx::query(
             "UPDATE quiz_attempts
-             SET results_released_at = COALESCE(results_released_at, $2),
-                 updated_at = $2
-             WHERE quiz_id = $1
-               AND submitted_at IS NOT NULL",
+             SET results_released_at = COALESCE(results_released_at, $2), updated_at = $2
+             WHERE quiz_id = $1  AND submitted_at IS NOT NULL",
         )
         .bind(quiz_id)
         .bind(now)
@@ -225,12 +226,9 @@ impl AttemptRepository {
         Ok(result.rows_affected())
     }
 
-    pub async fn list_in_progress_for_quiz(&self, quiz_id: &Uuid) -> AppResult<Vec<AttemptEntity>> {
-        let attempts = sqlx::query_as::<_, AttemptEntity>(
-            "SELECT *
-             FROM quiz_attempts
-             WHERE quiz_id = $1
-               AND submitted_at IS NULL",
+    pub async fn list_in_progress_for_quiz(&self, quiz_id: &QuizId) -> AppResult<Vec<Attempt>> {
+        let attempts = sqlx::query_as::<_, Attempt>(
+            "SELECT * FROM quiz_attempts WHERE quiz_id = $1 AND submitted_at IS NULL",
         )
         .bind(quiz_id)
         .fetch_all(self.db.get_pool())
@@ -239,12 +237,10 @@ impl AttemptRepository {
         Ok(attempts)
     }
 
-    pub async fn list_submitted_for_quiz(&self, quiz_id: &Uuid) -> AppResult<Vec<AttemptEntity>> {
-        let attempts = sqlx::query_as::<_, AttemptEntity>(
-            "SELECT *
-             FROM quiz_attempts
-             WHERE quiz_id = $1
-               AND submitted_at IS NOT NULL",
+    pub async fn list_submitted_for_quiz(&self, quiz_id: &QuizId) -> AppResult<Vec<Attempt>> {
+        let attempts = sqlx::query_as::<_, Attempt>(
+            "SELECT * FROM quiz_attempts
+             WHERE quiz_id = $1 AND submitted_at IS NOT NULL",
         )
         .bind(quiz_id)
         .fetch_all(self.db.get_pool())
@@ -255,14 +251,13 @@ impl AttemptRepository {
 
     pub async fn mark_results_viewed_once(
         &self,
-        attempt_id: &Uuid,
-    ) -> AppResult<Option<AttemptEntity>> {
+        attempt_id: &AttemptId,
+    ) -> AppResult<Option<Attempt>> {
         let now = Utc::now();
 
-        let attempt = sqlx::query_as::<_, AttemptEntity>(
+        let attempt = sqlx::query_as::<_, Attempt>(
             "UPDATE quiz_attempts
-             SET results_viewed_at = $2,
-                 updated_at = $2
+             SET results_viewed_at = $2, updated_at = $2
              WHERE id = $1
                AND submitted_at IS NOT NULL
                AND results_released_at IS NOT NULL

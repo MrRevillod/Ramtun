@@ -1,9 +1,40 @@
-use crate::quizzes::QuizParticipantView;
+use crate::{
+    quizzes::{QuizId, QuizParticipantView},
+    shared::{Entity, Id},
+    users::UserId,
+};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 use uuid::Uuid;
+
+pub type AttemptId = Id<Attempt>;
+
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
+pub struct Attempt {
+    pub id: AttemptId,
+    pub quiz_id: QuizId,
+    pub student_id: UserId,
+    pub started_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub submitted_at: Option<DateTime<Utc>>,
+    pub question_order: Vec<Uuid>,
+    pub score_points: Option<f64>,
+    pub score_points_max: Option<f64>,
+    pub grade: Option<f64>,
+    pub evaluated_at: Option<DateTime<Utc>>,
+    pub evaluated_by: Option<UserId>,
+    pub results_released_at: Option<DateTime<Utc>>,
+    pub results_viewed_at: Option<DateTime<Utc>>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl Entity for Attempt {
+    fn key_name() -> &'static str {
+        "attempt"
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -22,27 +53,8 @@ pub enum AttemptCertaintyLevel {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-pub struct AttemptEntity {
-    pub id: Uuid,
-    pub quiz_id: Uuid,
-    pub student_id: Uuid,
-    pub started_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-    pub submitted_at: Option<DateTime<Utc>>,
-    pub question_order: Vec<Uuid>,
-    pub score_points: Option<f64>,
-    pub score_points_max: Option<f64>,
-    pub grade: Option<f64>,
-    pub evaluated_at: Option<DateTime<Utc>>,
-    pub evaluated_by: Option<Uuid>,
-    pub results_released_at: Option<DateTime<Utc>>,
-    pub results_viewed_at: Option<DateTime<Utc>>,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct AttemptAnswerEntity {
-    pub attempt_id: Uuid,
+    pub attempt_id: AttemptId,
     pub question_id: Uuid,
     pub answer_index: i16,
     pub certainty_level: Option<AttemptCertaintyLevel>,
@@ -59,8 +71,8 @@ pub struct AttemptAnswerView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttemptSnapshotView {
-    pub attempt_id: Uuid,
-    pub quiz_id: Uuid,
+    pub attempt_id: AttemptId,
+    pub quiz_id: QuizId,
     pub started_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
     pub status: AttemptStatus,
@@ -85,8 +97,8 @@ pub struct AttemptQuestionResultView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AttemptResultView {
-    pub attempt_id: Uuid,
-    pub quiz_id: Uuid,
+    pub attempt_id: AttemptId,
+    pub quiz_id: QuizId,
     pub status: AttemptStatus,
     pub submitted_at: DateTime<Utc>,
     pub evaluated_at: DateTime<Utc>,
@@ -119,7 +131,7 @@ pub struct ManagedAttemptSummaryView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FinalizeAndPublishSummaryView {
-    pub quiz_id: Uuid,
+    pub quiz_id: QuizId,
     pub finalized_attempts: usize,
     pub published_attempts: usize,
 }

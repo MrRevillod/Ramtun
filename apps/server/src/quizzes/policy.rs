@@ -1,9 +1,8 @@
-use crate::quizzes::{Quiz, QuizError, QuizRepository};
+use crate::quizzes::{Quiz, QuizError, QuizId, QuizRepository};
 use crate::shared::AppResult;
 use crate::users::{User, UserRole};
 
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct QuizPolicy {
@@ -63,7 +62,7 @@ impl QuizPolicy {
     pub async fn require_managed_quiz(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<Quiz> {
         let Some(quiz) = self.repository.find_by_id(quiz_id).await? else {
             return Err(QuizError::NotFound(quiz_id.to_string()))?;
@@ -74,7 +73,11 @@ impl QuizPolicy {
         Ok(quiz)
     }
 
-    pub async fn require_owner_quiz(&self, current_user: &User, quiz_id: &Uuid) -> AppResult<Quiz> {
+    pub async fn require_owner_quiz(
+        &self,
+        current_user: &User,
+        quiz_id: &QuizId,
+    ) -> AppResult<Quiz> {
         let Some(quiz) = self.repository.find_by_id(quiz_id).await? else {
             return Err(QuizError::NotFound(quiz_id.to_string()))?;
         };

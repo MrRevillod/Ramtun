@@ -8,7 +8,7 @@ use controller::AuthController;
 use serde::Deserialize;
 use sword::prelude::*;
 
-pub use dtos::{LoginDto, LoginResponse, RefreshResponse, Session, SessionClaims};
+pub use dtos::{LoginDto, LoginResponse, RefreshResponse, Session, SessionClaims, SessionId};
 pub use interceptor::SessionCheck;
 pub use repository::SessionRepository;
 pub use services::{AuthService, LdapClient};

@@ -1,6 +1,5 @@
 use crate::{shared::AppResult, users::*};
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct UsersService {
@@ -33,7 +32,7 @@ impl UsersService {
     pub async fn update_role(
         &self,
         current_user: &User,
-        user_id: &Uuid,
+        user_id: &UserId,
         input: UpdateUserRoleRequest,
     ) -> AppResult<User> {
         let mut target = self

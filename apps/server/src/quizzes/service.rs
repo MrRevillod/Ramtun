@@ -2,13 +2,12 @@ use std::str::FromStr;
 
 use crate::quizzes::*;
 use crate::shared::AppResult;
-use crate::users::{User, UserRepository, UserRole};
+use crate::users::{User, UserId, UserRepository, UserRole};
 
 use chrono::{DateTime, Utc};
 use rand::RngExt;
 use rand::distr::Alphanumeric;
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct QuizService {
@@ -24,7 +23,7 @@ impl QuizService {
     pub async fn get_detail(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<QuizDetailView> {
         let quiz = self
             .policy
@@ -70,7 +69,7 @@ impl QuizService {
         &self,
         current_user: &User,
         code: &str,
-    ) -> AppResult<Uuid> {
+    ) -> AppResult<QuizId> {
         self.policy.can_join_quiz(current_user)?;
 
         let Some(quiz) = self.repository.find_by_code(code).await? else {
@@ -84,7 +83,7 @@ impl QuizService {
         &self,
         current_user: &User,
         input: CreateQuizRequest,
-        owner_id: Uuid,
+        owner_id: UserId,
     ) -> AppResult<QuizDetailView> {
         self.policy.can_create_quiz(current_user)?;
 
@@ -130,7 +129,7 @@ impl QuizService {
     pub async fn update(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
         input: UpdateQuizRequest,
     ) -> AppResult<QuizDetailView> {
         let mut quiz = self
@@ -179,7 +178,7 @@ impl QuizService {
         Ok(QuizDetailView::from(quiz))
     }
 
-    pub async fn delete_quiz(&self, current_user: &User, quiz_id: &Uuid) -> AppResult<()> {
+    pub async fn delete_quiz(&self, current_user: &User, quiz_id: &QuizId) -> AppResult<()> {
         let quiz = self
             .policy
             .require_owner_quiz(current_user, quiz_id)
@@ -195,7 +194,7 @@ impl QuizService {
     pub async fn add_collaborator(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
         input: AddCollaboratorRequest,
     ) -> AppResult<()> {
         let quiz = self
@@ -225,8 +224,8 @@ impl QuizService {
     pub async fn remove_collaborator(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
-        user_id: &Uuid,
+        quiz_id: &QuizId,
+        user_id: &UserId,
     ) -> AppResult<()> {
         let quiz = self
             .policy
@@ -247,7 +246,7 @@ impl QuizService {
     pub async fn list_collaborators(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<Vec<User>> {
         let quiz = self
             .policy
@@ -287,8 +286,8 @@ impl QuizService {
 
     async fn validate_collaborators(
         &self,
-        collaborator_ids: &[Uuid],
-        owner_id: &Uuid,
+        collaborator_ids: &[UserId],
+        owner_id: &UserId,
     ) -> AppResult<()> {
         for collaborator_id in collaborator_ids {
             if collaborator_id == owner_id {

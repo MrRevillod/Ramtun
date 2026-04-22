@@ -1,4 +1,4 @@
-use crate::quizzes::*;
+use crate::{quizzes::*, users::UserId};
 use std::str::FromStr;
 
 use chrono::{DateTime, Utc};
@@ -19,7 +19,7 @@ pub struct CreateQuizRequest {
 
     pub mode: String,
     pub start_time_utc: String,
-    pub collaborator_ids: Vec<Uuid>,
+    pub collaborator_ids: Vec<UserId>,
 
     #[validate(range(
         min = 1,
@@ -89,8 +89,10 @@ pub struct UpdateQuizRequest {
 pub struct CertainlyTableRequest {
     #[validate(nested)]
     pub low: CertainlyLevelRequest,
+
     #[validate(nested)]
     pub medium: CertainlyLevelRequest,
+
     #[validate(nested)]
     pub high: CertainlyLevelRequest,
 }
@@ -103,6 +105,7 @@ pub struct CertainlyLevelRequest {
         message = "Correct values must be between 0 and 100"
     ))]
     pub correct: i16,
+
     #[validate(range(
         min = -100,
         max = 0,
@@ -161,7 +164,7 @@ pub struct JoinQuizByCodeRequest {
 #[derive(Clone, Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddCollaboratorRequest {
-    pub user_id: Uuid,
+    pub user_id: UserId,
 }
 
 fn validate_create_schema(request: &CreateQuizRequest) -> Result<(), ValidationError> {

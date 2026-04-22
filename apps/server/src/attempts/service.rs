@@ -22,14 +22,14 @@ impl AttemptService {
     pub async fn start_attempt(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<AttemptSnapshotView> {
         self.policy.can_start_attempt(current_user)?;
 
         let quiz = self.require_quiz(quiz_id).await?;
 
         if quiz.closed_at.is_some() {
-            return Err(QuizError::Closed.into());
+            return Err(QuizError::Closed)?;
         }
 
         if Utc::now() < quiz.start_time {
@@ -56,8 +56,8 @@ impl AttemptService {
         let started_at = Utc::now();
         let expires_at = started_at + Duration::minutes(i64::from(quiz.attempt_duration_minutes));
 
-        let attempt = AttemptEntity {
-            id: Uuid::new_v4(),
+        let attempt = Attempt {
+            id: AttemptId::new(),
             quiz_id: *quiz_id,
             student_id: current_user.id,
             started_at,
@@ -82,7 +82,7 @@ impl AttemptService {
     pub async fn get_active_attempt_for_quiz(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<AttemptSnapshotView> {
         self.policy.can_start_attempt(current_user)?;
 
@@ -91,7 +91,7 @@ impl AttemptService {
             .find_active_for_quiz(quiz_id, &current_user.id)
             .await?
         else {
-            return Err(AttemptError::ActiveAttemptNotFound(quiz_id.to_string()).into());
+            return Err(AttemptError::ActiveAttemptNotFound(quiz_id.to_string()))?;
         };
 
         let quiz = self.require_quiz(&attempt.quiz_id).await?;
@@ -114,7 +114,7 @@ impl AttemptService {
         self.policy.can_save_answer(current_user, &attempt)?;
 
         if !attempt.question_order.contains(&command.question_id) {
-            return Err(AttemptError::QuestionNotInAttempt.into());
+            return Err(AttemptError::QuestionNotInAttempt)?;
         }
 
         let Some(question) = quiz
@@ -122,11 +122,11 @@ impl AttemptService {
             .iter()
             .find(|question| question.id == command.question_id)
         else {
-            return Err(AttemptError::QuestionNotInAttempt.into());
+            return Err(AttemptError::QuestionNotInAttempt)?;
         };
 
         if matches!(quiz.kind, QuizKind::Certainly) && command.certainty_level.is_none() {
-            return Err(AttemptError::CertaintyLevelRequired.into());
+            return Err(AttemptError::CertaintyLevelRequired)?;
         }
 
         let is_invalid_answer = match usize::try_from(command.answer_index) {
@@ -135,7 +135,7 @@ impl AttemptService {
         };
 
         if is_invalid_answer {
-            return Err(AttemptError::InvalidAnswerIndex.into());
+            return Err(AttemptError::InvalidAnswerIndex)?;
         }
 
         let answer = AttemptAnswerEntity {
@@ -153,7 +153,7 @@ impl AttemptService {
     pub async fn submit_attempt(
         &self,
         current_user: &User,
-        attempt_id: &Uuid,
+        attempt_id: &AttemptId,
     ) -> AppResult<AttemptSnapshotView> {
         let attempt = self.require_attempt_owner(current_user, attempt_id).await?;
         self.policy.can_submit_attempt(current_user, &attempt)?;
@@ -165,6 +165,7 @@ impl AttemptService {
                 error
             }
         })?;
+
         let quiz = self.require_quiz(&attempt.quiz_id).await?;
         let answers = self.attempts.list_answers(attempt_id).await?;
 
@@ -186,7 +187,7 @@ impl AttemptService {
     pub async fn finalize_and_publish_quiz(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<FinalizeAndPublishSummaryView> {
         let quiz = self
             .quiz_policy
@@ -246,10 +247,11 @@ impl AttemptService {
         }
 
         let published_attempts = self.attempts.release_results_for_quiz(quiz_id).await? as usize;
+
         self.quizzes.close_quiz(quiz_id).await?;
 
         Ok(FinalizeAndPublishSummaryView {
-            quiz_id: *quiz_id,
+            quiz_id: quiz.id,
             finalized_attempts,
             published_attempts,
         })
@@ -258,7 +260,7 @@ impl AttemptService {
     pub async fn list_managed_quiz_attempts(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<Vec<ManagedAttemptSummaryView>> {
         self.quiz_policy
             .require_managed_quiz(current_user, quiz_id)
@@ -270,8 +272,8 @@ impl AttemptService {
     pub async fn get_result_for_managed_attempt(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
-        attempt_id: &Uuid,
+        quiz_id: &QuizId,
+        attempt_id: &AttemptId,
     ) -> AppResult<AttemptResultView> {
         let quiz = self
             .quiz_policy
@@ -279,19 +281,19 @@ impl AttemptService {
             .await?;
 
         let Some(attempt) = self.attempts.find_by_id(attempt_id).await? else {
-            return Err(AttemptError::NotFound(attempt_id.to_string()).into());
+            return Err(AttemptError::NotFound(attempt_id.to_string()))?;
         };
 
-        if attempt.quiz_id != *quiz_id {
-            return Err(AttemptError::NotFound(attempt_id.to_string()).into());
+        if *attempt.quiz_id != **quiz_id {
+            return Err(AttemptError::NotFound(attempt_id.to_string()))?;
         }
 
         if attempt.submitted_at.is_none() {
-            return Err(AttemptError::NotSubmitted.into());
+            return Err(AttemptError::NotSubmitted)?;
         }
 
         if attempt.results_released_at.is_none() {
-            return Err(AttemptError::ResultNotAvailable.into());
+            return Err(AttemptError::ResultNotAvailable)?;
         }
 
         let answers = self.attempts.list_answers(&attempt.id).await?;
@@ -321,7 +323,7 @@ impl AttemptService {
     pub async fn get_result_for_student(
         &self,
         current_user: &User,
-        quiz_id: &Uuid,
+        quiz_id: &QuizId,
     ) -> AppResult<AttemptResultView> {
         self.policy.can_start_attempt(current_user)?;
 
@@ -330,33 +332,34 @@ impl AttemptService {
             .find_by_quiz_and_student(quiz_id, &current_user.id)
             .await?
         else {
-            return Err(AttemptError::NotFound(quiz_id.to_string()).into());
+            return Err(AttemptError::NotFound(quiz_id.to_string()))?;
         };
 
         if attempt.submitted_at.is_none() {
-            return Err(AttemptError::NotSubmitted.into());
+            return Err(AttemptError::NotSubmitted)?;
         }
 
         let quiz = self.require_quiz(quiz_id).await?;
+
         if attempt.results_released_at.is_none() {
-            return Err(AttemptError::ResultNotAvailable.into());
+            return Err(AttemptError::ResultNotAvailable)?;
         }
 
         if attempt.results_viewed_at.is_some() {
-            return Err(AttemptError::ResultAlreadyViewed.into());
+            return Err(AttemptError::ResultAlreadyViewed)?;
         }
 
         let Some(consumed_attempt) = self.attempts.mark_results_viewed_once(&attempt.id).await?
         else {
             let Some(recheck_attempt) = self.attempts.find_by_id(&attempt.id).await? else {
-                return Err(AttemptError::NotFound(attempt.id.to_string()).into());
+                return Err(AttemptError::NotFound(attempt.id.to_string()))?;
             };
 
             if recheck_attempt.results_released_at.is_none() {
-                return Err(AttemptError::ResultNotAvailable.into());
+                return Err(AttemptError::ResultNotAvailable)?;
             }
 
-            return Err(AttemptError::ResultAlreadyViewed.into());
+            return Err(AttemptError::ResultAlreadyViewed)?;
         };
 
         let answers = self.attempts.list_answers(&consumed_attempt.id).await?;
@@ -386,33 +389,33 @@ impl AttemptService {
     pub async fn get_result_for_attempt_owner(
         &self,
         current_user: &User,
-        attempt_id: &Uuid,
+        attempt_id: &AttemptId,
     ) -> AppResult<AttemptResultView> {
         let attempt = self.require_attempt_owner(current_user, attempt_id).await?;
 
         if attempt.submitted_at.is_none() {
-            return Err(AttemptError::NotSubmitted.into());
+            return Err(AttemptError::NotSubmitted)?;
         }
 
         if attempt.results_released_at.is_none() {
-            return Err(AttemptError::ResultNotAvailable.into());
+            return Err(AttemptError::ResultNotAvailable)?;
         }
 
         if attempt.results_viewed_at.is_some() {
-            return Err(AttemptError::ResultAlreadyViewed.into());
+            return Err(AttemptError::ResultAlreadyViewed)?;
         }
 
         let Some(consumed_attempt) = self.attempts.mark_results_viewed_once(&attempt.id).await?
         else {
             let Some(recheck_attempt) = self.attempts.find_by_id(&attempt.id).await? else {
-                return Err(AttemptError::NotFound(attempt.id.to_string()).into());
+                return Err(AttemptError::NotFound(attempt.id.to_string()))?;
             };
 
             if recheck_attempt.results_released_at.is_none() {
-                return Err(AttemptError::ResultNotAvailable.into());
+                return Err(AttemptError::ResultNotAvailable)?;
             }
 
-            return Err(AttemptError::ResultAlreadyViewed.into());
+            return Err(AttemptError::ResultAlreadyViewed)?;
         };
 
         let quiz = self.require_quiz(&consumed_attempt.quiz_id).await?;
@@ -440,9 +443,9 @@ impl AttemptService {
         Ok(self.build_result_view(&quiz, &evaluated_attempt, &evaluation))
     }
 
-    async fn require_quiz(&self, quiz_id: &Uuid) -> AppResult<Quiz> {
+    async fn require_quiz(&self, quiz_id: &QuizId) -> AppResult<Quiz> {
         let Some(quiz) = self.quizzes.find_by_id(quiz_id).await? else {
-            return Err(AttemptError::NotFound(quiz_id.to_string()).into());
+            return Err(AttemptError::NotFound(quiz_id.to_string()))?;
         };
 
         Ok(quiz)
@@ -451,8 +454,8 @@ impl AttemptService {
     async fn require_attempt_owner(
         &self,
         current_user: &User,
-        attempt_id: &Uuid,
-    ) -> AppResult<AttemptEntity> {
+        attempt_id: &AttemptId,
+    ) -> AppResult<Attempt> {
         let Some(attempt) = self.attempts.find_by_id(attempt_id).await? else {
             return Err(AttemptError::NotFound(attempt_id.to_string()).into());
         };
@@ -465,7 +468,7 @@ impl AttemptService {
     fn build_snapshot(
         &self,
         quiz: &Quiz,
-        attempt: AttemptEntity,
+        attempt: Attempt,
         answers: Vec<AttemptAnswerEntity>,
     ) -> AttemptSnapshotView {
         let mut ordered_questions = Vec::with_capacity(attempt.question_order.len());
@@ -509,7 +512,7 @@ impl AttemptService {
     fn evaluate_attempt(
         &self,
         quiz: &Quiz,
-        attempt: &AttemptEntity,
+        attempt: &Attempt,
         answers: &[AttemptAnswerEntity],
     ) -> AttemptEvaluation {
         let answer_map = answers
@@ -637,7 +640,7 @@ impl AttemptService {
     fn build_result_view(
         &self,
         quiz: &Quiz,
-        attempt: &AttemptEntity,
+        attempt: &Attempt,
         evaluation: &AttemptEvaluation,
     ) -> AttemptResultView {
         let submitted_at = attempt.submitted_at.unwrap_or(attempt.updated_at);
