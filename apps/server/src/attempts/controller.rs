@@ -1,6 +1,4 @@
 use std::sync::Arc;
-
-use serde_json::json;
 use sword::prelude::*;
 use sword::web::*;
 use uuid::Uuid;
@@ -45,11 +43,9 @@ impl AttemptsController {
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
         let attempt = self.attempts.initialize_attempt(quiz_id, user.id).await?;
-        let (attempt, questions) = self.attempts.get_initialize_response(&attempt).await?;
+        let view = self.attempts.get_initialize_response(&attempt).await?;
 
-        let data = json!({ "attempt": attempt, "questions": questions });
-
-        Ok(JsonResponse::Created().data(data))
+        Ok(JsonResponse::Created().data(view))
     }
 
     #[put("/{attemptId}/answers/{questionId}")]
@@ -75,34 +71,17 @@ impl AttemptsController {
 
         let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
 
-        let data = json!({ "attempt": attempt });
-
-        Ok(JsonResponse::Ok().data(data))
-    }
-
-    #[get("/{attemptId}/result")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewResults)]
-    async fn view_result(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
-
-        let result = self.attempts.view_results(attempt_id, user.id).await?;
-
-        let data = json!(result);
-
-        Ok(JsonResponse::Ok().data(data))
+        Ok(JsonResponse::Ok().data(attempt))
     }
 
     #[get("/{attemptId}/results")]
     #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewResults)]
-    async fn view_results_legacy(&self, req: Request) -> WebResult {
+    async fn view_results(&self, req: Request) -> WebResult {
         let attempt_id = req.param::<AttemptId>("attemptId")?;
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let result = self.attempts.view_results(attempt_id, user.id).await?;
+        let results = self.attempts.view_results(attempt_id, user.id).await?;
 
-        let data = json!(result);
-
-        Ok(JsonResponse::Ok().data(data))
+        Ok(JsonResponse::Ok().data(results))
     }
 }

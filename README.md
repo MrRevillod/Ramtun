@@ -2,4 +2,4 @@
 
 ## Entity Relationship Diagram
 
-<img src="./Ramtun.png" alt="ER Diagram">
+<img src="./.docs/ERD.png" alt="ER Diagram">

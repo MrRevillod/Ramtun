@@ -51,3 +51,86 @@ Actualmente hay componentes en la página web, sin embargo, cumplia las necesida
 Mantendriamos la paleta de colores sobria en escala de grises, pero mejorariamos en general la experiencia de usuarios, haciendo que sea más fácil navegar por la página, y que sea más agradable a la vista.
 
 La web utiliza tailwind y fuente Palatino.
+
+## Analisis del frontend actual (para rediseno desde cero)
+
+### Estado general
+
+- El frontend actual tiene una base tecnica util (auth, cliente HTTP, shell de layout), pero los modulos de dominio de quiz/attempt quedaron desalineados del backend actual.
+- El rediseno se hara desde cero en dominio funcional, manteniendo solo base comun: auth, axios/http y estructura general.
+
+### Hallazgos de UX actuales que si conviene conservar como lenguaje visual
+
+#### 1) Runner de preguntas (intento)
+
+Referencia actual: `apps/client/src/lib/features/quiz/components/JoinedQuizRunner.svelte`
+
+- Estructura acertada:
+  - encabezado con titulo, progreso y contador de respuestas
+  - temporizador visible y accion de salida
+  - bloque principal con pregunta, imagenes y opciones
+  - pie con estado de guardado y accion de avanzar/finalizar
+- Patron de seleccion util:
+  - opcion seleccionada en negro (`bg-black text-white`)
+  - opcion no seleccionada en blanco con borde gris y hover suave
+- Feedback en tiempo real:
+  - mensajes tipo "Guardando respuesta" / "Respuesta guardada"
+  - validacion de avance segun estado de respuesta
+
+#### 2) Bloque de certeza
+
+Referencia actual: `JoinedQuizRunner.svelte` y `JoinQuizInstructions.svelte`
+
+- Niveles: `Baja`, `Media`, `Alta`.
+- Comportamiento que debe mantenerse:
+  - en quiz de certeza, no se permite continuar/finalizar sin certeza valida cuando corresponde.
+- Lenguaje visual recomendable:
+  - 3 botones en grilla con misma jerarquia visual que opciones.
+
+#### 3) Visor de resultados
+
+Referencia actual: `apps/client/src/lib/features/quiz/components/AttemptResultView.svelte`
+
+- Resumen superior correcto:
+  - nota final
+  - puntaje total
+  - fecha/hora de envio
+- Detalle por pregunta util:
+  - estado `Correcta` (verde) / `Incorrecta` (rojo)
+  - resaltado por opcion:
+    - correcta: verde
+    - seleccion incorrecta del estudiante: rojo
+  - indicadores auxiliares:
+    - puntos otorgados por respuesta
+    - marca de "Tu seleccion"
+  - mensaje explicito cuando no hubo respuesta.
+
+#### 4) Sistema visual global
+
+Referencia actual: `apps/client/src/routes/layout.css`
+
+- Mantener direccion visual sobria en escala de grises.
+- Mantener tipografia Palatino.
+- Mantener semantica cromatica en feedback:
+  - verde = correcto
+  - rojo = incorrecto
+  - azul = etiqueta informativa secundaria
+
+### Restriccion funcional explicita
+
+- Las preguntas y opciones NO deben soportar HTML enriquecido ni renderizado de markup.
+- Todo contenido de pregunta/opciones se tratara como texto plano.
+- En el rediseno no debe incluirse soporte legacy de rich text.
+
+### Criterio para la reconstruccion
+
+- Rehacer desde cero los modulos de dominio frontend:
+  - quizzes
+  - attempts
+  - courses
+  - banks
+- Mantener solo base compartida existente:
+  - auth
+  - cliente HTTP
+  - shell global
+- Contratos API obligatorios: usar `.docs/endpoints/*.md` como fuente unica.

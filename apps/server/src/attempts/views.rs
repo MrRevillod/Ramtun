@@ -1,0 +1,87 @@
+use chrono::{DateTime, Utc};
+use serde::Serialize;
+use uuid::Uuid;
+
+use crate::{
+    attempts::{Attempt, AttemptId},
+    banks::QuestionView,
+    quizzes::{CertaintyLevel, QuizId},
+    users::UserId,
+};
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttemptListItemView {
+    pub attempt_id: AttemptId,
+    pub student_id: UserId,
+    pub quiz_id: QuizId,
+    pub started_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub submitted_at: Option<DateTime<Utc>>,
+    pub results_viewed_at: Option<DateTime<Utc>>,
+    pub score: Option<i16>,
+    pub grade: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttemptView {
+    pub attempt_id: AttemptId,
+    pub quiz_id: QuizId,
+    pub started_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub submitted_at: Option<DateTime<Utc>>,
+    pub results_viewed_at: Option<DateTime<Utc>>,
+    pub questions: Vec<QuestionView>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttemptSubmitView {
+    pub attempt_id: AttemptId,
+    pub quiz_id: QuizId,
+    pub submitted_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QuestionResultView {
+    pub question_id: Uuid,
+    pub question: String,
+    pub options: Vec<String>,
+    pub images: Vec<String>,
+    pub answer_index: Option<i16>,
+    pub correct_answer_index: i16,
+    pub certainty_level: Option<CertaintyLevel>,
+    pub is_correct: bool,
+    pub awarded_points: i16,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttemptResultView {
+    pub attempt_id: AttemptId,
+    pub quiz_id: QuizId,
+    pub submitted_at: DateTime<Utc>,
+    pub grade: f64,
+    pub score: i16,
+    pub max_score: i16,
+    pub results_viewed_at: Option<DateTime<Utc>>,
+    pub questions: Vec<QuestionResultView>,
+}
+
+impl From<Attempt> for AttemptListItemView {
+    fn from(value: Attempt) -> Self {
+        Self {
+            attempt_id: value.id,
+            student_id: value.student_id,
+            quiz_id: value.quiz_id,
+            started_at: value.started_at,
+            expires_at: value.expires_at,
+            submitted_at: value.submitted_at,
+            results_viewed_at: value.results_viewed_at,
+            score: value.score,
+            grade: value.grade,
+        }
+    }
+}

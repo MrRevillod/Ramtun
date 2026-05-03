@@ -4,7 +4,7 @@ use sword::prelude::*;
 use uuid::Uuid;
 
 use crate::{
-    attempts::{AttemptAnswer, AttemptQuestionResultView},
+    attempts::{AttemptAnswer, QuestionResultView},
     banks::Question,
     quizzes::{CertaintyLevel, CertaintyTable, QuizKind},
 };
@@ -13,7 +13,7 @@ pub struct GradingOutput {
     pub score_points: i16,
     pub score_points_max: i16,
     pub grade: f64,
-    pub questions: Vec<AttemptQuestionResultView>,
+    pub questions: Vec<QuestionResultView>,
 }
 
 #[injectable]
@@ -67,7 +67,7 @@ impl GradingService {
 
             score_points += awarded_points;
 
-            question_results.push(AttemptQuestionResultView {
+            question_results.push(QuestionResultView {
                 question_id: question.id,
                 question: question.prompt.clone(),
                 options: question.options.clone(),

@@ -4,6 +4,7 @@ mod entity;
 mod errors;
 mod repository;
 mod services;
+mod views;
 
 use sword::prelude::*;
 
@@ -13,6 +14,7 @@ pub use entity::*;
 pub use errors::AttemptError;
 pub use repository::AttemptRepository;
 pub use services::*;
+pub use views::*;
 
 pub struct AttemptsModule;
 

@@ -18,8 +18,6 @@ use uuid::Uuid;
 pub use grading::{GradingOutput, GradingService};
 pub use questions::QuestionService;
 
-use crate::banks::QuestionView;
-
 #[injectable]
 pub struct AttemptsService {
     repository: Arc<AttemptRepository>,
@@ -34,12 +32,16 @@ impl AttemptsService {
         &self,
         current_user: &User,
         filter: AttemptFilter,
-    ) -> AppResult<Vec<Attempt>> {
+    ) -> AppResult<Vec<AttemptListItemView>> {
         self.course_policy
             .require_func_member(current_user, &filter.course_id)
             .await?;
 
-        self.repository.list_attempts(filter).await
+        let attempts = self.repository.list_attempts(filter).await?;
+        Ok(attempts
+            .into_iter()
+            .map(AttemptListItemView::from)
+            .collect())
     }
 
     pub async fn get_attempt_for_user(
@@ -116,16 +118,21 @@ impl AttemptsService {
         Ok(attempt)
     }
 
-    pub async fn get_initialize_response(
-        &self,
-        attempt: &Attempt,
-    ) -> AppResult<(AttemptSnapshotView, Vec<QuestionView>)> {
+    pub async fn get_initialize_response(&self, attempt: &Attempt) -> AppResult<AttemptView> {
         let questions = self
             .questions_service
             .get_ordered_question_views(&attempt.quiz_id, &attempt.question_order)
             .await?;
 
-        Ok((AttemptSnapshotView::from(attempt), questions))
+        Ok(AttemptView {
+            attempt_id: attempt.id,
+            quiz_id: attempt.quiz_id,
+            started_at: attempt.started_at,
+            expires_at: attempt.expires_at,
+            submitted_at: attempt.submitted_at,
+            results_viewed_at: attempt.results_viewed_at,
+            questions,
+        })
     }
 
     pub async fn save_answer(
@@ -184,7 +191,7 @@ impl AttemptsService {
         &self,
         attempt_id: AttemptId,
         user_id: UserId,
-    ) -> AppResult<AttemptSnapshotView> {
+    ) -> AppResult<AttemptSubmitView> {
         let mut attempt = self.get_attempt_for_user(attempt_id, user_id).await?;
 
         self.ensure_attempt_is_answerable(&attempt)?;
@@ -214,7 +221,11 @@ impl AttemptsService {
 
         self.repository.save(&attempt).await?;
 
-        Ok(AttemptSnapshotView::from(&attempt))
+        Ok(AttemptSubmitView {
+            attempt_id: attempt.id,
+            quiz_id: attempt.quiz_id,
+            submitted_at: attempt.submitted_at.ok_or(AttemptError::AlreadySubmitted)?,
+        })
     }
 
     pub async fn view_results(
@@ -257,11 +268,9 @@ impl AttemptsService {
         Ok(AttemptResultView {
             attempt_id: attempt.id,
             quiz_id: attempt.quiz_id,
-            status: AttemptStatus::Submitted,
             submitted_at,
-            evaluated_at: submitted_at,
-            score_points,
-            score_points_max: grading_details.score_points_max,
+            score: score_points,
+            max_score: grading_details.score_points_max,
             grade,
             results_viewed_at: attempt.results_viewed_at,
             questions: grading_details.questions,
