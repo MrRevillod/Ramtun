@@ -67,7 +67,7 @@ impl CoursesService {
 
     pub async fn soft_delete(&self, current_user: &User, course_id: &CourseId) -> AppResult<()> {
         self.policy
-            .require_func_member(current_user, course_id)
+            .require_manager_member(current_user, course_id)
             .await?;
 
         if !self.repository.soft_delete(course_id).await? {
@@ -96,7 +96,7 @@ impl CoursesService {
         input: AddCourseMemberDto,
     ) -> AppResult<()> {
         self.policy
-            .require_func_member(current_user, course_id)
+            .require_manager_member(current_user, course_id)
             .await?;
 
         let target = self
@@ -135,7 +135,7 @@ impl CoursesService {
         user_id: &UserId,
     ) -> AppResult<()> {
         self.policy
-            .require_func_member(current_user, course_id)
+            .require_manager_member(current_user, course_id)
             .await?;
 
         self.remove_course_member(course_id, user_id).await

@@ -115,10 +115,17 @@ impl CourseRepository {
         Ok(is_member)
     }
 
-    pub async fn is_func_member(&self, course_id: &CourseId, user_id: &UserId) -> AppResult<bool> {
-        let is_func_member = sqlx::query_scalar::<_, bool>(
+    pub async fn is_manager_member(
+        &self,
+        course_id: &CourseId,
+        user_id: &UserId,
+    ) -> AppResult<bool> {
+        let is_manager_member = sqlx::query_scalar::<_, bool>(
             "SELECT EXISTS(
-                SELECT 1 FROM course_members WHERE course_id = $1 AND user_id = $2 AND role = 'func'
+                SELECT 1 FROM course_members
+                WHERE course_id = $1
+                  AND user_id = $2
+                  AND role IN ('func', 'assistant')
             )",
         )
         .bind(course_id)
@@ -126,7 +133,7 @@ impl CourseRepository {
         .fetch_one(self.db.get_pool())
         .await?;
 
-        Ok(is_func_member)
+        Ok(is_manager_member)
     }
 
     pub async fn add_member(&self, tx: &mut Tx<'_>, course_member: &CourseMember) -> AppResult<()> {

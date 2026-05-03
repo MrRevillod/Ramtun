@@ -1,10 +1,10 @@
 node_modules/
-.svelte-kit/
+**/.svelte-kit/
 apps/client/.svelte-kit/
 
-build/
-dist/
-static/
+**/build/
+**/dist/
+**/static/
 
 package-lock.json
 yarn.lock
@@ -12,3 +12,7 @@ pnpm-lock.yaml
 
 *.min.js
 *.bundle.js
+
+.svelte-kit/
+build/
+dist/

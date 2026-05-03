@@ -117,6 +117,9 @@ fn is_course_action(action: AuthzAction) -> bool {
 fn is_assistant_course_action(action: AuthzAction) -> bool {
     matches!(
         action,
-        AuthzAction::CourseList | AuthzAction::CourseRead | AuthzAction::CourseCreate
+        AuthzAction::CourseList
+            | AuthzAction::CourseRead
+            | AuthzAction::CourseCreate
+            | AuthzAction::CourseManageMembers
     )
 }

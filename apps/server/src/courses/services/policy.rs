@@ -36,7 +36,7 @@ impl CoursePolicy {
         Ok(course)
     }
 
-    pub async fn require_func_member(
+    pub async fn require_manager_member(
         &self,
         current_user: &User,
         course_id: &CourseId,
@@ -51,7 +51,7 @@ impl CoursePolicy {
 
         if !self
             .repository
-            .is_func_member(course_id, &current_user.id)
+            .is_manager_member(course_id, &current_user.id)
             .await?
         {
             return Err(CoursesError::OnlyFuncCanManageMembers)?;

@@ -1,28 +1,24 @@
 import { browser } from "$app/environment"
 import { AxiosHeaders, type AxiosError } from "axios"
-import { authService } from "$lib/features/auth/auth.service"
-import { authStore } from "$lib/features/auth/auth.store.svelte"
+import { authService } from "$lib/auth/auth.service"
+import { sessionManager } from "$lib/shared/auth/session.manager"
 import { apiClient } from "$lib/shared/http/http"
+import { refreshCoordinator } from "$lib/shared/http/refresh.coordinator"
 
 import type { ApiRequestConfig } from "$lib/shared/http/http"
 
-let refreshRequest: Promise<string | null> | null = null
 let teardownInterceptors: (() => void) | null = null
 
 const refreshAccessToken = async (): Promise<string | null> => {
-	if (!refreshRequest) {
-		refreshRequest = authService
-			.refresh()
-			.then(({ value: tokens, error: refreshError }) => {
-				if (refreshError || !tokens) return null
-				return tokens.accessToken
-			})
-			.finally(() => {
-				refreshRequest = null
-			})
-	}
-
-	return refreshRequest
+	return refreshCoordinator.run(async () => {
+		try {
+			const tokens = await authService.refreshOrThrow()
+			sessionManager.updateTokens(tokens)
+			return tokens.accessToken
+		} catch {
+			return null
+		}
+	})
 }
 
 const handleUnauthorized = async (originalConfig: ApiRequestConfig) => {
@@ -31,11 +27,12 @@ const handleUnauthorized = async (originalConfig: ApiRequestConfig) => {
 	const refreshedAccessToken = await refreshAccessToken()
 
 	if (!refreshedAccessToken) {
-		authStore.clearAllStores()
+		sessionManager.clearSession()
 		return Promise.reject({
-			type: "Unauthorized",
+			kind: "auth",
+			code: "session_expired",
 			message: "La sesión expiró. Debes iniciar sesión nuevamente.",
-			status: 401,
+			details: null,
 		})
 	}
 
@@ -59,7 +56,7 @@ export const setupApiInterceptors = () => {
 			return config
 		}
 
-		const accessToken = authStore.accessToken
+		const accessToken = sessionManager.getAccessToken()
 		if (!accessToken) return config
 
 		const headers = AxiosHeaders.from(config.headers)

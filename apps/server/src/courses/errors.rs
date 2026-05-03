@@ -17,9 +17,9 @@ pub enum CoursesError {
 
     #[http(
         code = 403,
-        message = "Only func course members can manage course members."
+        message = "Only assistant or func course members can manage course members."
     )]
-    #[error("Only func members can manage course members")]
+    #[error("Only assistant or func members can manage course members")]
     OnlyFuncCanManageMembers,
 
     #[http(code = 409, message = "A course with this code already exists.")]

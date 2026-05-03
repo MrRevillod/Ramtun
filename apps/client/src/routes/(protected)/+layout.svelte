@@ -1,21 +1,30 @@
 <script lang="ts">
+	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
-	import { authService } from "$lib/features/auth/auth.service"
-	import { authStore } from "$lib/features/auth/auth.store.svelte"
-	import { toUserMessage } from "$lib/shared/errors"
+	import { authService } from "$lib/auth/auth.service"
+	import { authStore } from "$lib/auth/auth.store.svelte"
+	import { sessionManager } from "$lib/shared/auth/session.manager"
+	import { getErrorMessage } from "$lib/shared/errors"
 
 	let { children } = $props()
 
+	const logoutMutation = createMutation(() => ({
+		mutationFn: () => authService.logoutOrThrow(),
+		onSuccess: async () => {
+			sessionManager.clearSession()
+			await goto(resolve("/login"))
+		},
+		onError: error => {
+			toast.error(getErrorMessage(error))
+			sessionManager.clearSession()
+			void goto(resolve("/login"))
+		},
+	}))
+
 	const handleLogout = async () => {
-		const result = await authService.logout()
-
-		if (result.error) {
-			toast.error(toUserMessage(result.error))
-		}
-
-		await goto(resolve("/login"))
+		await logoutMutation.mutateAsync()
 	}
 
 	const roleLabel = $derived.by(() => {

@@ -134,3 +134,133 @@ Referencia actual: `apps/client/src/routes/layout.css`
   - cliente HTTP
   - shell global
 - Contratos API obligatorios: usar `.docs/endpoints/*.md` como fuente unica.
+
+## Estandares de arquitectura frontend
+
+### Principios
+
+- Separacion de responsabilidades estricta por capa.
+- Los modulos de UI no deben conocer detalles de transporte HTTP.
+- Los services de dominio no deben mezclar logica de red con logica de presentacion.
+- Todo error debe circular con tipos explicitos y consistentes.
+
+### Capas y responsabilidades
+
+- `shared/http/*`
+  - Define `apiClient`, contrato de request y normalizacion de errores.
+  - Mantiene interceptors y politicas de retry/refresh.
+  - No maneja toasts, no navega, no renderiza UI.
+- `shared/auth/session.manager.ts`
+  - Punto unico para leer/escribir estado de sesion.
+  - Operaciones: obtener tokens/usuario, setear sesion, actualizar tokens, limpiar sesion.
+- `shared/http/refresh.coordinator.ts`
+  - Coordina refresh concurrente (single-flight) para evitar condiciones de carrera.
+- `features/*/*.service.ts`
+  - Encapsulan llamadas de red por feature.
+  - Exponen metodos `Result` y metodos `OrThrow` para integracion limpia con TanStack Query.
+  - No deben mostrar toasts ni decidir navegacion.
+- `routes/*` y componentes
+  - Definen `createQuery/createMutation`.
+  - Manejan side effects de UI (`onSuccess`, `onError`, redirects, feedback visual).
+
+### Manejo de errores (profesional)
+
+- Usar `neverthrow` como estandar unico de errores de dominio/API.
+- Modelo de error unico: `AppError` discriminado por `kind` (`auth`, `http`, `network`, `decode`, `unknown`).
+- La capa HTTP debe mapear errores tecnicos a `AppError` consistente.
+- Para UI, usar `getErrorMessage(error: unknown)` como adaptador de mensajes de usuario.
+- Evitar `try/catch` en handlers de formulario cuando TanStack Query puede gestionar `onError`.
+
+### Integracion con TanStack Query
+
+- Las mutations/queries deben recibir funciones limpias desde los services.
+- Preferir metodos `xxxOrThrow()` en `mutationFn/queryFn` para evitar unwrap manual en componentes.
+- Side effects en `onSuccess/onError`:
+  - login exitoso: setSession + redirect.
+  - logout (ok/error): limpiar sesion local y redirigir a login.
+- Invalidaciones y cache se implementan en capa de componentes/queries, no en services.
+
+### Convenciones de implementacion
+
+- Mantener sintaxis de metodos TypeScript en services (`public async foo()`), no propiedades flecha por defecto.
+- Mantener naming consistente:
+  - `foo()`: retorna `AppResult<T>`.
+  - `fooOrThrow()`: retorna `T` y lanza `AppError`.
+- Mantener todo payload en camelCase y alineado a `.docs/endpoints/*.md`.
+- No introducir soporte de rich text/HTML en preguntas u opciones.
+
+### Criterios de calidad minima
+
+- `pnpm check` debe pasar en cada cambio.
+- El flujo auth debe mantenerse estable respecto al comportamiento esperado inicial:
+  - login
+  - refresh con retry automatico en `401`
+  - logout
+  - redireccion de rutas protegidas sin sesion
+- Cambios de arquitectura no deben alterar contratos de backend ni romper UX base.
+
+## Plan de views por roles (alineado a authz real)
+
+### Decision de arquitectura de vistas
+
+- Se usara un enfoque mixto:
+  - rutas/paginas separadas por dominio y contexto de uso
+  - conditional rendering solo para acciones puntuales dentro de cada pagina
+- No se usara una sola pagina gigante con condicionales por rol.
+
+### Rutas objetivo (MVP reconstruido)
+
+- `/(protected)/join`
+  - acceso: `student`, `assistant`, `func`, `admin`
+  - uso: unirse por codigo, iniciar intento, responder, enviar
+- `/(protected)/results`
+  - acceso: `student`, `assistant`, `func`, `admin`
+  - uso: ver resultado por join code o por attempt
+- `/(protected)/courses`
+  - acceso: `assistant`, `func`, `admin`
+  - uso: listar/crear cursos
+- `/(protected)/courses/[courseId]/members`
+  - acceso: `assistant`, `func`, `admin`
+  - policy backend: solo course manager (`assistant|func`) o `admin`
+- `/(protected)/courses/[courseId]/banks`
+  - acceso: `assistant`, `func`, `admin`
+  - uso: CRUD de bancos segun policy de curso
+- `/(protected)/courses/[courseId]/quizzes`
+  - acceso: `assistant`, `func`, `admin`
+  - uso: crear/listar/eliminar quizzes
+- `/(protected)/courses/[courseId]/quizzes/[quizId]/attempts`
+  - acceso: `assistant`, `func`, `admin`
+  - policy backend: list de intentos requiere manager member o admin
+- `/(protected)/admin/users`
+  - acceso: `func`, `admin`
+  - uso: gestionar roles assistant globales
+
+### Reglas de render condicional dentro de pagina
+
+- `assistant`:
+  - puede gestionar members en cursos donde sea manager member.
+  - no puede eliminar curso.
+- `func`:
+  - todo lo de assistant.
+  - puede eliminar curso.
+  - puede promover student -> assistant global.
+- `admin`:
+  - acceso total.
+- `student`:
+  - solo flujos join/attempt/results.
+
+### Matriz endpoint -> pagina (fuente de verdad frontend)
+
+- `/courses` (GET/POST) -> `/(protected)/courses`
+- `/courses/{courseId}` (GET/DELETE) -> `/(protected)/courses/[courseId]` y vistas derivadas
+- `/courses/{courseId}/members` (GET/POST) -> `/(protected)/courses/[courseId]/members`
+- `/courses/{courseId}/members/{userId}` (DELETE) -> `/(protected)/courses/[courseId]/members`
+- `/banks/course/{courseId}` + `/banks/*` -> `/(protected)/courses/[courseId]/banks`
+- `/quizzes/me`, `/quizzes`, `/quizzes/{quizId}` -> `/(protected)/courses/[courseId]/quizzes`
+- `/attempts/course/{courseId}/quiz/{quizId}` (GET) -> `/(protected)/courses/[courseId]/quizzes/[quizId]/attempts`
+- `/quizzes/join/{joinCode}` + `/attempts/*` submit/results -> `/(protected)/join` y `/(protected)/results`
+
+### Nota de seguridad UX
+
+- La UI debe ocultar acciones segun rol/contexto para mejor experiencia.
+- Aun asi, el backend sigue siendo la fuente de verdad; hay que manejar `403` con feedback claro.

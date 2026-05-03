@@ -1,7 +1,7 @@
 import axios, { isAxiosError } from "axios"
 import type { AxiosRequestConfig } from "axios"
 import type { AppError } from "$lib/shared/errors"
-import { Err, Ok, safeAsyncTry, type PromiseResult } from "$lib/shared/result"
+import { ResultAsync, err, ok, type AppResult } from "$lib/shared/result"
 
 type ApiResponse<T = unknown> = {
 	code: number
@@ -26,8 +26,8 @@ export const apiClient = axios.create({
 })
 
 const UNKNOWN_ERROR: AppError = {
-	type: "Unknown",
-	message: "Ocurrió un error desconocido.",
+	kind: "unknown",
+	message: "Ocurrio un error desconocido.",
 }
 
 const isApiResponse = (payload: unknown): payload is ApiResponse<unknown> => {
@@ -45,46 +45,70 @@ const isApiResponse = (payload: unknown): payload is ApiResponse<unknown> => {
 	)
 }
 
-export const request = async <T>(
-	config: ApiRequestConfig
-): PromiseResult<T, AppError> => {
-	const { value: response, error: requestError } = await safeAsyncTry(
-		apiClient.request<ApiResponse<T>>(config)
-	)
+const mapTransportError = (error: unknown): AppError => {
+	if (!isAxiosError(error)) {
+		return { ...UNKNOWN_ERROR, details: error }
+	}
 
-	if (requestError) {
-		if (!isAxiosError(requestError) || !requestError.response?.data) {
-			return Err({ ...UNKNOWN_ERROR, details: requestError })
+	if (error.code === "ECONNABORTED") {
+		return {
+			kind: "network",
+			code: "timeout",
+			message: "La solicitud tardó demasiado tiempo.",
+			details: error,
 		}
+	}
 
-		const payload = requestError.response.data
-
-		if (!isApiResponse(payload)) {
-			return Err({ ...UNKNOWN_ERROR, details: requestError.response.data })
+	if (!error.response) {
+		return {
+			kind: "network",
+			code: "unknown",
+			message: "No fue posible conectar con el servidor.",
+			details: error,
 		}
+	}
 
-		return Err({
-			type: payload.code === 401 || payload.code === 403 ? "Unauthorized" : "Server",
-			message: payload.message,
+	const payload = error.response.data
+
+	if (isApiResponse(payload)) {
+		return {
+			kind: "http",
 			status: payload.code,
-			details: payload.error ?? null,
-		})
-	}
-
-	if (!response || !isApiResponse(response.data)) {
-		return Err({ ...UNKNOWN_ERROR, details: response?.data ?? null })
-	}
-
-	const payload = response.data
-
-	if (!payload.success) {
-		return Err({
-			type: payload.code === 401 || payload.code === 403 ? "Unauthorized" : "Server",
 			message: payload.message,
-			status: payload.code,
 			details: payload.error ?? null,
-		})
+		}
 	}
 
-	return Ok(payload.data as T)
+	return {
+		kind: "http",
+		status: error.response.status,
+		message: "El servidor respondió con un formato de error no esperado.",
+		details: payload,
+	}
 }
+
+export const request = <T>(config: ApiRequestConfig): ResultAsync<T, AppError> =>
+	ResultAsync.fromPromise(apiClient.request<ApiResponse<T>>(config), mapTransportError)
+		.andThen((response): AppResult<T> => {
+			if (!response || !isApiResponse(response.data)) {
+				return err<T, AppError>({
+					kind: "decode",
+					code: "invalid_envelope",
+					message: "Respuesta del servidor inválida.",
+					details: response?.data ?? null,
+				})
+			}
+
+			const payload = response.data
+
+			if (!payload.success) {
+				return err<T, AppError>({
+					kind: "http",
+					status: payload.code,
+					message: payload.message,
+					details: payload.error ?? null,
+				})
+			}
+
+			return ok(payload.data as T)
+		})

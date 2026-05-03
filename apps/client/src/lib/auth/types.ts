@@ -3,7 +3,7 @@ export type User = {
 	username: string
 	name: string
 	email: string
-	role: "student" | "func" | "assistant"
+	role: "student" | "func" | "assistant" | "admin"
 }
 
 export type LoginInput = {

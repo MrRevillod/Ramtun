@@ -49,7 +49,8 @@
 ## POST `/courses/{courseId}/members`
 - Summary: Add member to course.
 - Auth: Bearer token required.
-- Roles (AuthzAction::CourseManageMembers): `admin`, `func`.
+- Roles (AuthzAction::CourseManageMembers): `admin`, `func`, `assistant`.
+- Policy: requester must be course manager (`func` or `assistant`) or `admin`.
 - Path params:
   - `courseId: uuid`
 - Body:
@@ -65,7 +66,8 @@
 ## DELETE `/courses/{courseId}/members/{userId}`
 - Summary: Remove member from course.
 - Auth: Bearer token required.
-- Roles (AuthzAction::CourseManageMembers): `admin`, `func`.
+- Roles (AuthzAction::CourseManageMembers): `admin`, `func`, `assistant`.
+- Policy: requester must be course manager (`func` or `assistant`) or `admin`.
 - Path params:
   - `courseId: uuid`
   - `userId: uuid`

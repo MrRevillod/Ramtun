@@ -1,39 +1,31 @@
-export type Result<T, E> = { value: T; error: null } | { value: null; error: E }
-export type PromiseResult<T, E> = Promise<Result<T, E>>
+import { fromThrowable, type Result, type ResultAsync } from "neverthrow"
 
-export const Ok = <T>(value: T): Result<T, never> => ({
-	value,
-	error: null,
-})
+import type { AppError } from "$lib/shared/errors"
 
-export const Err = <E>(error: E): Result<never, E> => ({
-	value: null,
-	error,
-})
+export { err, ok, ResultAsync } from "neverthrow"
+export type { Result } from "neverthrow"
 
-export const isOk = <T, E>(
-	result: Result<T, E>
-): result is { value: T; error: null } => result.error === null
+export type AppResult<T> = Result<T, AppError>
+export type AppResultAsync<T> = ResultAsync<T, AppError>
 
-export const isErr = <T, E>(
-	result: Result<T, E>
-): result is { value: null; error: E } => result.error !== null
-
-export const safeAsyncTry = async <T>(
-	promise: Promise<T>
-): PromiseResult<T, unknown> => {
-	try {
-		const value = await promise
-		return Ok(value)
-	} catch (error) {
-		return Err(error)
+export const unwrapResultOrThrow = <T>(result: AppResult<T>): T => {
+	const maybe = result as unknown as {
+		isErr?: () => boolean
+		error?: AppError | null
+		value?: T | null
 	}
-}
 
-export const safeTry = <T>(fn: () => T): Result<T, unknown> => {
-	try {
-		return Ok(fn())
-	} catch (error) {
-		return Err(error)
+	if (typeof maybe.isErr === "function") {
+		if (maybe.isErr()) {
+			throw maybe.error
+		}
+
+		return maybe.value as T
 	}
+
+	if (maybe.error) {
+		throw maybe.error
+	}
+
+	return maybe.value as T
 }

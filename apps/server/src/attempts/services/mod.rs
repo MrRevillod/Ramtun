@@ -34,7 +34,7 @@ impl AttemptsService {
         filter: AttemptFilter,
     ) -> AppResult<Vec<AttemptListItemView>> {
         self.course_policy
-            .require_func_member(current_user, &filter.course_id)
+            .require_manager_member(current_user, &filter.course_id)
             .await?;
 
         let attempts = self.repository.list_attempts(filter).await?;

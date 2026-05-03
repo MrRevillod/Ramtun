@@ -1,6 +1,5 @@
 import { PersistedState } from "runed"
-import { quizUiStore } from "$lib/features/quiz/quiz.store.svelte"
-import type { AuthTokens, LoginResponse, User } from "$lib/features/auth/types"
+import type { AuthTokens, LoginResponse, User } from "$lib/auth/types"
 
 class AuthStore {
 	#tokens = new PersistedState<AuthTokens | null>("auth-tokens", null, {
@@ -47,20 +46,20 @@ class AuthStore {
 	isAuthenticated = () => Boolean(this.accessToken && this.refreshToken && this.user)
 
 	setSession = (session: LoginResponse) => {
-		quizUiStore.clearAllStores()
 		this.#tokens.current = {
 			accessToken: session.accessToken,
 			refreshToken: session.refreshToken,
 		}
+
 		this.#user.current = session.user
 	}
 
 	updateTokens = (tokens: AuthTokens) => {
-		if (!this.user) {
-			return
+		if (this.user) {
+			this.#tokens.current = tokens
 		}
 
-		this.#tokens.current = tokens
+		return
 	}
 
 	clearSession = () => {
@@ -70,7 +69,6 @@ class AuthStore {
 
 	clearAllStores = () => {
 		this.clearSession()
-		quizUiStore.clearAllStores()
 	}
 }
 

@@ -1,32 +1,33 @@
 <script lang="ts">
+	import type { LoginInput } from "$lib/auth/types"
+
 	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
-	import { authService } from "$lib/features/auth/auth.service"
-	import type { LoginInput } from "$lib/features/auth/types"
-	import { toUserMessage } from "$lib/shared/errors"
+	import { authService } from "$lib/auth/auth.service"
+	import { sessionManager } from "$lib/shared/auth/session.manager"
+	import { getErrorMessage } from "$lib/shared/errors"
 
 	let username = $state("")
 	let password = $state("")
 
 	const loginMutation = createMutation(() => ({
-		mutationFn: (payload: LoginInput) => authService.login(payload),
+		mutationFn: (payload: LoginInput) => authService.loginOrThrow(payload),
+		onSuccess: async session => {
+			sessionManager.setSession(session)
+			await goto(resolve("/"))
+		},
+		onError: error => {
+			toast.error(getErrorMessage(error))
+		},
 	}))
 
 	const loading = $derived(loginMutation.isPending)
 
 	const handleSubmit = async (event: SubmitEvent) => {
 		event.preventDefault()
-
-		const result = await loginMutation.mutateAsync({ username, password })
-
-		if (result.value) {
-			await goto(resolve("/"))
-			return
-		}
-
-		toast.error(toUserMessage(result.error))
+		await loginMutation.mutateAsync({ username, password })
 	}
 </script>
 

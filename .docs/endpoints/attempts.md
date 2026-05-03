@@ -4,7 +4,7 @@
 - Summary: List attempts for a quiz (management view).
 - Auth: Bearer token required.
 - Roles (AuthzAction::AttemptList): `admin`, `func`, `assistant`, `student`.
-- Policy: currently requires course membership as `func` in service policy.
+- Policy: requires course manager membership (`func` or `assistant`) or `admin`.
 - Path params:
   - `courseId: uuid`
   - `quizId: uuid`
