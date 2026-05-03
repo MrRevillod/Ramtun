@@ -48,6 +48,14 @@ pub enum QuizError {
     #[error("Quiz is closed")]
     Closed,
 
+    #[http(code = 409, message = "Quiz must be closed before publishing results.")]
+    #[error("Quiz is not closed")]
+    NotClosed,
+
+    #[http(code = 409, message = "Quiz results are not published yet.")]
+    #[error("Quiz results not published")]
+    ResultsNotPublished,
+
     #[http(
         code = 409,
         message = "This quiz already has attempts and can no longer be edited."

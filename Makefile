@@ -61,11 +61,11 @@ npmi:
 	docker compose exec $(service) /bin/sh -c "cd /app/apps/$(app) && corepack pnpm add $(pkg)"
 
 npmu:
-	cd apps/$(app) && corepack pnpm remove $(pkg)
+	cd $(CLIENT) && corepack pnpm remove $(pkg)
 	docker compose exec $(service) /bin/sh -c "cd /app/apps/$(app) && corepack pnpm remove $(pkg)"
 
 npmci:
-	cd apps/$(app) && corepack pnpm install --frozen-lockfile --ignore-scripts
+	cd $(CLIENT) && corepack pnpm install --frozen-lockfile --ignore-scripts
 	docker compose exec $(service) /bin/sh -c "cd /app/apps/$(app) && corepack pnpm install --frozen-lockfile --ignore-scripts"
 
 puml:

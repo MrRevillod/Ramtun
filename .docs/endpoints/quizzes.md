@@ -48,6 +48,24 @@
   - `quizId: uuid`
 - Response `data`: none (success envelope only).
 
+## POST `/quizzes/{quizId}/close`
+- Summary: Close quiz so no more attempts can start.
+- Auth: Bearer token required.
+- Roles (AuthzAction::QuizCloseManaged): `admin`, `func`, `assistant`.
+- Path params:
+  - `quizId: uuid`
+- Response `data`: none (success envelope only).
+
+## POST `/quizzes/{quizId}/publish-results`
+- Summary: Publish results so students can view them.
+- Auth: Bearer token required.
+- Roles (AuthzAction::QuizPublishResultsManaged): `admin`, `func`, `assistant`.
+- Path params:
+  - `quizId: uuid`
+- Preconditions:
+  - quiz must be closed.
+- Response `data`: none (success envelope only).
+
 ## POST `/quizzes/join/{joinCode}`
 - Summary: Resolve join code and return join preview.
 - Auth: Bearer token required.
@@ -65,10 +83,11 @@
 - Path params:
   - `joinCode: string`
 - Policy: access depends on course membership and student ownership checks.
+- Student can view only after results are published.
 - Response `data`: `AttemptResultView`
 
 ## Output Shape: `QuizView`
-- `{ id, title, kind, joinCode, questionCount, certaintyTable, attemptDurationMinutes, startsAt, closedAt, createdAt, course }`
+- `{ id, title, kind, joinCode, questionCount, certaintyTable, attemptDurationMinutes, startsAt, closedAt, resultsPublishedAt, createdAt, course }`
 - `course` is embedded course entity data.
 
 ## Common Domain Errors

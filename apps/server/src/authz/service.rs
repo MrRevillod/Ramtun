@@ -83,6 +83,9 @@ fn is_quiz_management_action(action: AuthzAction) -> bool {
             | AuthzAction::QuizUpdateManaged
             | AuthzAction::QuizManageCollaborators
             | AuthzAction::QuizDeleteManaged
+            | AuthzAction::QuizCloseManaged
+            | AuthzAction::QuizPublishResultsManaged
+            | AuthzAction::QuizCloseAndPublishManaged
     )
 }
 
@@ -100,6 +103,7 @@ fn is_attempt_action(action: AuthzAction) -> bool {
             | AuthzAction::AttemptInitialize
             | AuthzAction::AttemptSubmit
             | AuthzAction::AttemptViewResults
+            | AuthzAction::AttemptViewResultsManaged
     )
 }
 

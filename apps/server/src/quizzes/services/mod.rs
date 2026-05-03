@@ -101,12 +101,17 @@ impl QuizService {
         };
 
         if current_user.role != UserRole::Admin
+            && current_user.role != UserRole::Student
             && !self
                 .courses
                 .is_member(&quiz.course_id, &current_user.id)
                 .await?
         {
             return Err(QuizError::Forbidden)?;
+        }
+
+        if current_user.role == UserRole::Student && quiz.results_published_at.is_none() {
+            return Err(QuizError::ResultsNotPublished)?;
         }
 
         let attempt = self
@@ -117,6 +122,57 @@ impl QuizService {
         self.attempts
             .view_results(attempt.id, current_user.id)
             .await
+    }
+
+    pub async fn close_quiz(&self, current_user: &User, quiz_id: &QuizId) -> AppResult<()> {
+        let quiz = self
+            .policy
+            .require_managed_quiz(current_user, quiz_id)
+            .await?;
+
+        if !self.repository.close_quiz(&quiz.id).await? {
+            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn publish_results(&self, current_user: &User, quiz_id: &QuizId) -> AppResult<()> {
+        let quiz = self
+            .policy
+            .require_managed_quiz(current_user, quiz_id)
+            .await?;
+
+        if quiz.closed_at.is_none() {
+            return Err(QuizError::NotClosed)?;
+        }
+
+        if !self.repository.publish_results(&quiz.id).await? {
+            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn close_and_publish_results(
+        &self,
+        current_user: &User,
+        quiz_id: &QuizId,
+    ) -> AppResult<()> {
+        let quiz = self
+            .policy
+            .require_managed_quiz(current_user, quiz_id)
+            .await?;
+
+        if quiz.closed_at.is_none() && !self.repository.close_quiz(&quiz.id).await? {
+            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+        }
+
+        if !self.repository.publish_results(&quiz.id).await? {
+            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+        }
+
+        Ok(())
     }
 
     pub async fn create(&self, current_user: &User, input: CreateQuizDto) -> AppResult<QuizView> {

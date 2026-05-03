@@ -30,11 +30,15 @@ pub enum AuthzAction {
     QuizJoinByCode,
     QuizViewAttemptResultByCode,
     QuizDeleteManaged,
+    QuizCloseManaged,
+    QuizPublishResultsManaged,
+    QuizCloseAndPublishManaged,
 
     AttemptList,
     AttemptInitialize,
     AttemptSubmit,
     AttemptViewResults,
+    AttemptViewResultsManaged,
 
     UserListAdmin,
     UserListCollaboratorCandidates,

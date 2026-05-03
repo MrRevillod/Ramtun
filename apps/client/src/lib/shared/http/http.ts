@@ -88,27 +88,29 @@ const mapTransportError = (error: unknown): AppError => {
 }
 
 export const request = <T>(config: ApiRequestConfig): ResultAsync<T, AppError> =>
-	ResultAsync.fromPromise(apiClient.request<ApiResponse<T>>(config), mapTransportError)
-		.andThen((response): AppResult<T> => {
-			if (!response || !isApiResponse(response.data)) {
-				return err<T, AppError>({
-					kind: "decode",
-					code: "invalid_envelope",
-					message: "Respuesta del servidor inválida.",
-					details: response?.data ?? null,
-				})
-			}
+	ResultAsync.fromPromise(
+		apiClient.request<ApiResponse<T>>(config),
+		mapTransportError
+	).andThen((response): AppResult<T> => {
+		if (!response || !isApiResponse(response.data)) {
+			return err<T, AppError>({
+				kind: "decode",
+				code: "invalid_envelope",
+				message: "Respuesta del servidor inválida.",
+				details: response?.data ?? null,
+			})
+		}
 
-			const payload = response.data
+		const payload = response.data
 
-			if (!payload.success) {
-				return err<T, AppError>({
-					kind: "http",
-					status: payload.code,
-					message: payload.message,
-					details: payload.error ?? null,
-				})
-			}
+		if (!payload.success) {
+			return err<T, AppError>({
+				kind: "http",
+				status: payload.code,
+				message: payload.message,
+				details: payload.error ?? null,
+			})
+		}
 
-			return ok(payload.data as T)
-		})
+		return ok(payload.data as T)
+	})

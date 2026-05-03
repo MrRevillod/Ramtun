@@ -194,6 +194,17 @@ impl CourseRepository {
         Ok(count)
     }
 
+    pub async fn count_members(&self, course_id: &CourseId) -> AppResult<i64> {
+        let count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM course_members WHERE course_id = $1",
+        )
+        .bind(course_id)
+        .fetch_one(self.db.get_pool())
+        .await?;
+
+        Ok(count)
+    }
+
     pub async fn list_members(&self, course_id: &CourseId) -> AppResult<Vec<CourseMemberView>> {
         let members = sqlx::query_as::<_, CourseMemberView>(
             "SELECT u.id AS user_id, u.username, u.name, cm.role

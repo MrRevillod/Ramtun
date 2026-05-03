@@ -243,6 +243,10 @@ impl AttemptsService {
             return Err(QuizError::NotFound(attempt.quiz_id.to_string()))?;
         };
 
+        if quiz.results_published_at.is_none() {
+            return Err(QuizError::ResultsNotPublished)?;
+        }
+
         let score_points = attempt.score.ok_or(AttemptError::ResultsNotAvailable)?;
         let grade = attempt.grade.ok_or(AttemptError::ResultsNotAvailable)?;
 
@@ -264,6 +268,59 @@ impl AttemptsService {
         self.repository.mark_results_viewed(&attempt.id).await?;
 
         attempt.results_viewed_at = Some(Utc::now());
+
+        Ok(AttemptResultView {
+            attempt_id: attempt.id,
+            quiz_id: attempt.quiz_id,
+            submitted_at,
+            score: score_points,
+            max_score: grading_details.score_points_max,
+            grade,
+            results_viewed_at: attempt.results_viewed_at,
+            questions: grading_details.questions,
+        })
+    }
+
+    pub async fn view_attempt_results_managed(
+        &self,
+        current_user: &User,
+        attempt_id: AttemptId,
+    ) -> AppResult<AttemptResultView> {
+        let attempt = self
+            .repository
+            .find_by_id(&attempt_id)
+            .await?
+            .ok_or(AttemptError::NotFound(attempt_id))?;
+
+        let quiz = self
+            .quizzes
+            .find_by_id(&attempt.quiz_id)
+            .await?
+            .ok_or_else(|| QuizError::NotFound(attempt.quiz_id.to_string()))?;
+
+        self.course_policy
+            .require_accessible_course(current_user, &quiz.course_id)
+            .await?;
+
+        let submitted_at = attempt.submitted_at.ok_or(AttemptError::NotSubmitted)?;
+
+        let score_points = attempt.score.ok_or(AttemptError::ResultsNotAvailable)?;
+        let grade = attempt.grade.ok_or(AttemptError::ResultsNotAvailable)?;
+
+        let questions_by_id = self
+            .questions_service
+            .get_questions_by_ids(&attempt.quiz_id, &attempt.question_order)
+            .await?;
+
+        let answers = self.repository.list_attempt_answers(&attempt.id).await?;
+
+        let grading_details = self.apply_grading(
+            &attempt.question_order,
+            &questions_by_id,
+            &answers,
+            quiz.kind,
+            quiz.certainty_table,
+        );
 
         Ok(AttemptResultView {
             attempt_id: attempt.id,

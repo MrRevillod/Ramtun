@@ -81,9 +81,10 @@ impl GradingService {
         }
 
         let grade = if score_points_max > 0 {
-            score_points as f64 / score_points_max as f64
+            let raw_grade = ((score_points as f64 / score_points_max as f64) * 6.0) + 1.0;
+            raw_grade.max(1.0)
         } else {
-            0.0
+            1.0
         };
 
         GradingOutput {

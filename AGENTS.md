@@ -36,3 +36,10 @@
 ## Style Notes
 - Frontend formatting is shared from the root `.prettierrc`: tabs, no semicolons, `printWidth: 85`, and Tailwind class sorting via `prettier-plugin-tailwindcss` using `apps/client/src/routes/layout.css` as the Tailwind stylesheet.
 - The frontend uses Svelte 5 runes (`$state`, `$derived`) rather than legacy store patterns in component code. Match the existing style when editing Svelte files.
+
+## Frontend Copy Rules
+- **No implementation leaks.** Visible text must never reference internal architecture, contracts, endpoints, policies, authorization roles, technical jargon, or development status (e.g. "temporal", "en reconstruccion", "segun policy", "endpoints", "CRUD").
+- **User-oriented copy only.** Descriptions, labels, and headers must explain *what the user can do here*, not *how the system works*. Keep it brief and action-focused.
+- **No generic kickers without context.** Avoid meaningless section kickers like "Flujo estudiante", "Gestion academica", "Curso", or "Quiz". Either provide a contextual label or remove the kicker entirely.
+- **Consistent language.** Use product language across all pages. Example: prefer "Crea y administra quizzes de este curso." over "Gestion de quizzes por curso: creacion, listado y acciones administrativas."
+- **Error messages** should be actionable and in Spanish, but may reference HTTP status codes or technical details in a user-friendly way when helpful (e.g. "El docente aun no publica los resultados de este quiz.").

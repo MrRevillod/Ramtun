@@ -5,6 +5,7 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
+	import { LogIn } from "lucide-svelte"
 	import { authService } from "$lib/auth/auth.service"
 	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
@@ -68,10 +69,11 @@
 				</label>
 
 				<button
-					class="btn-primary mt-2 w-full text-base"
+					class="btn-primary mt-2 flex w-full items-center justify-center gap-1.5 text-base"
 					type="submit"
 					disabled={loading}
 				>
+					<LogIn size={16} aria-hidden="true" />
 					{loading ? "Ingresando..." : "Ingresar"}
 				</button>
 			</form>

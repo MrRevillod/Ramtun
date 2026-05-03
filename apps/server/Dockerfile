@@ -2,7 +2,7 @@
 # Development Stage
 # ==============================================================================
 
-FROM rust:1.92-alpine AS dev
+FROM rust:1.95-alpine AS dev
 
 RUN apk add --no-cache \
 	wireguard-tools \

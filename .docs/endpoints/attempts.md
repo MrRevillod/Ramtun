@@ -64,6 +64,8 @@
 - Policy: attempt must belong to current user and must be submitted.
 - Path params:
   - `attemptId: uuid`
+- Preconditions:
+  - quiz results must be published.
 - Response `data`: `AttemptResultView`
   - `{ attemptId, quizId, submittedAt, grade, score, maxScore, resultsViewedAt, questions }`
   - `questions[]`: `{ questionId, question, options, images, answerIndex, correctAnswerIndex, certaintyLevel, isCorrect, awardedPoints }`

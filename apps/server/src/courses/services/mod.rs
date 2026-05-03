@@ -138,26 +138,17 @@ impl CoursesService {
             .require_manager_member(current_user, course_id)
             .await?;
 
-        self.remove_course_member(course_id, user_id).await
-    }
-
-    pub async fn list_course_members(
-        &self,
-        course_id: &CourseId,
-    ) -> AppResult<Vec<CourseMemberView>> {
-        self.repository.list_members(course_id).await
-    }
-
-    pub async fn remove_course_member(
-        &self,
-        course_id: &CourseId,
-        user_id: &UserId,
-    ) -> AppResult<()> {
         let member = self
             .repository
             .find_member(course_id, user_id)
             .await?
             .ok_or(CoursesError::MemberNotFound)?;
+
+        let member_count = self.repository.count_members(course_id).await?;
+
+        if member_count <= 1 && member.user_id == current_user.id {
+            return Err(CoursesError::CannotRemoveLastMember)?;
+        }
 
         let role_member_count = self
             .repository
@@ -173,5 +164,12 @@ impl CoursesService {
         }
 
         Ok(())
+    }
+
+    pub async fn list_course_members(
+        &self,
+        course_id: &CourseId,
+    ) -> AppResult<Vec<CourseMemberView>> {
+        self.repository.list_members(course_id).await
     }
 }

@@ -23,11 +23,6 @@ impl OnRequest for SessionCheck {
             return Err(JsonResponse::Unauthorized());
         };
 
-        let Some(auth_header) = auth_header.strip_prefix("Bearer ") else {
-            tracing::warn!(method = %method, path = %path, "SessionCheck rejected: invalid Authorization scheme");
-            return Err(JsonResponse::Unauthorized());
-        };
-
         let Some(token) = auth_header.strip_prefix("Bearer ") else {
             tracing::warn!(method = %method, path = %path, "SessionCheck rejected: invalid Authorization scheme");
             return Err(JsonResponse::Unauthorized());

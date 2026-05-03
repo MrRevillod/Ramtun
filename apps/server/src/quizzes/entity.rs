@@ -25,6 +25,7 @@ pub struct Quiz {
     pub attempt_duration_minutes: i16,
     pub starts_at: DateTime<Utc>,
     pub closed_at: Option<DateTime<Utc>>,
+    pub results_published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
@@ -62,6 +63,7 @@ pub struct CertaintyTable {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 #[sqlx(type_name = "certainty_level", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
 pub enum CertaintyLevel {
     Low,
     Medium,

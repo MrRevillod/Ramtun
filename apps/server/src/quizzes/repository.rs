@@ -65,10 +65,11 @@ impl QuizRepository {
                 attempt_duration_minutes,
                 starts_at,
                 closed_at,
+                results_published_at,
                 created_at,
                 deleted_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             ON CONFLICT (id)
             DO UPDATE SET
                 course_id = EXCLUDED.course_id,
@@ -81,6 +82,7 @@ impl QuizRepository {
                 attempt_duration_minutes = EXCLUDED.attempt_duration_minutes,
                 starts_at = EXCLUDED.starts_at,
                 closed_at = EXCLUDED.closed_at,
+                results_published_at = EXCLUDED.results_published_at,
                 created_at = EXCLUDED.created_at,
                 deleted_at = EXCLUDED.deleted_at
             RETURNING *",
@@ -96,6 +98,7 @@ impl QuizRepository {
         .bind(quiz.attempt_duration_minutes)
         .bind(quiz.starts_at)
         .bind(quiz.closed_at)
+        .bind(quiz.results_published_at)
         .bind(quiz.created_at)
         .bind(quiz.deleted_at)
         .fetch_one(&mut **tx)
@@ -104,12 +107,28 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn _close_quiz(&self, quiz_id: &QuizId) -> AppResult<()> {
+    pub async fn close_quiz(&self, quiz_id: &QuizId) -> AppResult<bool> {
         let now = Utc::now();
 
-        sqlx::query(
+        let result = sqlx::query(
             "UPDATE quizzes
-             SET closed_at = COALESCE(closed_at, $2)
+              SET closed_at = COALESCE(closed_at, $2)
+              WHERE id = $1 AND deleted_at IS NULL",
+        )
+        .bind(quiz_id)
+        .bind(now)
+        .execute(self.db.get_pool())
+        .await?;
+
+        Ok(result.rows_affected() > 0)
+    }
+
+    pub async fn publish_results(&self, quiz_id: &QuizId) -> AppResult<bool> {
+        let now = Utc::now();
+
+        let result = sqlx::query(
+            "UPDATE quizzes
+             SET results_published_at = COALESCE(results_published_at, $2)
              WHERE id = $1 AND deleted_at IS NULL",
         )
         .bind(quiz_id)
@@ -117,7 +136,7 @@ impl QuizRepository {
         .execute(self.db.get_pool())
         .await?;
 
-        Ok(())
+        Ok(result.rows_affected() > 0)
     }
 
     pub async fn delete_by_id(&self, quiz_id: &QuizId) -> AppResult<bool> {

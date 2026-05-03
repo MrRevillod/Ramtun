@@ -66,4 +66,8 @@ pub enum AttemptError {
     #[http(code = 404, message = "No existe intento para este quiz")]
     #[error("Attempt not found for quiz")]
     NotFoundForQuiz,
+
+    #[http(code = 409, message = "El estudiante aun no ha enviado este intento")]
+    #[error("Attempt has not been submitted yet")]
+    NotSubmitted,
 }

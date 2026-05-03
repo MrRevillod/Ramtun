@@ -47,4 +47,11 @@ pub enum CoursesError {
     )]
     #[error("Cannot remove last func member")]
     CannotRemoveLastFuncMember,
+
+    #[http(
+        code = 409,
+        message = "No puedes eliminarte a ti mismo si eres el último miembro de un curso. Puedes eliminar el curso."
+    )]
+    #[error("Cannot remove last member")]
+    CannotRemoveLastMember,
 }

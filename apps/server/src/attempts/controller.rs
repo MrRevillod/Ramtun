@@ -84,4 +84,18 @@ impl AttemptsController {
 
         Ok(JsonResponse::Ok().data(results))
     }
+
+    #[get("/{attemptId}/results/managed")]
+    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewResultsManaged)]
+    async fn view_attempt_results_managed(&self, req: Request) -> WebResult {
+        let attempt_id = req.param::<AttemptId>("attemptId")?;
+        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+
+        let results = self
+            .attempts
+            .view_attempt_results_managed(user, attempt_id)
+            .await?;
+
+        Ok(JsonResponse::Ok().data(results))
+    }
 }

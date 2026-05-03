@@ -106,6 +106,10 @@ class AuthService {
 
 			const refreshResult = await this.refresh()
 
+			if (refreshResult.isOk()) {
+				sessionManager.updateTokens(refreshResult.value)
+			}
+
 			authStore.isReady = true
 			authStore.isBootstrapping = false
 

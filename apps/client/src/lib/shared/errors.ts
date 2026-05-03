@@ -1,32 +1,32 @@
 export type AppError =
 	| {
-		kind: "auth"
-		code: "missing_refresh_token" | "session_expired" | "invalid_session"
-		message: string
-		details?: unknown
+			kind: "auth"
+			code: "missing_refresh_token" | "session_expired" | "invalid_session"
+			message: string
+			details?: unknown
 	  }
 	| {
-		kind: "http"
-		status: number
-		message: string
-		details?: unknown
+			kind: "http"
+			status: number
+			message: string
+			details?: unknown
 	  }
 	| {
-		kind: "network"
-		code: "offline" | "timeout" | "aborted" | "unknown"
-		message: string
-		details?: unknown
+			kind: "network"
+			code: "offline" | "timeout" | "aborted" | "unknown"
+			message: string
+			details?: unknown
 	  }
 	| {
-		kind: "decode"
-		code: "invalid_envelope" | "invalid_payload"
-		message: string
-		details?: unknown
+			kind: "decode"
+			code: "invalid_envelope" | "invalid_payload"
+			message: string
+			details?: unknown
 	  }
 	| {
-		kind: "unknown"
-		message: string
-		details?: unknown
+			kind: "unknown"
+			message: string
+			details?: unknown
 	  }
 
 const isAppError = (error: unknown): error is AppError => {
