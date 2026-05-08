@@ -54,7 +54,7 @@ impl CoursesController {
 
         self.courses.soft_delete(current_user, &course_id).await?;
 
-        Ok(JsonResponse::Ok().message("Course deleted successfully"))
+        Ok(JsonResponse::Ok().message("Curso eliminado correctamente"))
     }
 
     #[get("/{courseId}/members")]
@@ -79,7 +79,7 @@ impl CoursesController {
             .add_member(current_user, &course_id, input)
             .await?;
 
-        Ok(JsonResponse::Ok().message("Course member added successfully"))
+        Ok(JsonResponse::Ok().message("Miembro agregado al curso correctamente"))
     }
 
     #[delete("/{courseId}/members/{userId}")]
@@ -94,6 +94,6 @@ impl CoursesController {
             .remove_member(current_user, &course_id, &user_id)
             .await?;
 
-        Ok(JsonResponse::Ok().message("Course member removed successfully"))
+        Ok(JsonResponse::Ok().message("Miembro eliminado del curso correctamente"))
     }
 }

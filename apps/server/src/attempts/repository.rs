@@ -4,7 +4,7 @@ use sqlx::{Postgres, QueryBuilder};
 use sword::prelude::*;
 
 use crate::{
-    attempts::{Attempt, AttemptAnswer, AttemptFilter, AttemptId},
+    attempts::{Attempt, AttemptAnswer, AttemptFilter, AttemptId, AttemptListItemView},
     quizzes::QuizId,
     shared::{AppResult, Database},
     users::UserId,
@@ -56,6 +56,43 @@ impl AttemptRepository {
 
         let attempts = query
             .build_query_as::<Attempt>()
+            .fetch_all(self.db.get_pool())
+            .await?;
+
+        Ok(attempts)
+    }
+
+    pub async fn list_attempts_managed(
+        &self,
+        filter: AttemptFilter,
+    ) -> AppResult<Vec<AttemptListItemView>> {
+        let mut query = QueryBuilder::<Postgres>::new(
+            "SELECT
+                a.id AS attempt_id,
+                a.student_id,
+                u.name AS user_name,
+                a.quiz_id,
+                a.started_at,
+                a.expires_at,
+                a.submitted_at,
+                a.results_viewed_at,
+                a.score,
+                a.grade
+             FROM attempts a
+             JOIN users u ON u.id = a.student_id
+             WHERE a.deleted_at IS NULL",
+        );
+
+        query.push(" AND a.quiz_id = ").push_bind(filter.quiz_id);
+
+        if let Some(student_id) = filter.student_id {
+            query.push(" AND a.student_id = ").push_bind(student_id);
+        }
+
+        query.push(" ORDER BY a.started_at DESC");
+
+        let attempts = query
+            .build_query_as::<AttemptListItemView>()
             .fetch_all(self.db.get_pool())
             .await?;
 

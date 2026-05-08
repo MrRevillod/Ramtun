@@ -53,7 +53,7 @@ impl QuizController {
 
         self.service.delete_quiz(current_user, &quiz_id).await?;
 
-        Ok(JsonResponse::Ok().message("Quiz deleted successfully"))
+        Ok(JsonResponse::Ok().message("Quiz eliminado correctamente"))
     }
 
     #[post("/{quizId}/close")]
@@ -64,7 +64,7 @@ impl QuizController {
 
         self.service.close_quiz(current_user, &quiz_id).await?;
 
-        Ok(JsonResponse::Ok().message("Quiz closed successfully"))
+        Ok(JsonResponse::Ok().message("Quiz cerrado correctamente"))
     }
 
     #[post("/{quizId}/publish-results")]
@@ -75,7 +75,7 @@ impl QuizController {
 
         self.service.publish_results(current_user, &quiz_id).await?;
 
-        Ok(JsonResponse::Ok().message("Quiz results published successfully"))
+        Ok(JsonResponse::Ok().message("Resultados del quiz publicados correctamente"))
     }
 
     #[post("/{quizId}/close-and-publish")]
@@ -88,7 +88,7 @@ impl QuizController {
             .close_and_publish_results(current_user, &quiz_id)
             .await?;
 
-        Ok(JsonResponse::Ok().message("Quiz finalized and results published"))
+        Ok(JsonResponse::Ok().message("Quiz finalizado y resultados publicados"))
     }
 
     #[post("/join/{joinCode}")]

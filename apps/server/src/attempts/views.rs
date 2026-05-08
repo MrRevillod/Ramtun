@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use sqlx::FromRow;
 use uuid::Uuid;
 
 use crate::{
@@ -9,11 +10,12 @@ use crate::{
     users::UserId,
 };
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct AttemptListItemView {
     pub attempt_id: AttemptId,
     pub student_id: UserId,
+    pub user_name: String,
     pub quiz_id: QuizId,
     pub started_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
@@ -61,6 +63,8 @@ pub struct QuestionResultView {
 #[serde(rename_all = "camelCase")]
 pub struct AttemptResultView {
     pub attempt_id: AttemptId,
+    pub student_id: UserId,
+    pub user_name: String,
     pub quiz_id: QuizId,
     pub submitted_at: DateTime<Utc>,
     pub grade: f64,
@@ -75,6 +79,7 @@ impl From<Attempt> for AttemptListItemView {
         Self {
             attempt_id: value.id,
             student_id: value.student_id,
+            user_name: value.student_id.to_string(),
             quiz_id: value.quiz_id,
             started_at: value.started_at,
             expires_at: value.expires_at,

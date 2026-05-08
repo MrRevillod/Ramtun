@@ -7,7 +7,7 @@ use crate::{
     courses::CoursePolicy,
     quizzes::{QuizError, QuizId, QuizKind, QuizRepository},
     shared::AppResult,
-    users::{User, UserId},
+    users::{User, UserId, UserRepository},
 };
 
 use chrono::{Duration, Utc};
@@ -25,6 +25,7 @@ pub struct AttemptsService {
     course_policy: Arc<CoursePolicy>,
     questions_service: Arc<QuestionService>,
     grading: Arc<GradingService>,
+    users: Arc<UserRepository>,
 }
 
 impl AttemptsService {
@@ -37,11 +38,7 @@ impl AttemptsService {
             .require_manager_member(current_user, &filter.course_id)
             .await?;
 
-        let attempts = self.repository.list_attempts(filter).await?;
-        Ok(attempts
-            .into_iter()
-            .map(AttemptListItemView::from)
-            .collect())
+        self.repository.list_attempts_managed(filter).await
     }
 
     pub async fn get_attempt_for_user(
@@ -271,6 +268,8 @@ impl AttemptsService {
 
         Ok(AttemptResultView {
             attempt_id: attempt.id,
+            student_id: attempt.student_id,
+            user_name: self.get_user_name(&attempt.student_id).await?,
             quiz_id: attempt.quiz_id,
             submitted_at,
             score: score_points,
@@ -324,6 +323,8 @@ impl AttemptsService {
 
         Ok(AttemptResultView {
             attempt_id: attempt.id,
+            student_id: attempt.student_id,
+            user_name: self.get_user_name(&attempt.student_id).await?,
             quiz_id: attempt.quiz_id,
             submitted_at,
             score: score_points,
@@ -364,4 +365,11 @@ impl AttemptsService {
             certainty_table,
         )
     }
+
+	async fn get_user_name(&self, user_id: &UserId) -> AppResult<String> {
+		let maybe_user = self.users.find_by_id(user_id).await?;
+		Ok(maybe_user
+			.map(|user| user.name)
+			.unwrap_or_else(|| user_id.to_string()))
+	}
 }

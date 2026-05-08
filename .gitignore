@@ -7,6 +7,7 @@ data/
 presharedkey
 privatekey
 **/.svelte-kit
+.svelte-kit
 apps/client/.svelte-kit
 
 .output

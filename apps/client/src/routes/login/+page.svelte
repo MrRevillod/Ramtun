@@ -36,13 +36,12 @@
 	<div
 		class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center"
 	>
-		<section class="panel-surface w-full max-w-xl p-8 sm:p-10">
-			<p class="section-kicker">Acceso</p>
+		<section class="panel-elevated w-full max-w-xl p-8 sm:p-10">
 			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">
 				Iniciar sesión
 			</h1>
 			<p class="mt-3 mb-7 max-w-md text-base leading-relaxed text-zinc-700">
-				Usa tus credenciales Pillan/LDAP para continuar.
+				Usa tus credenciales Pillan/LDAP para ingresar.
 			</p>
 
 			<form class="grid gap-4" onsubmit={handleSubmit}>
@@ -77,6 +76,17 @@
 					{loading ? "Ingresando..." : "Ingresar"}
 				</button>
 			</form>
+
+			<p class="mt-5 mb-0 text-sm text-zinc-700">
+				<a
+					class="font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-3 hover:decoration-zinc-900"
+					href="https://chpass.inf.uct.cl"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					¿Olvidaste tu contraseña?
+				</a>
+			</p>
 		</section>
 	</div>
 </main>

@@ -9,6 +9,7 @@
 	import { joinCodeSchema } from "$lib/attempts/attempts.schema"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 
 	const initialJoinCode = browser
 		? (localStorage.getItem("last-submitted-join-code") ?? "")
@@ -20,6 +21,7 @@
 	})
 
 	let resultNotice = $state("")
+	let noticeTone = $state<"ok" | "warn" | "danger">("warn")
 
 	const getResultErrorMessage = (error: unknown): string => {
 		if (!error || typeof error !== "object") {
@@ -60,6 +62,7 @@
 			await goto(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`)
 		},
 		onError: error => {
+			noticeTone = "danger"
 			resultNotice = getResultErrorMessage(error)
 			toast.error(resultNotice)
 		},
@@ -68,10 +71,12 @@
 	const byAttemptIdMutation = createMutation(() => ({
 		mutationFn: (attemptId: string) => attemptsService.getResultsOrThrow(attemptId),
 		onSuccess: data => {
-			resultNotice = `Resultado encontrado. Puntaje: ${data.score}/${data.maxScore}, Nota: ${data.grade.toFixed(2)}.`
+			noticeTone = "ok"
+			resultNotice = `Resultado encontrado. Puntaje: ${data.score}/${data.maxScore}, Nota: ${GradeValue.format(data.grade)}.`
 			toast.success("Resultado cargado correctamente.")
 		},
 		onError: error => {
+			noticeTone = "danger"
 			resultNotice = getResultErrorMessage(error)
 			toast.error(resultNotice)
 		},
@@ -96,63 +101,68 @@
 	}
 </script>
 
-<section class="grid gap-4">
+<section class="grid gap-5">
 	<header>
 		<h2 class="mt-2 mb-0 text-2xl text-black">Resultados</h2>
 		<p class="mt-2 max-w-3xl text-zinc-700">
-			Consulta tu resultado usando el codigo del quiz o carga tu ultimo intento
-			enviado.
+			Busca tu resultado por código o recupera tu último intento guardado.
 		</p>
 	</header>
 
-	<section class="panel-muted p-4 sm:p-5">
-		<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-			<h3 class="m-0 text-lg text-black">Buscar resultado</h3>
-			<button
-				class="btn-secondary flex items-center gap-1.5"
-				type="button"
-				onclick={loadLastAttempt}
-			>
-				<History size={16} aria-hidden="true" />
-				Cargar ultimo intento
-			</button>
-		</div>
-
+	<section class="panel-elevated p-5 sm:p-6">
 		<Form
 			of={resultLookupForm}
 			onsubmit={submitLookup}
-			class="flex flex-col gap-3 sm:flex-row sm:items-end"
+			class="grid gap-3 lg:grid-cols-[3fr_1fr_1fr] lg:items-end"
 		>
 			<Field of={resultLookupForm} path={["joinCode"]}>
 				{#snippet children(field)}
-					<label class="grid flex-1 gap-1.5">
-						<span class="text-sm text-zinc-800">Join code</span>
+					<div class="grid gap-1.5">
 						<input
 							{...field.props}
 							class="input-base"
+							aria-label="Código de quiz"
 							value={field.input ?? ""}
-							placeholder="Ej: ABCD1234"
+							placeholder="Ingrese un código de Quiz. Ej: ABC1234"
 						/>
 						{#if field.errors?.[0]}
 							<span class="text-sm text-red-700">{field.errors[0]}</span>
 						{/if}
-					</label>
+					</div>
 				{/snippet}
 			</Field>
 
 			<button
-				class="btn-primary flex items-center gap-1.5"
+				class="btn-primary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
 				type="submit"
 				disabled={byJoinCodeMutation.isPending}
 			>
 				<Search size={16} aria-hidden="true" />
-				{byJoinCodeMutation.isPending ? "Buscando..." : "Buscar"}
+				{byJoinCodeMutation.isPending ? "Consultando..." : "Ir a sala de espera"}
+			</button>
+
+			<button
+				class="btn-secondary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
+				type="button"
+				onclick={loadLastAttempt}
+			>
+				<History size={16} aria-hidden="true" />
+				Cargar último intento
 			</button>
 		</Form>
 
+		<div class="keyline mt-4"></div>
+		<p class="mt-4 mb-0 text-sm text-zinc-600">
+			Si el resultado aún no está publicado, te llevaremos a una sala de espera con
+			actualización automática.
+		</p>
+
 		{#if resultNotice}
 			<p
-				class="mt-3 mb-0 rounded-[4px] border border-zinc-300 bg-zinc-100 px-3 py-2 text-sm text-zinc-700"
+				class="notice mt-4 mb-0"
+				class:notice-ok={noticeTone === "ok"}
+				class:notice-warn={noticeTone === "warn"}
+				class:notice-danger={noticeTone === "danger"}
 			>
 				{resultNotice}
 			</p>

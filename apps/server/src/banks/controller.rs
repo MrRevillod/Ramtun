@@ -48,7 +48,7 @@ impl QuestionBankController {
 
         self.service.create(current_user, input).await?;
 
-        Ok(JsonResponse::Created().message("Question bank created successfully"))
+        Ok(JsonResponse::Created().message("Banco de preguntas creado correctamente"))
     }
 
     #[patch("/{bankId}")]
@@ -61,7 +61,7 @@ impl QuestionBankController {
 
         self.service.update(current_user, &bank_id, input).await?;
 
-        Ok(JsonResponse::Ok().message("Question bank updated successfully"))
+        Ok(JsonResponse::Ok().message("Banco de preguntas actualizado correctamente"))
     }
 
     #[delete("/{bankId}")]
@@ -72,6 +72,6 @@ impl QuestionBankController {
 
         self.service.soft_delete(current_user, &bank_id).await?;
 
-        Ok(JsonResponse::Ok().message("Question bank deleted successfully"))
+        Ok(JsonResponse::Ok().message("Banco de preguntas eliminado correctamente"))
     }
 }

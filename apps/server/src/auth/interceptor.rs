@@ -2,9 +2,11 @@ use crate::{
     auth::{AuthConfig, SessionClaims, SessionRepository},
     shared::JsonWebTokenService,
 };
+
 use std::sync::Arc;
-use sword::prelude::*;
+use sword::socketio::*;
 use sword::web::*;
+use sword::{prelude::*, socketio::OnConnect};
 
 #[derive(Interceptor)]
 pub struct SessionCheck {
@@ -69,5 +71,71 @@ impl OnRequest for SessionCheck {
         req.extensions.insert(claims);
 
         req.next().await
+    }
+}
+
+impl OnConnect for SessionCheck {
+    type Error = String;
+
+    async fn on_connect(&self, ctx: SocketContext) -> Result<(), Self::Error> {
+        let Some(auth_header) = ctx.authorization() else {
+            tracing::warn!(socket_id = %ctx.id(), "SessionCheck rejected: missing Authorization header");
+            return Err("Missing Authorization header".into());
+        };
+
+        let Some(token) = auth_header.strip_prefix("Bearer ") else {
+            tracing::warn!(socket_id = %ctx.id(), "SessionCheck rejected: invalid Authorization scheme");
+            return Err("Invalid Authorization scheme".into());
+        };
+
+        let claims: SessionClaims = self
+			.jwt_service
+			.decode(&token.to_string(), self.config.jwt_secret.as_ref())
+			.inspect_err(|error| {
+				tracing::warn!(socket_id = %ctx.id(), error = %error, "SessionCheck rejected: token decode failed");
+			})
+			.map_err(|_| "Token decode failed".to_string())?;
+
+        if claims.typ != "access" {
+            tracing::warn!(
+                socket_id = %ctx.id(),
+                session_id = %claims.session_id,
+                user_id = %claims.user_id,
+                token_type = %claims.typ,
+                "SessionCheck rejected: token type is not access"
+            );
+            return Err("Token type is not access".into());
+        }
+
+        let Ok(is_session_active) = self.sessions.is_active(&claims.session_id).await else {
+            tracing::warn!(
+                socket_id = %ctx.id(),
+                session_id = %claims.session_id,
+                user_id = %claims.user_id,
+                "SessionCheck rejected: failed to check session activity"
+            );
+
+            return Err("Failed to check session activity".into());
+        };
+
+        if !is_session_active {
+            tracing::warn!(
+                socket_id = %ctx.id(),
+                session_id = %claims.session_id,
+                user_id = %claims.user_id,
+                "SessionCheck rejected: session is not active"
+            );
+
+            return Err("Session is not active".into());
+        }
+
+        tracing::debug!(
+            socket_id = %ctx.id(),
+            session_id = %claims.session_id,
+            user_id = %claims.user_id,
+            "SessionCheck accepted"
+        );
+
+        Ok(())
     }
 }

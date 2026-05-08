@@ -30,45 +30,44 @@
 	}
 </script>
 
-<section class="grid gap-4">
+<section class="grid gap-5">
 	<header>
-		<h2 class="mt-2 mb-0 text-2xl text-black">Unirse a quiz</h2>
+		<h2 class="mt-2 mb-0 text-2xl text-black">Unirse a un quiz</h2>
 		<p class="mt-2 max-w-3xl text-zinc-700">
-			Ingresa el codigo de acceso para ir al lobby del quiz.
+			Ingresa tu código para revisar los datos del quiz antes de comenzar.
 		</p>
 	</header>
 
-	<section class="panel-muted p-4 sm:p-5">
-		<h3 class="m-0 text-lg text-black">Codigo de acceso</h3>
+	<section class="panel-elevated p-5 sm:p-6">
 		<Form
 			of={joinForm}
 			onsubmit={submitJoin}
-			class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end"
+			class="grid gap-3 lg:grid-cols-[3fr_1fr] lg:items-end"
 		>
 			<Field of={joinForm} path={["joinCode"]}>
 				{#snippet children(field)}
-					<label class="grid flex-1 gap-1.5">
-						<span class="text-sm text-zinc-800">Join code</span>
+					<div class="grid gap-1.5">
 						<input
 							{...field.props}
 							class="input-base"
+							aria-label="Código de quiz"
 							value={field.input ?? ""}
-							placeholder="Ej: ABCD1234"
+							placeholder="Ingrese un código de Quiz. Ej: ABC1234"
 						/>
 						{#if field.errors?.[0]}
 							<span class="text-sm text-red-700">{field.errors[0]}</span>
 						{/if}
-					</label>
+					</div>
 				{/snippet}
 			</Field>
 
 			<button
-				class="btn-primary flex items-center gap-1.5"
+				class="btn-primary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
 				type="submit"
 				disabled={joinMutation.isPending}
 			>
 				<Search size={16} aria-hidden="true" />
-				{joinMutation.isPending ? "Validando..." : "Ir al lobby"}
+				{joinMutation.isPending ? "Validando..." : "Entrar"}
 			</button>
 		</Form>
 	</section>

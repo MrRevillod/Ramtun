@@ -14,6 +14,17 @@ class BanksService {
 		return unwrapResultOrThrow(await this.listByCourse(courseId))
 	}
 
+	public getById(bankId: string): AppResultAsync<QuestionBank> {
+		return request<QuestionBank>({
+			method: "GET",
+			url: `/banks/${bankId}`,
+		})
+	}
+
+	public async getByIdOrThrow(bankId: string): Promise<QuestionBank> {
+		return unwrapResultOrThrow(await this.getById(bankId))
+	}
+
 	public create(input: CreateQuestionBankInput): AppResultAsync<void> {
 		return request<void>({
 			method: "POST",

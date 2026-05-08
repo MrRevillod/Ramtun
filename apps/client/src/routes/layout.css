@@ -4,6 +4,7 @@
 :root {
 	--paper: #f8f8f6;
 	--paper-soft: #fcfcfb;
+	--paper-deep: #eceae4;
 	--paper-muted: #f0f0eb;
 	--ink: #171412;
 	--ink-soft: #2c2622;
@@ -15,9 +16,34 @@
 	--highlight: #a36b2c;
 	--shadow-soft: 0 12px 28px rgba(50, 40, 28, 0.07);
 	--shadow-float: 0 20px 44px rgba(50, 40, 28, 0.12);
+	--shadow-hard: 0 16px 34px rgba(35, 27, 18, 0.16);
+	--ok: #1c6c48;
+	--warn: #b26a18;
+	--danger: #9f2f2f;
 	font-family: "Palatino", sans-serif;
 	color: var(--ink);
 	background: var(--paper);
+}
+
+html.dark {
+	--paper: #141414;
+	--paper-soft: #1b1b1b;
+	--paper-deep: #232323;
+	--paper-muted: #1f1f1f;
+	--ink: #f2f2f2;
+	--ink-soft: #dddddd;
+	--ink-muted: #a3a3a3;
+	--line: #323232;
+	--line-strong: #464646;
+	--accent: #111111;
+	--accent-soft: #2a2a2a;
+	--highlight: #c9c9c9;
+	--shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.28);
+	--shadow-float: 0 20px 44px rgba(0, 0, 0, 0.35);
+	--shadow-hard: 0 16px 34px rgba(0, 0, 0, 0.45);
+	--ok: #38a169;
+	--warn: #d69e2e;
+	--danger: #f56565;
 }
 
 html,
@@ -31,18 +57,10 @@ body {
 
 @layer base {
 	body {
-		@apply text-zinc-900;
+		color: var(--ink);
 		margin: 0;
 		min-height: 100dvh;
-		background:
-			radial-gradient(circle at top right, rgba(213, 189, 161, 0.18), transparent 45%),
-			radial-gradient(circle at top left, rgba(201, 218, 198, 0.16), transparent 38%),
-			linear-gradient(
-				180deg,
-				var(--paper-soft) 0%,
-				var(--paper) 24%,
-				var(--paper) 100%
-			);
+		background: var(--paper);
 		font-family: "Palatino", "Palatino Linotype", "Book Antiqua", serif;
 		font-size: 17px;
 		font-weight: 400;
@@ -56,7 +74,8 @@ body {
 	h2,
 	h3,
 	h4 {
-		@apply font-normal text-black;
+		font-weight: 400;
+		color: var(--ink);
 		letter-spacing: -0.01em;
 	}
 
@@ -87,13 +106,61 @@ body {
 
 @layer components {
 	.app-shell {
-		@apply mx-auto flex min-h-dvh w-full max-w-[88rem] flex-col p-3 sm:p-4 lg:p-6;
+		@apply mx-auto flex min-h-dvh w-full max-w-[78rem] flex-col p-3 sm:p-4 lg:p-6;
+	}
+
+	.shell-grid {
+		@apply grid gap-3;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.page-wrap {
+		@apply grid gap-4;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.page-main {
+		@apply min-w-0;
+	}
+
+	.page-side {
+		@apply min-w-0;
+	}
+
+	.form-stack {
+		@apply grid gap-3;
+	}
+
+	.form-grid-2 {
+		@apply grid gap-3;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.sticky-actions {
+		@apply sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-md border p-2.5;
+		border-color: color-mix(in srgb, var(--line) 88%, white);
+		background: color-mix(in srgb, white 90%, var(--paper-soft));
+		box-shadow: var(--shadow-soft);
 	}
 
 	.panel-surface {
-		@apply rounded-md border bg-white;
+		@apply rounded-md border;
 		border-color: color-mix(in srgb, var(--line) 88%, white);
+		background: color-mix(in srgb, var(--paper-soft) 90%, white);
 		box-shadow: var(--shadow-soft);
+	}
+
+	.panel-elevated {
+		@apply rounded-md border;
+		border-color: color-mix(in srgb, var(--line) 84%, white);
+		background:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--paper-soft) 96%, white) 0%,
+				color-mix(in srgb, var(--paper-soft) 92%, var(--paper)) 100%
+			),
+			var(--paper-soft);
+		box-shadow: var(--shadow-float);
 	}
 
 	.panel-muted {
@@ -107,7 +174,9 @@ body {
 	}
 
 	.input-base {
-		@apply w-full rounded-[4px] border bg-white px-3.5 py-2.5 text-[0.97rem] leading-6 text-zinc-900;
+		@apply w-full rounded-[4px] border px-3.5 py-2.5 text-[0.97rem] leading-6;
+		background: color-mix(in srgb, var(--paper-soft) 90%, white);
+		color: var(--ink);
 		border-color: var(--line-strong);
 		min-height: 44px;
 	}
@@ -158,6 +227,7 @@ body {
 			var(--accent) 100%
 		);
 		min-height: 42px;
+		box-shadow: 0 8px 16px rgba(45, 36, 28, 0.2);
 	}
 
 	.btn-primary:hover:not(:disabled) {
@@ -169,7 +239,9 @@ body {
 	}
 
 	.btn-secondary {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-black;
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
+		background: color-mix(in srgb, var(--paper-soft) 92%, white);
+		color: var(--ink);
 		border-color: color-mix(in srgb, var(--ink) 88%, white);
 		min-height: 42px;
 	}
@@ -179,7 +251,10 @@ body {
 	}
 
 	.btn-tertiary {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-zinc-800;
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
+		border-color: color-mix(in srgb, var(--line-strong) 70%, white);
+		background: color-mix(in srgb, var(--paper-soft) 92%, white);
+		color: var(--ink-soft);
 		min-height: 42px;
 	}
 
@@ -189,20 +264,29 @@ body {
 	}
 
 	.action-tab {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border bg-white px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-black sm:px-5;
-		border-color: color-mix(in srgb, var(--ink) 88%, white);
-		min-height: 46px;
+		@apply inline-flex items-center gap-2 rounded-[4px] border px-3 py-2 text-sm font-medium tracking-[0.005em];
+		color: var(--ink-soft);
+		justify-content: flex-start;
+		border-color: color-mix(in srgb, var(--line-strong) 85%, white);
+		background: color-mix(in srgb, white 88%, var(--paper-soft));
+		min-height: 38px;
+		transition:
+			background-color 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease,
+			box-shadow 180ms ease;
 	}
 
 	.action-tab[data-active="true"] {
-		@apply text-white;
-		border-color: color-mix(in srgb, var(--accent) 86%, white);
-		background: linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--accent) 84%, black) 0%,
-			var(--accent) 100%
-		);
-		box-shadow: 0 10px 18px rgba(50, 40, 28, 0.16);
+		color: var(--ink);
+		border-color: color-mix(in srgb, #8a8a8a 35%, white);
+		background: color-mix(in srgb, #b5b5b5 14%, white);
+		box-shadow: inset 2px 0 0 #111111;
+	}
+
+	.action-tab:hover:not([data-active="true"]) {
+		background: color-mix(in srgb, #d5d5d5 10%, white);
+		border-color: color-mix(in srgb, #a5a5a5 38%, white);
 	}
 
 	.code-chip {
@@ -215,5 +299,245 @@ body {
 	.section-kicker {
 		@apply text-[11px] font-semibold tracking-[0.16em] uppercase;
 		color: color-mix(in srgb, var(--accent-soft) 82%, white);
+	}
+
+	.stat-card {
+		@apply rounded-md border p-4;
+		border-color: color-mix(in srgb, var(--line) 84%, white);
+		background: linear-gradient(
+			180deg,
+			rgba(255, 255, 255, 0.92) 0%,
+			rgba(247, 246, 242, 0.9) 100%
+		);
+	}
+
+	.row-hover {
+		transition: background-color 160ms ease;
+	}
+
+	.row-hover:hover {
+		background-color: color-mix(in srgb, var(--paper-deep) 28%, white);
+	}
+
+	.table-head {
+		background: color-mix(in srgb, var(--paper-deep) 55%, white);
+		color: var(--ink-soft);
+	}
+
+	.table-row {
+		border-top: 1px solid color-mix(in srgb, var(--line) 82%, white);
+		background: color-mix(in srgb, var(--paper-soft) 88%, white);
+	}
+
+	.table-cell-muted {
+		color: var(--ink-muted);
+	}
+
+	.icon-btn {
+		@apply inline-flex items-center justify-center rounded-[4px] border p-1.5;
+		border-color: color-mix(in srgb, var(--line-strong) 82%, white);
+		background: color-mix(in srgb, var(--paper-soft) 90%, white);
+		color: var(--ink-muted);
+	}
+
+	.icon-btn:hover {
+		border-color: color-mix(in srgb, var(--ink-muted) 55%, white);
+		background: color-mix(in srgb, var(--paper) 82%, white);
+	}
+
+	.icon-btn-danger {
+		border-color: color-mix(in srgb, #cf5a5a 38%, white);
+		color: #a33333;
+	}
+
+	.icon-btn-danger:hover {
+		border-color: color-mix(in srgb, #a33333 45%, white);
+		background: color-mix(in srgb, #a33333 8%, white);
+	}
+
+	.pill-outline {
+		@apply inline-flex items-center gap-1 rounded-[4px] border px-2 py-1 text-xs;
+		border-color: color-mix(in srgb, var(--line-strong) 86%, white);
+		color: var(--ink-muted);
+		background: transparent;
+	}
+
+	.quiz-shell {
+		@apply grid gap-4;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.quiz-option {
+		@apply w-full rounded-[4px] border px-4 py-3 text-left;
+		border-color: color-mix(in srgb, var(--line-strong) 92%, white);
+		background: color-mix(in srgb, var(--paper-soft) 92%, white);
+		color: var(--ink);
+		min-height: 48px;
+	}
+
+	.quiz-option:hover {
+		border-color: color-mix(in srgb, var(--ink-muted) 48%, white);
+	}
+
+	.quiz-option[data-active="true"] {
+		@apply text-white;
+		border-color: color-mix(in srgb, var(--accent) 86%, white);
+		background: linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--accent) 85%, black) 0%,
+			var(--accent) 100%
+		);
+		box-shadow: 0 8px 18px rgba(42, 33, 25, 0.18);
+	}
+
+	.notice {
+		@apply rounded-[4px] border px-3 py-2 text-sm;
+	}
+
+	.notice-ok {
+		border-color: color-mix(in srgb, var(--ok) 45%, white);
+		background: color-mix(in srgb, var(--ok) 14%, white);
+		color: color-mix(in srgb, var(--ok) 88%, black);
+	}
+
+	.notice-warn {
+		border-color: color-mix(in srgb, var(--warn) 52%, white);
+		background: color-mix(in srgb, var(--warn) 16%, white);
+		color: color-mix(in srgb, var(--warn) 82%, black);
+	}
+
+	.notice-danger {
+		border-color: color-mix(in srgb, var(--danger) 50%, white);
+		background: color-mix(in srgb, var(--danger) 15%, white);
+		color: color-mix(in srgb, var(--danger) 85%, black);
+	}
+
+	.keyline {
+		height: 1px;
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			color-mix(in srgb, var(--line-strong) 86%, white) 20%,
+			color-mix(in srgb, var(--line-strong) 86%, white) 80%,
+			transparent 100%
+		);
+	}
+
+	@media (min-width: 1024px) {
+		.shell-grid {
+			grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
+			align-items: stretch;
+			min-height: calc(100dvh - 12.5rem);
+		}
+
+		.shell-grid > nav,
+		.shell-grid > section {
+			min-height: 100%;
+		}
+
+		.page-wrap {
+			grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+			align-items: start;
+		}
+
+		.form-grid-2 {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.quiz-shell {
+			grid-template-columns: minmax(0, 1fr) 21rem;
+		}
+	}
+}
+
+@layer utilities {
+	html.dark .panel-elevated {
+		border-color: color-mix(in srgb, var(--line-strong) 78%, black);
+		background: #1b1b1b;
+		box-shadow: none;
+	}
+
+	html.dark .panel-muted {
+		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
+		background: #1a1a1a;
+		box-shadow: none;
+	}
+
+	html.dark .panel-surface {
+		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
+		background: #1d1d1d;
+		box-shadow: none;
+	}
+
+	html.dark .stat-card {
+		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
+		background: linear-gradient(180deg, #222 0%, #1b1b1b 100%);
+	}
+
+	html.dark .code-chip {
+		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
+		background: #212121;
+		color: #e5e5e5;
+	}
+
+	html.dark .table-head {
+		background: #2a2a2a;
+		color: #ececec;
+	}
+
+	html.dark .table-row {
+		background: #1c1c1c;
+		border-top-color: color-mix(in srgb, var(--line-strong) 72%, black);
+	}
+
+	html.dark .action-tab {
+		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
+		background: #202020;
+		color: #d4d4d4;
+	}
+
+	html.dark .action-tab[data-active="true"] {
+		border-color: color-mix(in srgb, var(--line-strong) 82%, black);
+		background: #2b2b2b;
+		color: #ffffff;
+		box-shadow: inset 2px 0 0 #ffffff;
+	}
+
+	html.dark .btn-secondary,
+	html.dark .btn-tertiary {
+		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
+		background: #222;
+		color: #e5e5e5;
+	}
+
+	html.dark .icon-btn {
+		border-color: color-mix(in srgb, var(--line-strong) 68%, black);
+		background: #222;
+		color: #d4d4d4;
+	}
+
+	html.dark .bg-white,
+	html.dark .bg-white\/80,
+	html.dark .bg-white\/90 {
+		background-color: color-mix(in srgb, var(--paper-soft) 88%, black);
+	}
+
+	html.dark .text-black,
+	html.dark .text-zinc-900,
+	html.dark .text-zinc-800,
+	html.dark .text-zinc-700,
+	html.dark .text-zinc-600 {
+		color: var(--ink-soft);
+	}
+
+	html.dark .border-zinc-300,
+	html.dark .border-zinc-200 {
+		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
+	}
+
+	html.dark .bg-zinc-50,
+	html.dark .bg-zinc-100,
+	html.dark .bg-zinc-200 {
+		background-color: color-mix(in srgb, var(--paper-muted) 90%, black);
 	}
 }

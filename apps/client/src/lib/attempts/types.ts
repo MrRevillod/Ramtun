@@ -20,6 +20,7 @@ export type AttemptView = {
 export type AttemptListItem = {
 	attemptId: string
 	studentId: string
+	userName: string
 	quizId: string
 	startedAt: string
 	expiresAt: string
@@ -49,6 +50,8 @@ export type QuestionResult = {
 
 export type AttemptResult = {
 	attemptId: string
+	studentId: string
+	userName: string
 	quizId: string
 	submittedAt: string
 	grade: number

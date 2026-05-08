@@ -2,17 +2,21 @@ export type Question = {
 	id: string
 	prompt: string
 	options: string[]
-	answerIndex: number
+	answer_index?: number
+	answerIndex?: number
 	images: string[]
 }
 
 export type QuestionBank = {
 	id: string
-	courseId: string
+	course_id?: string
+	courseId?: string
 	name: string
 	questions: Question[]
-	createdAt: string
-	deletedAt: string | null
+	created_at?: string
+	createdAt?: string
+	deleted_at?: string | null
+	deletedAt?: string | null
 }
 
 export type CreateQuestionBankInput = {

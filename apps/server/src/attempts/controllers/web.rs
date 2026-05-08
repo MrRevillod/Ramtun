@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use sword::prelude::*;
+use sword::socketio::SocketIo;
 use sword::web::*;
 use uuid::Uuid;
 
@@ -13,6 +14,7 @@ use crate::shared::RequestExt;
 #[controller(kind = Controller::Web, path = "/attempts")]
 #[interceptor(SessionCheck)]
 pub struct AttemptsController {
+    socket_io: SocketIo,
     attempts: Arc<AttemptsService>,
 }
 
@@ -70,6 +72,12 @@ impl AttemptsController {
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
         let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
+
+        self.socket_io
+            .broadcast()
+            .emit("attempts:new-submit", &attempt)
+            .await
+            .ok();
 
         Ok(JsonResponse::Ok().data(attempt))
     }

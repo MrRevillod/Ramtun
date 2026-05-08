@@ -4,7 +4,7 @@
 	import { createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { browser } from "$app/environment"
 	import { onMount } from "svelte"
-	import { Loader2, RefreshCw, ArrowLeft } from "lucide-svelte"
+	import { Loader2, RefreshCw, ArrowLeft, BadgeCheck } from "lucide-svelte"
 	import type { AttemptResult } from "$lib/attempts/types"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
@@ -34,10 +34,7 @@
 				return r
 			} catch (e) {
 				const maybe = e as { kind?: string; status?: number }
-				if (
-					maybe.kind === "http" &&
-					maybe.status === 409
-				) {
+				if (maybe.kind === "http" && maybe.status === 409) {
 					return null
 				}
 				throw e
@@ -89,27 +86,21 @@
 	}
 </script>
 
-<section class="grid gap-4">
+<section class="grid gap-5">
 	{#if !hasResult}
 		<header>
 			<h2 class="mt-2 mb-0 text-2xl text-black">Sala de espera de resultados</h2>
 			<p class="mt-2 max-w-3xl text-zinc-700">
-				Aún no se publican los resultados de este quiz. Te avisaremos cuando
-				estén disponibles.
+				Aun no se publican los resultados de este quiz. Esta pantalla se actualiza
+				automaticamente.
 			</p>
 		</header>
 
-		<section class="panel-surface p-6 sm:p-8">
+		<section class="panel-elevated p-6 sm:p-8">
 			<div class="flex flex-col items-center gap-4 text-center">
-				<Loader2
-					size={32}
-					class="animate-spin text-zinc-600"
-					aria-hidden="true"
-				/>
-				<p class="m-0 text-lg text-zinc-800">
-					Esperando publicación de resultados
-				</p>
-				<p class="m-0 text-sm text-zinc-600">
+				<Loader2 size={32} class="animate-spin text-zinc-600" aria-hidden="true" />
+				<p class="m-0 text-lg text-zinc-800">Esperando publicación de resultados</p>
+				<p class="notice notice-warn m-0 text-sm">
 					Próxima consulta en {nextCheckIn}s
 				</p>
 
@@ -119,7 +110,7 @@
 					</p>
 				{/if}
 
-				<div class="flex gap-2">
+				<div class="flex flex-wrap justify-center gap-2">
 					<button
 						class="btn-secondary flex items-center gap-1.5"
 						type="button"
@@ -138,16 +129,25 @@
 						Volver
 					</button>
 				</div>
+
+				<p class="mt-2 mb-0 max-w-xl text-xs text-zinc-500">
+					Puedes cerrar esta pantalla y volver luego con el mismo codigo. Si el
+					resultado ya esta publicado, lo veras al instante.
+				</p>
 			</div>
 		</section>
 	{:else}
 		<header>
 			<h2 class="mt-2 mb-0 text-2xl text-black">Resultados disponibles</h2>
 			<p class="mt-2 max-w-3xl text-zinc-700">
-				Los resultados ya están publicados. Revisa tu desempeño a
-				continuación.
+				Los resultados ya estan publicados. Revisa tu desempeno a continuacion.
 			</p>
 		</header>
+
+		<p class="notice notice-ok m-0 inline-flex w-fit items-center gap-1.5">
+			<BadgeCheck size={16} aria-hidden="true" />
+			Tu resultado esta disponible para revision.
+		</p>
 
 		{#if result}
 			<AttemptResultReview {result} />

@@ -4,7 +4,6 @@ mod authz;
 mod banks;
 mod courses;
 mod logger;
-mod macros;
 mod quizzes;
 mod shared;
 mod snapshots;

@@ -4,9 +4,16 @@
 		createQuery,
 		useQueryClient,
 	} from "@tanstack/svelte-query"
-	import { createForm, Field, Form, type SubmitEventHandler, reset } from "@formisch/svelte"
+	import {
+		createForm,
+		Field,
+		Form,
+		type SubmitEventHandler,
+		reset,
+	} from "@formisch/svelte"
 	import { toast } from "svelte-sonner"
-	import { Plus, RefreshCw, UserMinus } from "lucide-svelte"
+	import { fade, scale } from "svelte/transition"
+	import { Plus, Trash2, X } from "lucide-svelte"
 	import {
 		addCourseMemberSchema,
 		type AddCourseMemberFormValues,
@@ -14,6 +21,7 @@
 	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { usersService } from "$lib/users/users.service"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import { roleLabel } from "$lib/shared/labels"
 
 	let { data } = $props()
@@ -69,77 +77,54 @@
 		typeof addCourseMemberSchema
 	> = async output => {
 		await addMemberMutation.mutateAsync(output)
+		showAddModal = false
+	}
+
+	let showAddModal = $state(false)
+	let memberToRemove = $state<{ userId: string; username: string } | null>(null)
+
+	const confirmRemoveMember = async () => {
+		if (!memberToRemove) return
+		await removeMemberMutation.mutateAsync(memberToRemove.userId)
+		memberToRemove = null
 	}
 </script>
 
 <section class="grid gap-4">
 	<header>
-		<h3 class="mt-2 mb-0 text-xl text-black">
-			Miembros {#if courseQuery.data}<span class="text-zinc-500"
-					>· {courseQuery.data.code}</span
-				>{/if}
-		</h3>
-		<p class="mt-2 mb-0 text-zinc-700">Administra los integrantes del curso.</p>
-	</header>
-
-	<section class="panel-muted p-4">
-		<h4 class="m-0 text-base text-black">Agregar miembro</h4>
-		<Form of={addMemberForm} onsubmit={submitAddMember} class="mt-3 grid gap-3">
-			<Field of={addMemberForm} path={["userId"]}>
-				{#snippet children(field)}
-					<label class="grid gap-1.5">
-						<span class="text-sm text-zinc-800">Usuario</span>
-						<select {...field.props} class="input-base" value={field.input ?? ""}>
-							<option value="">Selecciona un usuario</option>
-							{#each candidatesQuery.data ?? [] as candidate (candidate.id)}
-								<option value={candidate.id}>
-									{candidate.username} · {candidate.name}
-								</option>
-							{/each}
-						</select>
-						{#if field.errors?.[0]}
-							<span class="text-sm text-red-700">{field.errors[0]}</span>
-						{/if}
-					</label>
-				{/snippet}
-			</Field>
-
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<h3 class="mt-2 mb-0 text-xl text-black">
+					{courseQuery.data?.name ?? "Curso"} - Miembros
+				</h3>
+				<p class="mt-2 mb-0 text-zinc-700">
+					Agrega o retira participantes.
+				</p>
+			</div>
 			<button
-				class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
-				type="submit"
+				class="btn-primary flex items-center gap-1.5"
+				type="button"
+				onclick={() => (showAddModal = true)}
 			>
 				<Plus size={16} aria-hidden="true" />
-				{addMemberMutation.isPending ? "Agregando..." : "Agregar miembro"}
-			</button>
-		</Form>
-	</section>
-
-	<section class="panel-surface p-4">
-		<div class="mb-3 flex items-center justify-between gap-3">
-			<h4 class="m-0 text-base text-black">Listado de miembros</h4>
-			<button
-				class="btn-secondary flex items-center gap-1.5"
-				type="button"
-				onclick={() => membersQuery.refetch()}
-				disabled={membersQuery.isFetching}
-			>
-				<RefreshCw size={16} aria-hidden="true" />
-				Actualizar
+				Agregar miembro
 			</button>
 		</div>
+	</header>
 
+	<section class="panel-elevated p-4">
 		{#if membersQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando miembros...</p>
 		{:else if membersQuery.error}
 			<p class="m-0 text-red-700">{getErrorMessage(membersQuery.error)}</p>
 		{:else if !membersQuery.data?.length}
-			<p class="m-0 text-zinc-600">El curso aun no tiene miembros.</p>
+			<p class="notice notice-warn m-0">El curso aún no tiene miembros.</p>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-full border-collapse text-sm">
-					<thead class="bg-zinc-100/90 text-zinc-700">
+					<thead class="table-head">
 						<tr>
-							<th class="px-3 py-2 text-left font-medium">Username</th>
+							<th class="px-3 py-2 text-left font-medium">Usuario</th>
 							<th class="px-3 py-2 text-left font-medium">Nombre</th>
 							<th class="px-3 py-2 text-left font-medium">Rol</th>
 							<th class="px-3 py-2 text-left font-medium">Acciones</th>
@@ -147,20 +132,24 @@
 					</thead>
 					<tbody>
 						{#each membersQuery.data as member (member.userId)}
-							<tr class="border-t border-zinc-200 bg-white/80">
+							<tr class="table-row">
 								<td class="px-3 py-2 font-medium text-zinc-900">{member.username}</td
 								>
 								<td class="px-3 py-2 text-zinc-800">{member.name}</td>
 								<td class="px-3 py-2 text-zinc-700">{roleLabel(member.role)}</td>
 								<td class="px-3 py-2">
 									<button
-										class="btn-tertiary flex items-center gap-1.5"
-										type="button"
-										onclick={() => removeMemberMutation.mutate(member.userId)}
-										disabled={removeMemberMutation.isPending}
-									>
-										<UserMinus size={16} aria-hidden="true" />
-										Quitar
+									class="icon-btn icon-btn-danger"
+									title="Quitar"
+									type="button"
+									onclick={() =>
+										(memberToRemove = {
+											userId: member.userId,
+											username: member.username,
+										})}
+									disabled={removeMemberMutation.isPending}
+								>
+										<Trash2 size={15} aria-hidden="true" />
 									</button>
 								</td>
 							</tr>
@@ -170,4 +159,77 @@
 			</div>
 		{/if}
 	</section>
+
+	{#if showAddModal}
+		<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			transition:fade={{ duration: 180 }}
+			onclick={() => (showAddModal = false)}
+			onkeydown={e => {
+				if (e.key === "Escape") showAddModal = false
+			}}
+		>
+			<section
+				class="panel-elevated w-full max-w-xl p-5"
+				role="presentation"
+				tabindex="-1"
+				transition:scale={{ duration: 190, start: 0.98 }}
+				onclick={e => e.stopPropagation()}
+			>
+				<div class="mb-3 flex items-center justify-between gap-2">
+					<h4 class="m-0 text-base text-black">Agregar miembro</h4>
+					<button
+						class="btn-tertiary p-1"
+						type="button"
+						onclick={() => (showAddModal = false)}
+						><X size={18} aria-hidden="true" /></button
+					>
+				</div>
+				<Form of={addMemberForm} onsubmit={submitAddMember} class="form-stack">
+					<Field of={addMemberForm} path={["userId"]}
+						>{#snippet children(field)}<label class="grid gap-1.5"
+								><span class="text-sm text-zinc-800">Usuario</span><select
+									{...field.props}
+									class="input-base"
+									value={field.input ?? ""}
+									><option value="">Selecciona un usuario</option
+									>{#each candidatesQuery.data ?? [] as candidate (candidate.id)}<option
+											value={candidate.id}
+											>{candidate.username} · {candidate.name}</option
+										>{/each}</select
+								>{#if field.errors?.[0]}<span class="text-sm text-red-700"
+										>{field.errors[0]}</span
+									>{/if}</label
+							>{/snippet}</Field
+					>
+					<div class="flex justify-end gap-2">
+						<button
+							class="btn-tertiary"
+							type="button"
+							onclick={() => (showAddModal = false)}>Cancelar</button
+						><button class="btn-primary flex items-center gap-1.5" type="submit"
+							><Plus size={16} aria-hidden="true" />{addMemberMutation.isPending
+								? "Agregando..."
+								: "Agregar miembro"}</button
+						>
+					</div>
+				</Form>
+			</section>
+		</div>
+	{/if}
+
+	<ConfirmActionModal
+		open={!!memberToRemove}
+		title="Quitar miembro"
+		message={memberToRemove
+			? `Se quitara a ${memberToRemove.username} de este curso.`
+			: ""}
+		confirmLabel="Quitar"
+		isPending={removeMemberMutation.isPending}
+		onCancel={() => (memberToRemove = null)}
+		onConfirm={confirmRemoveMember}
+	/>
 </section>

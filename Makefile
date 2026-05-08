@@ -12,13 +12,9 @@ file ?=
 cmd ?= deploy
 args ?=
 docker_tty ?= -it
-DIAGRAMS_DIR ?= .diagrams
-RENDER_DIR ?= $(DIAGRAMS_DIR)/render
-KROKI ?= kroki
-MMDC ?= mmdc
 
 .DEFAULT_GOAL := run
-.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup puml mmd deployer
+.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup deployer
 
 setup:
 	rm -rf $(CLIENT)/node_modules
@@ -67,22 +63,6 @@ npmu:
 npmci:
 	cd $(CLIENT) && corepack pnpm install --frozen-lockfile --ignore-scripts
 	docker compose exec $(service) /bin/sh -c "cd /app/apps/$(app) && corepack pnpm install --frozen-lockfile --ignore-scripts"
-
-puml:
-	@test -n "$(file)" || (echo 'Uso: make puml file=nombre' && exit 1)
-	@test -f "$(DIAGRAMS_DIR)/$(file).puml" || (echo "No existe $(DIAGRAMS_DIR)/$(file).puml" && exit 1)
-	@command -v "$(KROKI)" >/dev/null 2>&1 || (echo "No se encontro kroki. Usa KROKI=/ruta/al/binario" && exit 1)
-	@mkdir -p "$(RENDER_DIR)"
-	@"$(KROKI)" convert "$(DIAGRAMS_DIR)/$(file).puml" --out-file "$(RENDER_DIR)/$(file).png"
-	@echo "Generado $(RENDER_DIR)/$(file).png"
-
-mmd:
-	@test -n "$(file)" || (echo 'Uso: make mmd file=nombre' && exit 1)
-	@test -f "$(DIAGRAMS_DIR)/$(file).mmd" || (echo "No existe $(DIAGRAMS_DIR)/$(file).mmd" && exit 1)
-	@command -v "$(MMDC)" >/dev/null 2>&1 || (echo "No se encontro mmdc. Usa MMDC=/ruta/al/binario" && exit 1)
-	@mkdir -p "$(RENDER_DIR)"
-	@"$(MMDC)" -i "$(DIAGRAMS_DIR)/$(file).mmd" -o "$(RENDER_DIR)/$(file).png" -b white
-	@echo "Generado $(RENDER_DIR)/$(file).png"
 
 deployer:
 	docker build -f config/deployer/Dockerfile -t questions-deployer:local .

@@ -5,10 +5,8 @@
 	"formatter": "language_server",
 	"file_scan_exclusions": [
 		"**/.git/**",
-		"**/node_modules/**",
 		"**/target/**",
 		"**/routeTree.gen.ts",
-		"**/.svelte-kit/**",
 		"**/dist/**",
 		"**/build/**"
 	],

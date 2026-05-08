@@ -3,35 +3,41 @@ use thiserror::Error;
 
 #[derive(Debug, Error, HttpError)]
 pub enum QuestionBankError {
-    #[http(code = 404, message = "The requested question bank was not found.")]
+    #[http(
+        code = 404,
+        message = "No se encontró el banco de preguntas solicitado."
+    )]
     #[error("Question bank not found: {0}")]
     NotFound(String),
 
-    #[http(code = 400, message = "The provided question bank ID is invalid.")]
+    #[http(
+        code = 400,
+        message = "El ID del banco de preguntas proporcionado no es válido."
+    )]
     #[error("Invalid question bank ID")]
     InvalidId,
 
-    #[http(code = 403, message = "You do not have access to this question bank.")]
+    #[http(code = 403, message = "No tienes acceso a este banco de preguntas.")]
     #[error("Forbidden question bank access")]
     Forbidden,
 
     #[http(
         code = 409,
-        message = "This bank is used by a quiz currently running and cannot be modified."
+        message = "Este banco está siendo usado por un quiz en curso y no se puede modificar."
     )]
     #[error("Question bank is locked by running quiz")]
     LockedByRunningQuiz,
 
     #[http(
         code = 409,
-        message = "The resulting snapshot has fewer questions than the quiz questionCount."
+        message = "La versión resultante del banco tiene menos preguntas que las requeridas por el quiz."
     )]
     #[error("Invalid question count after bank update")]
     InvalidQuestionCountAfterBankUpdate,
 
     #[http(
         code = 409,
-        message = "Question bank snapshot was not found for one linked quiz."
+        message = "No se encontró la versión del banco para uno de los quizzes vinculados."
     )]
     #[error("Question bank snapshot not found")]
     SnapshotNotFound,

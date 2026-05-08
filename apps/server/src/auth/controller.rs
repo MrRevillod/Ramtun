@@ -42,6 +42,6 @@ impl AuthController {
 
         self.auth_service.logout(&session_claims.session_id).await?;
 
-        Ok(JsonResponse::Ok().message("Logged out successfully"))
+        Ok(JsonResponse::Ok().message("Sesión cerrada correctamente"))
     }
 }

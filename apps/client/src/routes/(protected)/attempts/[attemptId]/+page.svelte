@@ -58,7 +58,10 @@
 			}
 
 			session = parsed
-			currentIndex = Math.max(0, Math.min(parsed.index, parsed.attempt.questions.length - 1))
+			currentIndex = Math.max(
+				0,
+				Math.min(parsed.index, parsed.attempt.questions.length - 1)
+			)
 			answers = parsed.answers
 		} catch {
 			await goto("/join")
@@ -89,7 +92,10 @@
 	const startTimer = (expiresAt: string) => {
 		clearTimer()
 		const update = () => {
-			const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+			const diff = Math.max(
+				0,
+				Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
+			)
 			remainingSeconds = diff
 			if (diff === 0 && !autoSubmitting && !submitMutation.isPending) {
 				autoSubmitting = true
@@ -129,7 +135,8 @@
 			if (browser) {
 				localStorage.removeItem(ATTEMPT_SESSION_KEY)
 				localStorage.setItem("last-submitted-attempt-id", submitted.attemptId)
-				if (session) localStorage.setItem("last-submitted-join-code", session.joinCode)
+				if (session)
+					localStorage.setItem("last-submitted-join-code", session.joinCode)
 			}
 			clearTimer()
 			showSubmitModal = true
@@ -170,7 +177,7 @@
 	const selectCertainty = async (questionId: string, certainty: CertaintyLevel) => {
 		const prev = answers[questionId]
 		if (!prev) {
-			toast.error("Primero selecciona una alternativa.")
+			toast.info("Primero selecciona una alternativa.")
 			return
 		}
 		answers = {
@@ -189,10 +196,24 @@
 		})
 	}
 
+	const firstCertaintyGapIndex = () => {
+		if (!session || session.preview.kind !== "certainty") return -1
+		return session.attempt.questions.findIndex(question => {
+			const answer = answers[question.id]
+			if (!answer) return false
+			return answer.certaintyLevel === null
+		})
+	}
+
 	const submitAttempt = async (force = false) => {
 		if (!session) return
 		if (!force && hasCertaintyGap()) {
-			toast.error("Debes seleccionar nivel de certeza antes de finalizar.")
+			const gapIndex = firstCertaintyGapIndex()
+			if (gapIndex >= 0) {
+				currentIndex = gapIndex
+				persistSession()
+			}
+			toast.error("Te falta seleccionar nivel de certeza en una o más preguntas.")
 			return
 		}
 		await submitMutation.mutateAsync(session.attempt.attemptId)
@@ -200,9 +221,14 @@
 
 	const currentQuestion = $derived(session?.attempt.questions[currentIndex] ?? null)
 	const totalQuestions = $derived(session?.attempt.questions.length ?? 0)
-	const currentAnswer = $derived(currentQuestion ? answers[currentQuestion.id] : null)
+	const currentAnswer = $derived(
+		currentQuestion ? answers[currentQuestion.id] : null
+	)
 	const progress = $derived(
 		session ? `${currentIndex + 1}/${session.attempt.questions.length}` : "0/0"
+	)
+	const progressPercent = $derived(
+		totalQuestions > 0 ? ((currentIndex + 1) / totalQuestions) * 100 : 0
 	)
 	const timerLabel = $derived.by(() => {
 		const min = Math.floor(remainingSeconds / 60)
@@ -213,29 +239,39 @@
 
 {#if session && currentQuestion}
 	<section class="grid gap-5">
-		<header class="panel-muted p-4 sm:p-5">
-			<div class="flex flex-wrap items-center justify-between gap-2">
+		<section class="panel-elevated p-4 sm:p-6">
+			<header class="mb-5 flex flex-wrap items-start justify-between gap-3">
 				<div>
-					<p class="m-0 text-sm text-zinc-600">Progreso: {progress}</p>
-					<h3 class="m-0 mt-1 text-xl text-black">{session.preview.title}</h3>
+					<h3 class="m-0 text-xl text-black">{session.preview.title}</h3>
+					<p class="mt-1 mb-0 text-sm text-zinc-600">Pregunta {progress}</p>
+					<div class="mt-2 h-1.5 w-56 overflow-hidden rounded-full bg-zinc-200">
+						<div
+							class="h-full rounded-full bg-zinc-900 transition-all duration-200"
+							style={`width: ${progressPercent}%`}
+						></div>
+					</div>
 				</div>
-				<p class="m-0 text-sm font-medium text-zinc-800">
+				<div
+					class="notice {remainingSeconds <= 120
+						? 'notice-danger'
+						: 'notice-warn'} font-medium"
+				>
 					<Clock size={14} class="-mt-0.5 mr-0.5 inline-block" aria-hidden="true" />
-					{timerLabel}
-				</p>
-			</div>
-		</header>
+					Tiempo restante: {timerLabel}
+				</div>
+			</header>
 
-		<section class="panel-surface p-4 sm:p-6">
-			<h4 class="m-0 text-lg text-black">{currentQuestion.prompt}</h4>
+			<div class="keyline"></div>
+			<h4 class="mt-5 mb-0 text-lg leading-relaxed text-black">
+				{currentQuestion.prompt}
+			</h4>
 
 			<div class="mt-6 grid gap-3">
-				{#each currentQuestion.options as option, optionIndex}
+				{#each currentQuestion.options as option, optionIndex (optionIndex)}
 					<button
 						type="button"
-						class={currentAnswer?.answerIndex === optionIndex
-							? "btn-primary w-full justify-start py-3"
-							: "btn-secondary w-full justify-start py-3"}
+						class="quiz-option"
+						data-active={currentAnswer?.answerIndex === optionIndex}
 						onclick={() => selectOption(currentQuestion.id, optionIndex)}
 					>
 						{option}
@@ -244,14 +280,18 @@
 			</div>
 
 			{#if session.preview.kind === "certainty"}
-				<div class="mt-7 grid gap-2 sm:grid-cols-3">
-					{#each ["low", "medium", "high"] as level}
+				<p class="mt-7 mb-0 text-sm font-medium text-zinc-800">Nivel de certeza</p>
+				<div class="mt-2 grid gap-2 sm:grid-cols-3">
+					{#each ["low", "medium", "high"] as level (level)}
 						<button
 							type="button"
-							class={currentAnswer?.certaintyLevel === level ? "btn-primary" : "btn-tertiary"}
-							onclick={() => selectCertainty(currentQuestion.id, level as CertaintyLevel)}
+							class={currentAnswer?.certaintyLevel === level
+								? "btn-primary"
+								: "btn-tertiary"}
+							onclick={() =>
+								selectCertainty(currentQuestion.id, level as CertaintyLevel)}
 						>
-							Certeza {certaintyLevelLabel(level as CertaintyLevel)}
+							{certaintyLevelLabel(level as CertaintyLevel)}
 						</button>
 					{/each}
 				</div>
@@ -267,13 +307,19 @@
 							persistSession()
 						}}
 					>
-						Siguiente
+						Siguiente pregunta
 						<ArrowRight size={16} aria-hidden="true" />
 					</button>
 				{:else}
-					<button class="btn-primary flex items-center gap-1.5" type="button" onclick={() => submitAttempt()}>
+					<button
+						class="btn-primary flex items-center gap-1.5"
+						type="button"
+						onclick={() => submitAttempt()}
+					>
 						<Send size={16} aria-hidden="true" />
-						{submitMutation.isPending || autoSubmitting ? "Enviando..." : "Finalizar intento"}
+						{submitMutation.isPending || autoSubmitting
+							? "Enviando..."
+							: "Finalizar intento"}
 					</button>
 				{/if}
 			</div>
@@ -294,25 +340,44 @@
 			if (e.key === "Escape") showSubmitModal = false
 		}}
 	>
-		<div class="panel-surface w-full max-w-md p-6" role="presentation" tabindex="-1" onclick={e => e.stopPropagation()}>
+		<div
+			class="panel-surface w-full max-w-md p-6"
+			role="presentation"
+			tabindex="-1"
+			onclick={e => e.stopPropagation()}
+		>
 			<div class="mb-4 flex items-center justify-between">
 				<h3 class="m-0 flex items-center gap-2 text-xl text-black">
 					<CheckCircle2 size={20} class="text-emerald-600" aria-hidden="true" />
 					Intento enviado
 				</h3>
-				<button class="btn-tertiary p-1" type="button" onclick={() => (showSubmitModal = false)}>
+				<button
+					class="btn-tertiary p-1"
+					type="button"
+					onclick={() => (showSubmitModal = false)}
+				>
 					<X size={18} aria-hidden="true" />
 				</button>
 			</div>
 			<p class="mb-4 text-sm text-zinc-700">
-				Tu intento fue enviado correctamente. Los resultados estaran disponibles cuando el docente los publique.
+				Tu intento fue enviado correctamente. Los resultados estarán disponibles
+				cuando el docente los publique.
 			</p>
 			<div class="grid gap-2">
-				<button class="btn-primary flex items-center justify-center gap-1.5" type="button" onclick={() => goto(`/results/lobby?joinCode=${encodeURIComponent(session ? session.joinCode : "")}`)}>
+				<button
+					class="btn-primary flex items-center justify-center gap-1.5"
+					type="button"
+					onclick={() =>
+						goto(
+							`/results/lobby?joinCode=${encodeURIComponent(session ? session.joinCode : "")}`
+						)}
+				>
 					<ArrowUpRight size={16} aria-hidden="true" />
 					Ir a sala de espera de resultados
 				</button>
-				<button class="btn-secondary" type="button" onclick={() => goto("/join")}>Volver a unirse</button>
+				<button class="btn-secondary" type="button" onclick={() => goto("/")}
+					>Volver al Inicio</button
+				>
 			</div>
 		</div>
 	</div>

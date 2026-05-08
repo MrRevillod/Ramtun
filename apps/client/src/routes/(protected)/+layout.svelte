@@ -10,7 +10,8 @@
 		Users,
 		ClipboardList,
 		LogOut,
-		User,
+		Moon,
+		Sun,
 	} from "lucide-svelte"
 	import { authService } from "$lib/auth/auth.service"
 	import { authStore } from "$lib/auth/auth.store.svelte"
@@ -18,6 +19,7 @@
 	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { roleLabel } from "$lib/shared/labels"
+	import { themeStore } from "$lib/shared/theme/theme.store.svelte"
 
 	let { children } = $props()
 
@@ -46,64 +48,96 @@
 </script>
 
 <main class="app-shell">
-	<header
-		class="panel-surface relative overflow-hidden p-4 sm:p-5"
-	>
-		<div class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-amber-100/35 via-emerald-100/20 to-transparent"></div>
-		<div class="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-		<div>
-			<p class="section-kicker m-0">Plataforma academica</p>
-			<h1 class="mt-2 text-2xl leading-tight text-black sm:text-3xl">
-				Cuestionarios y Tests de Certeza
-			</h1>
-		</div>
+	<header class="panel-elevated mx-auto w-full max-w-[74rem] p-4 sm:p-5">
+		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+			<div>
+				<p class="section-kicker m-0">INF-UCT: RAMTUN</p>
+				<h1 class="mt-2 text-2xl leading-tight text-black sm:text-3xl">
+					Cuestionarios y Tests de Certeza
+				</h1>
+				<p class="mt-1 mb-0 text-sm text-zinc-600">
+					Desarrollado por y para miembros de la comunidad UCT.
+				</p>
+			</div>
 
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-			<div class="flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-left sm:text-right">
-				<User size={16} class="shrink-0 text-zinc-500" aria-hidden="true" />
-				<div>
-					<p class="text-sm font-semibold text-zinc-800">
+			<div class="flex w-full items-stretch gap-2 sm:w-auto">
+				<button
+					class="inline-flex size-11 items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
+					type="button"
+					onclick={() => themeStore.toggle()}
+					title={themeStore.resolved === "dark"
+						? "Cambiar a modo claro"
+						: "Cambiar a modo oscuro"}
+				>
+					{#if themeStore.resolved === "dark"}
+						<Sun size={16} aria-hidden="true" />
+					{:else}
+						<Moon size={16} aria-hidden="true" />
+					{/if}
+				</button>
+
+				<div
+					class="min-w-0 flex-1 rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-[14rem] sm:flex-none sm:text-right h-11 flex flex-col justify-center"
+				>
+					<p class="truncate text-sm font-semibold text-zinc-800">
 						{authStore.session?.user.name}
 					</p>
 					<p class="text-xs text-zinc-600">{displayRole}</p>
 				</div>
+				<button
+					class="inline-flex size-11 items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
+					type="button"
+					onclick={handleLogout}
+					title="Cerrar sesión"
+				>
+					<LogOut size={16} aria-hidden="true" />
+				</button>
 			</div>
-			<button
-				class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
-				type="button"
-				onclick={handleLogout}
-			>
-				<LogOut size={16} aria-hidden="true" />
-				Salir
-			</button>
-		</div>
 		</div>
 	</header>
 
-	<nav class="panel-muted mt-3 flex flex-wrap gap-2 p-2.5">
-		<a class="action-tab flex items-center gap-1.5" data-active={isActive("/join")} href={resolve("/join")}>
-			<DoorOpen size={16} aria-hidden="true" />
-			Unirse
-		</a>
-		<a class="action-tab flex items-center gap-1.5" data-active={isActive("/results")} href={resolve("/results")}>
-			<ClipboardList size={16} aria-hidden="true" />
-			Resultados
-		</a>
-		{#if showTeachingNav}
-			<a class="action-tab flex items-center gap-1.5" data-active={isActive("/courses")} href={resolve("/courses")}>
-				<Layers size={16} aria-hidden="true" />
-				Cursos
+	<section class="mx-auto mt-3 w-full max-w-[74rem] flex-1">
+		<nav class="panel-muted grid grid-cols-3 gap-1.5 p-2 lg:grid-cols-3">
+			<a
+				class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
+				data-active={isActive("/join")}
+				href={resolve("/join")}
+			>
+				<DoorOpen size={16} aria-hidden="true" />
+				Unirse
 			</a>
-		{/if}
-		{#if showUsersNav}
-			<a class="action-tab flex items-center gap-1.5" data-active={isActive("/admin/users")} href={resolve("/admin/users")}>
-				<Users size={16} aria-hidden="true" />
-				Usuarios
+			<a
+				class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
+				data-active={isActive("/results")}
+				href={resolve("/results")}
+			>
+				<ClipboardList size={16} aria-hidden="true" />
+				Resultados
 			</a>
-		{/if}
-	</nav>
+			{#if showTeachingNav}
+				<a
+					class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
+					data-active={isActive("/courses")}
+					href={resolve("/courses")}
+				>
+					<Layers size={16} aria-hidden="true" />
+					Cursos
+				</a>
+			{/if}
+			{#if showUsersNav}
+				<a
+					class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
+					data-active={isActive("/admin/users")}
+					href={resolve("/admin/users")}
+				>
+					<Users size={16} aria-hidden="true" />
+					Usuarios
+				</a>
+			{/if}
+		</nav>
 
-	<section class="panel-surface mt-3 flex-1 p-4 sm:p-5 lg:p-6">
-		{@render children()}
+		<section class="panel-elevated mt-3 min-w-0 p-4 sm:p-5 lg:p-6">
+			{@render children()}
+		</section>
 	</section>
 </main>

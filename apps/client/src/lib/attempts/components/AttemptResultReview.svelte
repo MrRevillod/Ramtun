@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CheckCircle2, XCircle } from "lucide-svelte"
 	import type { AttemptResult } from "$lib/attempts/types"
+	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { certaintyLevelLabel } from "$lib/shared/labels"
 
 	let { result }: { result: AttemptResult } = $props()
@@ -10,6 +11,11 @@
 </script>
 
 <section class="panel-surface p-4 sm:p-5">
+	<div class="mb-3">
+		<p class="m-0 text-xs text-zinc-600">Estudiante</p>
+		<p class="m-0 mt-1 text-sm font-semibold text-zinc-800">{result.userName}</p>
+	</div>
+
 	<div class="mb-4 grid gap-2 sm:grid-cols-3">
 		<div class="panel-muted p-3">
 			<p class="m-0 text-xs text-zinc-600">Puntaje</p>
@@ -20,7 +26,7 @@
 		<div class="panel-muted p-3">
 			<p class="m-0 text-xs text-zinc-600">Nota</p>
 			<p class="m-0 mt-1 text-sm font-semibold text-zinc-800">
-				{result.grade.toFixed(2)}
+				{GradeValue.format(result.grade)}
 			</p>
 		</div>
 		<div class="panel-muted p-3">

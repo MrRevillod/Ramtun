@@ -86,6 +86,17 @@ class CoursesService {
 	public async removeMemberOrThrow(courseId: string, userId: string): Promise<void> {
 		return unwrapResultOrThrow(await this.removeMember(courseId, userId))
 	}
+
+	public remove(courseId: string): AppResultAsync<void> {
+		return request<void>({
+			method: "DELETE",
+			url: `/courses/${courseId}`,
+		})
+	}
+
+	public async removeOrThrow(courseId: string): Promise<void> {
+		return unwrapResultOrThrow(await this.remove(courseId))
+	}
 }
 
 export const coursesService = new CoursesService()

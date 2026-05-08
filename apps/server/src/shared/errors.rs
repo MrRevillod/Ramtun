@@ -45,14 +45,14 @@ pub enum AppError {
 
     #[http(
         code = 401,
-        message = "The requested token was not found. Try again or generate a new one."
+        message = "No se encontró el token solicitado. Intenta de nuevo o genera uno nuevo."
     )]
     #[error("Unauthorized access")]
     TokenNotFound,
 
     #[http(
         code = 401,
-        message = "The provided token is invalid. Please try again or generate a new one."
+        message = "El token proporcionado no es válido. Intenta de nuevo o genera uno nuevo."
     )]
     #[error("Invalid token")]
     InvalidToken,
@@ -71,21 +71,21 @@ pub enum AppError {
 
     #[http(
         code = 401,
-        message = "Invalid Credentials. Please try again, or contact support."
+        message = "Credenciales inválidas. Inténtalo nuevamente o contacta a soporte."
     )]
     #[error("LDAP Authentication failed: {0}")]
     LdapAuth(#[from] LdapError),
 
     #[http(
         code = 401,
-        message = "No email address is associated with your account. Please contact support."
+        message = "No hay un correo asociado a tu cuenta. Contacta a soporte."
     )]
     #[error("LDAP Email not found")]
     LdapEmailNotFound,
 
     #[http(
         code = 401,
-        message = "No username is associated with your account. Please contact support."
+        message = "No hay un nombre de usuario asociado a tu cuenta. Contacta a soporte."
     )]
     #[error("LDAP Error: {0}")]
     LdapUsernameNotFound(String),

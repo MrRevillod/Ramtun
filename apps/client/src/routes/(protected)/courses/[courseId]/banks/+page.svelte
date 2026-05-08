@@ -4,11 +4,15 @@
 		createQuery,
 		useQueryClient,
 	} from "@tanstack/svelte-query"
+	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import * as v from "valibot"
 	import { toast } from "svelte-sonner"
-	import { Upload, Code, RefreshCw, Trash2 } from "lucide-svelte"
+	import { fade, scale } from "svelte/transition"
+	import { Upload, Code, Trash2, Plus, X } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
 	import { coursesService } from "$lib/courses/courses.service"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import {
 		bankUploadSchema,
@@ -32,8 +36,10 @@
 
 	let bankName = $state("")
 	let selectedFile = $state<File | null>(null)
+	let showCreateModal = $state(false)
 	let showFormatModal = $state(false)
 	let fileInput = $state<HTMLInputElement | null>(null)
+	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
 	const newQuestionSchema = v.object({
 		prompt: v.string(),
@@ -142,6 +148,7 @@
 			toast.success("Banco creado correctamente.")
 			bankName = ""
 			selectedFile = null
+			showCreateModal = false
 			if (fileInput) fileInput.value = ""
 			await queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
@@ -168,72 +175,189 @@
 	const handleSubmit = async () => {
 		await uploadBankMutation.mutateAsync()
 	}
+
+	const formatCreatedAt = (iso: string) =>
+	{
+		const parsed = new Date(iso)
+		if (Number.isNaN(parsed.getTime())) {
+			console.warn("[banks] invalid createdAt", { iso })
+			return "Fecha no disponible"
+		}
+
+		return new Intl.DateTimeFormat("es-CL", {
+			dateStyle: "medium",
+			timeStyle: "short",
+		}).format(parsed)
+	}
+
+	const confirmDeleteBank = async () => {
+		if (!bankToDelete) return
+		await deleteBankMutation.mutateAsync(bankToDelete.id)
+		bankToDelete = null
+	}
 </script>
 
 <section class="grid gap-4">
 	<header>
-		<h3 class="mt-2 mb-0 text-xl text-black">
-			Bancos de preguntas {#if courseQuery.data}<span class="text-zinc-500"
-					>· {courseQuery.data.code}</span
-				>{/if}
-		</h3>
-		<p class="m-0 mt-2 text-zinc-700">
-			Carga preguntas masivamente desde un archivo JSON.
-		</p>
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<h3 class="mt-2 mb-0 text-xl text-black">
+					{courseQuery.data?.name ?? "Curso"} - Bancos de preguntas
+				</h3>
+				<p class="m-0 mt-2 text-zinc-700">
+					Carga y organiza preguntas para reutilizarlas al crear quizzes.
+				</p>
+			</div>
+			<button
+				class="btn-primary flex items-center gap-1.5"
+				type="button"
+				onclick={() => (showCreateModal = true)}
+			>
+				<Plus size={16} aria-hidden="true" />
+				Nuevo banco
+			</button>
+		</div>
 	</header>
 
-	<section class="panel-muted p-4">
-		<h4 class="m-0 text-base text-black">Subir banco de preguntas</h4>
-		<p class="mt-1 mb-0 text-sm text-zinc-600">
-			Selecciona un archivo JSON con la estructura requerida.
-		</p>
-
-		<div class="mt-3 grid gap-3">
-			<label class="grid gap-1.5">
-				<span class="text-sm text-zinc-800">Nombre del banco</span>
-				<input
-					class="input-base"
-					type="text"
-					bind:value={bankName}
-					placeholder="Ej: Guía 1 - Mecánica"
-				/>
-			</label>
-
-			<label class="grid gap-1.5">
-				<span class="text-sm text-zinc-800">Archivo JSON</span>
-				<input
-					class="input-base file:cursor-pointer"
-					type="file"
-					accept=".json,application/json"
-					onchange={handleFileChange}
-					bind:this={fileInput}
-				/>
-				{#if selectedFile}
-					<span class="text-xs text-zinc-600">{selectedFile.name}</span>
-				{/if}
-			</label>
-
-			<div class="flex flex-wrap gap-2">
-				<button
-					class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
-					type="button"
-					onclick={handleSubmit}
-					disabled={uploadBankMutation.isPending || !bankName || !selectedFile}
-				>
-					<Upload size={16} aria-hidden="true" />
-					{uploadBankMutation.isPending ? "Subiendo..." : "Subir banco"}
-				</button>
-				<button
-					class="btn-secondary flex w-full items-center gap-1.5 sm:w-auto"
-					type="button"
-					onclick={() => (showFormatModal = true)}
-				>
-					<Code size={16} aria-hidden="true" />
-					Ver formato JSON
-				</button>
+	<section class="panel-elevated p-4">
+		{#if banksQuery.isLoading}
+			<p class="m-0 text-zinc-600">Cargando bancos...</p>
+		{:else if banksQuery.error}
+			<p class="m-0 text-red-700">{getErrorMessage(banksQuery.error)}</p>
+		{:else if !banksQuery.data?.length}
+			<p class="m-0 text-zinc-600">Aún no existen bancos para este curso.</p>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="min-w-full border-collapse text-sm">
+					<thead class="table-head">
+						<tr>
+							<th class="px-3 py-2 text-left font-medium">Nombre</th>
+							<th class="px-3 py-2 text-left font-medium">Preguntas</th>
+							<th class="px-3 py-2 text-left font-medium">Creado</th>
+							<th class="px-3 py-2 text-left font-medium">Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each banksQuery.data as bank (bank.id)}
+							<tr
+								class="table-row row-hover cursor-pointer"
+								onclick={() =>
+									goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
+							>
+								<td class="px-3 py-2 text-zinc-900">{bank.name}</td>
+								<td class="px-3 py-2 text-zinc-700">{bank.questions.length}</td>
+								<td class="px-3 py-2 text-zinc-700"
+									>{formatCreatedAt(bank.created_at ?? bank.createdAt ?? "")}</td
+								>
+								<td class="px-3 py-2">
+									<button
+									class="icon-btn icon-btn-danger"
+									title="Eliminar"
+									type="button"
+									onclick={e => {
+										e.stopPropagation()
+										bankToDelete = { id: bank.id, name: bank.name }
+									}}
+									disabled={deleteBankMutation.isPending}
+								>
+										<Trash2 size={15} aria-hidden="true" />
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
-		</div>
+		{/if}
 	</section>
+
+	{#if showCreateModal}
+		<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			transition:fade={{ duration: 180 }}
+			onclick={() => (showCreateModal = false)}
+			onkeydown={e => {
+				if (e.key === "Escape") showCreateModal = false
+			}}
+		>
+			<section
+				class="panel-elevated w-full max-w-2xl p-5"
+				role="presentation"
+				tabindex="-1"
+				transition:scale={{ duration: 190, start: 0.98 }}
+				onclick={e => e.stopPropagation()}
+			>
+				<div class="mb-3 flex items-center justify-between gap-2">
+					<h4 class="m-0 text-base text-black">Subir banco de preguntas</h4>
+					<button
+						class="btn-tertiary p-1"
+						type="button"
+						onclick={() => (showCreateModal = false)}
+						><X size={18} aria-hidden="true" /></button
+					>
+				</div>
+				<section class="page-main">
+					<div class="form-stack">
+						<h4 class="mt-2 mb-0 text-base text-black">Subir banco de preguntas</h4>
+						<p class="mt-1 mb-0 text-sm text-zinc-600">
+							Selecciona un archivo JSON validado.
+						</p>
+
+						<div class="form-stack mt-3">
+							<label class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Nombre del banco</span>
+								<input
+									class="input-base"
+									type="text"
+									bind:value={bankName}
+									placeholder="Ej: Guía 1 - Mecánica"
+								/>
+							</label>
+
+							<label class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Archivo JSON</span>
+								<input
+									class="input-base file:cursor-pointer"
+									type="file"
+									accept=".json,application/json"
+									onchange={handleFileChange}
+									bind:this={fileInput}
+								/>
+								{#if selectedFile}
+									<span class="text-xs text-zinc-600">{selectedFile.name}</span>
+								{/if}
+							</label>
+
+							<div class="sticky-actions">
+								<button
+									class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
+									type="button"
+									onclick={handleSubmit}
+									disabled={uploadBankMutation.isPending ||
+										!bankName ||
+										!selectedFile}
+								>
+									<Upload size={16} aria-hidden="true" />
+									{uploadBankMutation.isPending ? "Subiendo..." : "Subir banco"}
+								</button>
+								<button
+									class="btn-secondary flex w-full items-center gap-1.5 sm:w-auto"
+									type="button"
+									onclick={() => (showFormatModal = true)}
+								>
+									<Code size={16} aria-hidden="true" />
+									Ver formato JSON
+								</button>
+							</div>
+						</div>
+					</div>
+				</section>
+			</section>
+		</div>
+	{/if}
 
 	{#if showFormatModal}
 		<div
@@ -331,57 +455,15 @@
 		</div>
 	{/if}
 
-	<section class="panel-surface p-4">
-		<div class="mb-3 flex items-center justify-between gap-3">
-			<h4 class="m-0 text-base text-black">Bancos del curso</h4>
-			<button
-				class="btn-secondary flex items-center gap-1.5"
-				type="button"
-				onclick={() => banksQuery.refetch()}
-				disabled={banksQuery.isFetching}
-			>
-				<RefreshCw size={16} aria-hidden="true" />
-				Actualizar
-			</button>
-		</div>
-
-		{#if banksQuery.isLoading}
-			<p class="m-0 text-zinc-600">Cargando bancos...</p>
-		{:else if banksQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(banksQuery.error)}</p>
-		{:else if !banksQuery.data?.length}
-			<p class="m-0 text-zinc-600">Aún no existen bancos para este curso.</p>
-		{:else}
-			<div class="overflow-x-auto">
-				<table class="min-w-full border-collapse text-sm">
-					<thead class="bg-zinc-100/90 text-zinc-700">
-						<tr>
-							<th class="px-3 py-2 text-left font-medium">Nombre</th>
-							<th class="px-3 py-2 text-left font-medium">Preguntas</th>
-							<th class="px-3 py-2 text-left font-medium">Acciones</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each banksQuery.data as bank (bank.id)}
-							<tr class="border-t border-zinc-200 bg-white/80">
-								<td class="px-3 py-2 text-zinc-900">{bank.name}</td>
-								<td class="px-3 py-2 text-zinc-700">{bank.questions.length}</td>
-								<td class="px-3 py-2">
-									<button
-										class="btn-tertiary flex items-center gap-1.5"
-										type="button"
-										onclick={() => deleteBankMutation.mutate(bank.id)}
-										disabled={deleteBankMutation.isPending}
-									>
-										<Trash2 size={16} aria-hidden="true" />
-										Eliminar
-									</button>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</section>
+	<ConfirmActionModal
+		open={!!bankToDelete}
+		title="Eliminar banco"
+		message={bankToDelete
+			? `Se eliminara el banco ${bankToDelete.name}.`
+			: ""}
+		confirmLabel="Eliminar"
+		isPending={deleteBankMutation.isPending}
+		onCancel={() => (bankToDelete = null)}
+		onConfirm={confirmDeleteBank}
+	/>
 </section>

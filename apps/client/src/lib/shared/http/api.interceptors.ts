@@ -44,6 +44,10 @@ const handleUnauthorized = async (originalConfig: ApiRequestConfig) => {
 	return apiClient.request(originalConfig)
 }
 
+const shouldAttemptRefresh = (status: number | undefined) => {
+	return status === 401 || status === 403
+}
+
 export const setupApiInterceptors = () => {
 	if (teardownInterceptors) {
 		return teardownInterceptors
@@ -70,19 +74,20 @@ export const setupApiInterceptors = () => {
 		response => response,
 		async (error: AxiosError) => {
 			const originalConfig = error.config as ApiRequestConfig | undefined
+			const status = error.response?.status
 
 			if (!originalConfig) return Promise.reject(error)
 
 			if (
 				browser &&
-				error.response?.status === 401 &&
+				shouldAttemptRefresh(status) &&
 				window.location.pathname === "/login"
 			) {
 				return Promise.reject(error)
 			}
 
 			if (
-				error.response?.status === 401 &&
+				shouldAttemptRefresh(status) &&
 				!originalConfig.skipRefresh &&
 				!originalConfig._retry
 			) {
