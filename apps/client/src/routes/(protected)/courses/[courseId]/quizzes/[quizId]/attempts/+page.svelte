@@ -3,6 +3,10 @@
 	import { toast } from "svelte-sonner"
 	import { Eye, X } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
+	import {
+		disconnectAttemptsSocket,
+		onAttemptsSubmit,
+	} from "$lib/shared/socket/attempts.socket"
 	import type { AttemptListItem, AttemptResult } from "$lib/attempts/types"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
@@ -13,7 +17,6 @@
 	const attemptsQuery = createQuery(() => ({
 		queryKey: ["attempts", "managed", data.courseId, data.quizId],
 		queryFn: () => attemptsService.listAttemptsOrThrow(data.courseId, data.quizId),
-		refetchInterval: 15_000,
 	}))
 
 	let selectedAttempt = $state<AttemptListItem | null>(null)
@@ -44,6 +47,18 @@
 		detailResult = null
 		detailLoading = false
 	}
+
+	$effect(() => {
+		const unsubscribe = onAttemptsSubmit(payload => {
+			if (payload.quizId !== data.quizId) return
+			void attemptsQuery.refetch()
+		})
+
+		return () => {
+			unsubscribe()
+			disconnectAttemptsSocket()
+		}
+	})
 
 	const formatDatetime = (iso: string | null) => {
 		if (!iso) return "-"

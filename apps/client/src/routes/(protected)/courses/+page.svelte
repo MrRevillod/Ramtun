@@ -29,20 +29,7 @@
 
 	const coursesQuery = createQuery(() => ({
 		queryKey: coursesKey,
-		queryFn: async () => {
-			const courses = await coursesService.listOrThrow()
-			const memberCounts = await Promise.all(
-				courses.map(async course => {
-					const members = await coursesService.listMembersOrThrow(course.id)
-					return [course.id, members.length] as const
-				})
-			)
-			const byId = new Map(memberCounts)
-			return courses.map(course => ({
-				...course,
-				memberCount: byId.get(course.id) ?? 0,
-			}))
-		},
+		queryFn: async () => await coursesService.listOrThrow(),
 	}))
 
 	const createCourseMutation = createMutation(() => ({
@@ -115,7 +102,6 @@
 	</header>
 
 	<section class="panel-elevated p-4 sm:p-5">
-
 		{#if coursesQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando cursos...</p>
 		{:else if coursesQuery.error}
@@ -146,7 +132,7 @@
 								<td class="px-3 py-2 text-zinc-700">
 									<span class="inline-flex items-center gap-1">
 										<Users size={14} aria-hidden="true" />
-										{course.memberCount}
+										{course.members.length}
 									</span>
 								</td>
 								<td class="px-3 py-2">

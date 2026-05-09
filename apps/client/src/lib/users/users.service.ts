@@ -1,6 +1,7 @@
+import type { ManagedUser } from "$lib/users/types"
+
 import { request } from "$lib/shared/http/http"
 import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
-import type { ManagedUser } from "$lib/users/types"
 
 class UsersService {
 	public listCollaboratorCandidates(query?: string): AppResultAsync<ManagedUser[]> {

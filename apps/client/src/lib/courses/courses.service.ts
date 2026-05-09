@@ -4,6 +4,7 @@ import {
 	type AppResult,
 	type AppResultAsync,
 } from "$lib/shared/result"
+
 import type {
 	AddCourseMemberInput,
 	Course,
@@ -13,14 +14,14 @@ import type {
 } from "$lib/courses/types"
 
 class CoursesService {
-	public list(): AppResultAsync<Course[]> {
-		return request<Course[]>({
+	public list(): AppResultAsync<CourseView[]> {
+		return request<CourseView[]>({
 			method: "GET",
 			url: "/courses",
 		})
 	}
 
-	public async listOrThrow(): Promise<Course[]> {
+	public async listOrThrow(): Promise<CourseView[]> {
 		return unwrapResultOrThrow(await this.list())
 	}
 

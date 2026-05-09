@@ -8,6 +8,18 @@ body-limit = "5MB"
 request-timeout = { enabled = true, timeout = "15s" }
 router-prefix = "/api"
 
+[socketio]
+ack-timeout = "5s"
+connect-timeout = "45s"
+max-buffer-size = 128
+max-payload = "100KB"
+ping-interval = "25s"
+ping-timeout = "20s"
+req-path = "/socket.io"
+transports = ["polling", "websocket"]
+parser = "common"
+ws-read-buffer-size = 4096
+
 [postgres-db]
 user = "${POSTGRES_USER}"
 password = "${POSTGRES_PASSWORD}"

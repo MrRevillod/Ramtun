@@ -1,9 +1,7 @@
-import { fromThrowable, type Result, type ResultAsync } from "neverthrow"
-
+import { type Result, type ResultAsync } from "neverthrow"
 import type { AppError } from "$lib/shared/errors"
 
 export { err, ok, ResultAsync } from "neverthrow"
-export type { Result } from "neverthrow"
 
 export type AppResult<T> = Result<T, AppError>
 export type AppResultAsync<T> = ResultAsync<T, AppError>

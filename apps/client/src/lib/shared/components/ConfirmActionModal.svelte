@@ -1,6 +1,17 @@
 <script lang="ts">
 	import { fade, scale } from "svelte/transition"
 
+	interface ConfirmActionModalProps {
+		open: boolean
+		title: string
+		message: string
+		confirmLabel?: string
+		cancelLabel?: string
+		isPending?: boolean
+		onConfirm: () => void | Promise<void>
+		onCancel: () => void
+	}
+
 	let {
 		open,
 		title,
@@ -10,16 +21,7 @@
 		isPending = false,
 		onConfirm,
 		onCancel,
-	} = $props<{
-		open: boolean
-		title: string
-		message: string
-		confirmLabel?: string
-		cancelLabel?: string
-		isPending?: boolean
-		onConfirm: () => void | Promise<void>
-		onCancel: () => void
-	}>()
+	}: ConfirmActionModalProps = $props()
 </script>
 
 {#if open}
@@ -52,7 +54,12 @@
 				>
 					{cancelLabel}
 				</button>
-				<button class="btn-primary" type="button" onclick={onConfirm} disabled={isPending}>
+				<button
+					class="btn-primary"
+					type="button"
+					onclick={onConfirm}
+					disabled={isPending}
+				>
 					{isPending ? "Procesando..." : confirmLabel}
 				</button>
 			</div>

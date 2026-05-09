@@ -41,7 +41,10 @@
 			<Users size={16} aria-hidden="true" />
 			Miembros del curso
 		</a>
-		<a class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5" href="/courses">
+		<a
+			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
+			href="/courses"
+		>
 			<ArrowLeft size={16} aria-hidden="true" />
 			Volver al listado de cursos
 		</a>

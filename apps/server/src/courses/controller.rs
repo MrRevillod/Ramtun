@@ -85,8 +85,8 @@ impl CoursesController {
     #[delete("/{courseId}/members/{userId}")]
     #[interceptor(AuthzGuard, config = AuthzAction::CourseManageMembers)]
     pub async fn remove_member(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
         let user_id = req.param::<UserId>("userId")?;
+        let course_id = req.param::<CourseId>("courseId")?;
 
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 

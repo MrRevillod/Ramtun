@@ -4,6 +4,7 @@ use crate::courses::*;
 use crate::shared::{AppResult, TransactionManager};
 use crate::users::{User, UserId, UserRepository, UserRole};
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -18,8 +19,16 @@ pub struct CoursesService {
 }
 
 impl CoursesService {
-    pub async fn list_for_user(&self, current_user: &User) -> AppResult<Vec<Course>> {
-        self.repository.list_for_user(&current_user.id).await
+    pub async fn list_for_user(&self, current_user: &User) -> AppResult<Vec<CourseView>> {
+        let courses = self.repository.list_for_user(&current_user.id).await?;
+        let mut course_map: HashMap<CourseId, CourseView> = HashMap::new();
+
+        for course in &courses {
+            let members = self.list_course_members(&course.id).await?;
+            course_map.insert(course.id, CourseView::from((course, &members)));
+        }
+
+        Ok(course_map.into_values().collect())
     }
 
     pub async fn get_one(

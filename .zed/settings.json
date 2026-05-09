@@ -4,6 +4,8 @@
 	"format_on_save": "on",
 	"formatter": "language_server",
 	"file_scan_exclusions": [
+		"**/.svelte-kit/**",
+		"**/node_modules/**",
 		"**/.git/**",
 		"**/target/**",
 		"**/routeTree.gen.ts",
