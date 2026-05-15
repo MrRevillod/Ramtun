@@ -1,11 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::FromRow;
-use uuid::Uuid;
 
 use crate::{
     attempts::{Attempt, AttemptId},
-    banks::QuestionView,
+    banks::{QuestionId, QuestionView},
     quizzes::{CertaintyLevel, QuizId},
     users::UserId,
 };
@@ -48,7 +47,7 @@ pub struct AttemptSubmitView {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuestionResultView {
-    pub question_id: Uuid,
+    pub question_id: QuestionId,
     pub question: String,
     pub options: Vec<String>,
     pub images: Vec<String>,
@@ -87,6 +86,21 @@ impl From<Attempt> for AttemptListItemView {
             results_viewed_at: value.results_viewed_at,
             score: value.score,
             grade: value.grade,
+        }
+    }
+}
+
+impl From<(Attempt, Vec<QuestionView>)> for AttemptView {
+    fn from(value: (Attempt, Vec<QuestionView>)) -> Self {
+        let (attempt, questions) = value;
+        Self {
+            attempt_id: attempt.id,
+            quiz_id: attempt.quiz_id,
+            started_at: attempt.started_at,
+            expires_at: attempt.expires_at,
+            submitted_at: attempt.submitted_at,
+            results_viewed_at: attempt.results_viewed_at,
+            questions,
         }
     }
 }

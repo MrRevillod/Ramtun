@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createMutation } from "@tanstack/svelte-query"
+	import { browser } from "$app/environment"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { page } from "$app/state"
@@ -19,6 +20,10 @@
 	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { roleLabel } from "$lib/shared/labels"
+	import {
+		connectAttemptsSocket,
+		disconnectAttemptsSocket,
+	} from "$lib/shared/socket/attempts.socket"
 	import { themeStore } from "$lib/shared/theme/theme.store.svelte"
 
 	let { children } = $props()
@@ -45,6 +50,19 @@
 	const showTeachingNav = $derived(isTeachingRole(role))
 	const showUsersNav = $derived(canManageUsers(role))
 	const isActive = (href: string) => page.url.pathname.startsWith(href)
+	const isAuthenticated = $derived(authStore.isAuthenticated())
+
+	$effect(() => {
+		if (!browser) return
+
+		if (!isAuthenticated) {
+			disconnectAttemptsSocket()
+			return
+		}
+
+		connectAttemptsSocket()
+		return () => disconnectAttemptsSocket()
+	})
 </script>
 
 <main class="app-shell">
@@ -77,7 +95,7 @@
 				</button>
 
 				<div
-					class="min-w-0 flex-1 rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-[14rem] sm:flex-none sm:text-right h-11 flex flex-col justify-center"
+					class="flex h-11 min-w-0 flex-1 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-[14rem] sm:flex-none sm:text-right"
 				>
 					<p class="truncate text-sm font-semibold text-zinc-800">
 						{authStore.session?.user.name}

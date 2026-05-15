@@ -14,7 +14,6 @@ pub struct QuizView {
     pub certainty_table: Option<CertaintyTable>,
     pub attempt_duration_minutes: i16,
     pub starts_at: DateTime<Utc>,
-    pub closed_at: Option<DateTime<Utc>>,
     pub results_published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 
@@ -32,7 +31,6 @@ impl From<(Quiz, Course)> for QuizView {
             certainty_table: quiz.certainty_table,
             attempt_duration_minutes: quiz.attempt_duration_minutes,
             starts_at: quiz.starts_at,
-            closed_at: quiz.closed_at,
             results_published_at: quiz.results_published_at,
             created_at: quiz.created_at,
             course,
@@ -57,7 +55,7 @@ impl From<&Quiz> for JoinQuizPreviewView {
         Self {
             quiz_id: quiz.id,
             title: quiz.title.clone(),
-            kind: quiz.kind.clone(),
+            kind: quiz.kind,
             question_count: quiz.question_count,
             certainty_table: quiz.certainty_table.clone(),
             attempt_duration_minutes: quiz.attempt_duration_minutes,

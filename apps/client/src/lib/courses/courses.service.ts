@@ -1,13 +1,8 @@
 import { request } from "$lib/shared/http/http"
-import {
-	unwrapResultOrThrow,
-	type AppResult,
-	type AppResultAsync,
-} from "$lib/shared/result"
+import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
 
 import type {
 	AddCourseMemberInput,
-	Course,
 	CourseMember,
 	CourseView,
 	CreateCourseInput,

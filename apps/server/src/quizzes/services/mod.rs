@@ -7,13 +7,12 @@ pub use policy::*;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use crate::attempts::{AttemptResultView, AttemptsService};
 use crate::banks::QuestionBankRepository;
-use crate::courses::CourseRepository;
+use crate::courses::{CourseRepository, CoursesError};
 use crate::quizzes::*;
 use crate::shared::{AppResult, TransactionManager};
 use crate::snapshots::SnapshotService;
-use crate::users::{User, UserRole};
+use crate::users::User;
 
 use chrono::{DateTime, Utc};
 use sword::prelude::*;
@@ -28,7 +27,6 @@ pub struct QuizService {
     snapshots: Arc<SnapshotService>,
     tx: Arc<TransactionManager>,
     banks: Arc<QuestionBankRepository>,
-    attempts: Arc<AttemptsService>,
 }
 
 impl QuizService {
@@ -42,7 +40,7 @@ impl QuizService {
             .courses
             .find_by_id(&quiz.course_id)
             .await?
-            .ok_or_else(|| QuizError::NotFound(quiz.course_id.to_string()))?;
+            .ok_or_else(|| CoursesError::NotFound(quiz.course_id.to_string()))?;
 
         Ok(QuizView::from((quiz, course)))
     }
@@ -81,77 +79,14 @@ impl QuizService {
 
     pub async fn get_join_preview(&self, code: &str) -> AppResult<JoinQuizPreviewView> {
         let Some(quiz) = self.repository.find_by_code(code).await? else {
-            return Err(QuizError::NotFound(code.to_string()))?;
+            return Err(QuizError::InvalidCode)?;
         };
 
-        if quiz.closed_at.is_some() {
+        if quiz.results_published_at.is_some() {
             return Err(QuizError::Closed)?;
         }
 
         Ok(JoinQuizPreviewView::from(&quiz))
-    }
-
-    pub async fn get_my_result_by_join_code(
-        &self,
-        current_user: &User,
-        code: &str,
-    ) -> AppResult<AttemptResultView> {
-        let Some(quiz) = self.repository.find_by_code(code).await? else {
-            return Err(QuizError::NotFound(code.to_string()))?;
-        };
-
-        if current_user.role != UserRole::Admin
-            && current_user.role != UserRole::Student
-            && !self
-                .courses
-                .is_member(&quiz.course_id, &current_user.id)
-                .await?
-        {
-            return Err(QuizError::Forbidden)?;
-        }
-
-        if current_user.role == UserRole::Student && quiz.results_published_at.is_none() {
-            return Err(QuizError::ResultsNotPublished)?;
-        }
-
-        let attempt = self
-            .attempts
-            .get_attempt_for_quiz_and_student(&quiz.id, &current_user.id)
-            .await?;
-
-        self.attempts
-            .view_results(attempt.id, current_user.id)
-            .await
-    }
-
-    pub async fn close_quiz(&self, current_user: &User, quiz_id: &QuizId) -> AppResult<()> {
-        let quiz = self
-            .policy
-            .require_managed_quiz(current_user, quiz_id)
-            .await?;
-
-        if !self.repository.close_quiz(&quiz.id).await? {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
-        }
-
-        Ok(())
-    }
-
-    pub async fn publish_results(&self, current_user: &User, quiz_id: &QuizId) -> AppResult<()> {
-        let quiz = self
-            .policy
-            .require_managed_quiz(current_user, quiz_id)
-            .await?;
-
-        if quiz.closed_at.is_none() {
-            return Err(QuizError::NotClosed)?;
-        }
-
-        if !self.repository.publish_results(&quiz.id).await? {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
-        }
-
-        Ok(())
     }
 
     pub async fn close_and_publish_results(
@@ -164,12 +99,12 @@ impl QuizService {
             .require_managed_quiz(current_user, quiz_id)
             .await?;
 
-        if quiz.closed_at.is_none() && !self.repository.close_quiz(&quiz.id).await? {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+        if quiz.results_published_at.is_some() {
+            return Err(QuizError::Closed)?;
         }
 
         if !self.repository.publish_results(&quiz.id).await? {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+            return Err(QuizError::Closed)?;
         }
 
         Ok(())
@@ -203,6 +138,15 @@ impl QuizService {
 
         let snapshot_id = Uuid::new_v4();
 
+        let max_score = match input.kind {
+            QuizKind::Traditional => input.question_count,
+            QuizKind::Certainty => input
+                .certainty_config
+                .as_ref()
+                .map(|config| config.high.correct * input.question_count)
+                .unwrap_or(input.question_count),
+        };
+
         let quiz = Quiz::builder()
             .course_id(input.course_id)
             .snapshot_id(snapshot_id)
@@ -214,6 +158,7 @@ impl QuizService {
             .attempt_duration_minutes(input.attempt_duration_minutes)
             .starts_at(starts_at)
             .created_at(Utc::now())
+            .max_score(max_score)
             .build();
 
         let mut tx = self.tx.begin().await?;
@@ -234,7 +179,7 @@ impl QuizService {
             .courses
             .find_by_id(&quiz.course_id)
             .await?
-            .ok_or_else(|| QuizError::NotFound(quiz.course_id.to_string()))?;
+            .ok_or_else(|| CoursesError::NotFound(quiz.course_id.to_string()))?;
 
         Ok(QuizView::from((quiz, course)))
     }
@@ -246,7 +191,7 @@ impl QuizService {
             .await?;
 
         if !self.repository.delete_by_id(&quiz.id).await? {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+            return Err(QuizError::NotFound(*quiz_id))?;
         }
 
         Ok(())

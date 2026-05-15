@@ -64,4 +64,5 @@ export type AttemptResult = {
 export type SaveAnswerInput = {
 	answerIndex: number
 	certaintyLevel: CertaintyLevel | null
+	questionId: string
 }

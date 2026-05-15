@@ -1,8 +1,7 @@
 use sword::web::HttpError;
 use thiserror::Error;
-use uuid::Uuid;
 
-use crate::attempts::AttemptId;
+use crate::{attempts::AttemptId, banks::QuestionId};
 
 #[derive(Error, Debug, HttpError)]
 pub enum AttemptError {
@@ -39,7 +38,7 @@ pub enum AttemptError {
 
     #[http(code = 400, message = "La pregunta no pertenece a este intento")]
     #[error("Question does not belong to attempt: {0}")]
-    QuestionNotInAttempt(Uuid),
+    QuestionNotInAttempt(QuestionId),
 
     #[http(code = 403, message = "Los resultados aun no estan disponibles")]
     #[error("Results are not available yet")]

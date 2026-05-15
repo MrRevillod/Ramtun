@@ -13,6 +13,7 @@
 	import { banksService } from "$lib/banks/banks.service"
 	import { coursesService } from "$lib/courses/courses.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import CodeBlock from "$lib/shared/components/CodeBlock.svelte"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import {
 		bankUploadSchema,
@@ -54,6 +55,38 @@
 		answer: v.number(),
 		images: v.optional(v.array(v.string())),
 	})
+
+	const code1 = `[
+ 	{
+	    "prompt": "¿Cuál es la capital de Francia?",
+	    "options": ["París", "Londres", "Berlín"],
+	    "answerIndex": 0,
+	    "images": []
+	},
+  	{
+	    "prompt": "¿Cuánto es 2 + 2?",
+	    "options": ["3", "4", "5", "6"],
+	    "answerIndex": 1,
+	    "images": []
+    }
+]`
+
+	const code2 = `{
+  "questions": [
+    {
+      "question": "¿Cuál es la capital de Francia?",
+      "options": ["París", "Londres", "Berlín"],
+      "answer": 0,
+      "images": []
+    },
+    {
+      "question": "¿Cuánto es 2 + 2?",
+      "options": ["3", "4", "5", "6"],
+      "answer": 1,
+      "images": []
+    }
+  ]
+}`
 
 	const legacyBankSchema = v.object({
 		questions: v.array(legacyQuestionSchema),
@@ -176,8 +209,7 @@
 		await uploadBankMutation.mutateAsync()
 	}
 
-	const formatCreatedAt = (iso: string) =>
-	{
+	const formatCreatedAt = (iso: string) => {
 		const parsed = new Date(iso)
 		if (Number.isNaN(parsed.getTime())) {
 			console.warn("[banks] invalid createdAt", { iso })
@@ -240,7 +272,7 @@
 					<tbody>
 						{#each banksQuery.data as bank (bank.id)}
 							<tr
-								class="table-row row-hover cursor-pointer"
+								class="row-hover table-row cursor-pointer"
 								onclick={() =>
 									goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
 							>
@@ -251,15 +283,15 @@
 								>
 								<td class="px-3 py-2">
 									<button
-									class="icon-btn icon-btn-danger"
-									title="Eliminar"
-									type="button"
-									onclick={e => {
-										e.stopPropagation()
-										bankToDelete = { id: bank.id, name: bank.name }
-									}}
-									disabled={deleteBankMutation.isPending}
-								>
+										class="icon-btn icon-btn-danger"
+										title="Eliminar"
+										type="button"
+										onclick={e => {
+											e.stopPropagation()
+											bankToDelete = { id: bank.id, name: bank.name }
+										}}
+										disabled={deleteBankMutation.isPending}
+									>
 										<Trash2 size={15} aria-hidden="true" />
 									</button>
 								</td>
@@ -386,21 +418,7 @@
 				<p class="mt-2 mb-1 text-sm font-semibold text-zinc-800">
 					Formato actual (recomendado)
 				</p>
-				<pre
-					class="overflow-x-auto rounded-md bg-zinc-50 p-4 text-sm text-zinc-800">{@html `<code>[
-  {
-    "prompt": "¿Cuál es la capital de Francia?",
-    "options": ["París", "Londres", "Berlín"],
-    "answerIndex": 0,
-    "images": []
-  },
-  {
-    "prompt": "¿Cuánto es 2 + 2?",
-    "options": ["3", "4", "5", "6"],
-    "answerIndex": 1,
-    "images": []
-  }
-]</code>`}</pre>
+				<CodeBlock code={code1} class="mt-2" />
 
 				<ul class="mt-4 mb-0 list-inside list-disc text-sm text-zinc-700">
 					<li>
@@ -423,17 +441,7 @@
 				<p class="mt-4 mb-1 text-sm font-semibold text-zinc-800">
 					Formato legado (compatible)
 				</p>
-				<pre
-					class="overflow-x-auto rounded-md bg-zinc-50 p-4 text-sm text-zinc-800">{@html `<code>{
-  "questions": [
-    {
-      "question": "¿Cuál es la capital de Francia?",
-      "options": ["París", "Londres", "Berlín"],
-      "answer": 0,
-      "images": []
-    }
-  ]
-}</code>`}</pre>
+				<CodeBlock code={code2} class="mt-4" />
 
 				<p class="mt-2 mb-0 text-sm text-zinc-600">
 					Usa <code class="text-zinc-900">question</code> y
@@ -458,9 +466,7 @@
 	<ConfirmActionModal
 		open={!!bankToDelete}
 		title="Eliminar banco"
-		message={bankToDelete
-			? `Se eliminara el banco ${bankToDelete.name}.`
-			: ""}
+		message={bankToDelete ? `Se eliminara el banco ${bankToDelete.name}.` : ""}
 		confirmLabel="Eliminar"
 		isPending={deleteBankMutation.isPending}
 		onCancel={() => (bankToDelete = null)}

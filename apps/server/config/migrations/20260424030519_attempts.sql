@@ -17,6 +17,8 @@ CREATE TABLE attempt_answers (
 	question_id UUID NOT NULL,
 	answer_index SMALLINT NOT NULL,
 	certainty_level certainty_level,
+	is_correct BOOLEAN,
+	awarded_points SMALLINT,
 	PRIMARY KEY (attempt_id, question_id)
 );
 

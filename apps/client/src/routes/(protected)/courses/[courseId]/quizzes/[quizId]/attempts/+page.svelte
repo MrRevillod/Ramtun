@@ -19,13 +19,14 @@
 		queryFn: () => attemptsService.listAttemptsOrThrow(data.courseId, data.quizId),
 	}))
 
-	let selectedAttempt = $state<AttemptListItem | null>(null)
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	let _selectedAttempt = $state<AttemptListItem | null>(null)
 	let showDetailModal = $state(false)
 	let detailResult = $state<AttemptResult | null>(null)
 	let detailLoading = $state(false)
 
 	const openDetail = async (attempt: AttemptListItem) => {
-		selectedAttempt = attempt
+		_selectedAttempt = attempt
 		showDetailModal = true
 		detailLoading = true
 		detailResult = null

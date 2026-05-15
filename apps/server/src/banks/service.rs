@@ -138,7 +138,7 @@ impl QuestionBankService {
 
         if quizzes
             .iter()
-            .any(|quiz| quiz.closed_at.is_none() && quiz.starts_at <= now)
+            .any(|quiz| quiz.results_published_at.is_none() && quiz.starts_at <= now)
         {
             return Err(QuestionBankError::LockedByRunningQuiz)?;
         }
@@ -150,7 +150,7 @@ impl QuestionBankService {
         let now = Utc::now();
 
         for quiz in quizzes {
-            if quiz.closed_at.is_some() || quiz.starts_at <= now {
+            if quiz.results_published_at.is_some() || quiz.starts_at <= now {
                 continue;
             }
 

@@ -56,28 +56,6 @@ impl QuizController {
         Ok(JsonResponse::Ok().message("Quiz eliminado correctamente"))
     }
 
-    #[post("/{quizId}/close")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizCloseManaged)]
-    pub async fn close(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-
-        self.service.close_quiz(current_user, &quiz_id).await?;
-
-        Ok(JsonResponse::Ok().message("Quiz cerrado correctamente"))
-    }
-
-    #[post("/{quizId}/publish-results")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizPublishResultsManaged)]
-    pub async fn publish_results(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-
-        self.service.publish_results(current_user, &quiz_id).await?;
-
-        Ok(JsonResponse::Ok().message("Resultados del quiz publicados correctamente"))
-    }
-
     #[post("/{quizId}/close-and-publish")]
     #[interceptor(AuthzGuard, config = AuthzAction::QuizCloseAndPublishManaged)]
     pub async fn close_and_publish(&self, req: Request) -> WebResult {
@@ -98,19 +76,5 @@ impl QuizController {
         let preview = self.service.get_join_preview(&code).await?;
 
         Ok(JsonResponse::Ok().data(preview))
-    }
-
-    #[get("/join/{joinCode}/attempts/me/result")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizViewAttemptResultByCode)]
-    pub async fn get_my_result_by_code(&self, req: Request) -> WebResult {
-        let code = req.param::<String>("joinCode")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-
-        let result = self
-            .service
-            .get_my_result_by_join_code(current_user, &code)
-            .await?;
-
-        Ok(JsonResponse::Ok().data(result))
     }
 }

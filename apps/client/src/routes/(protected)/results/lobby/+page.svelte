@@ -1,21 +1,16 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
-	import { createQuery, useQueryClient } from "@tanstack/svelte-query"
-	import { browser } from "$app/environment"
+	import { createQuery } from "@tanstack/svelte-query"
 	import { onMount } from "svelte"
 	import { Loader2, RefreshCw, ArrowLeft, BadgeCheck } from "lucide-svelte"
 	import type { AttemptResult } from "$lib/attempts/types"
-	import { quizzesService } from "$lib/quizzes/quizzes.service"
-	import { getErrorMessage } from "$lib/shared/errors"
+	import { attemptsService } from "$lib/attempts/attempts.service"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 
 	let { data } = $props()
 
-	const queryClient = useQueryClient()
-
 	const joinCode = $derived(data.joinCode as string | undefined)
-	const attemptId = $derived(data.attemptId as string | undefined)
 
 	let hasResult = $state(false)
 	let result = $state<AttemptResult | null>(null)
@@ -30,7 +25,7 @@
 		queryFn: async (): Promise<AttemptResult | null> => {
 			if (!joinCode) return null
 			try {
-				const r = await quizzesService.getMyResultByCodeOrThrow(joinCode)
+				const r = await attemptsService.getResultsByJoinCodeOrThrow(joinCode)
 				return r
 			} catch (e) {
 				const maybe = e as { kind?: string; status?: number }
@@ -68,7 +63,7 @@
 		nextCheckIn = 15
 
 		try {
-			const r = await quizzesService.getMyResultByCodeOrThrow(joinCode!)
+			const r = await attemptsService.getResultsByJoinCodeOrThrow(joinCode!)
 			result = r
 			hasResult = true
 		} catch (e) {

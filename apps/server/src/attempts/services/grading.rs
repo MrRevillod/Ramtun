@@ -1,119 +1,116 @@
-use std::collections::HashMap;
-
-use sword::prelude::*;
-use uuid::Uuid;
-
 use crate::{
-    attempts::{AttemptAnswer, QuestionResultView},
-    banks::Question,
-    quizzes::{CertaintyLevel, CertaintyTable, QuizKind},
+    attempts::*,
+    banks::{Question, QuestionId},
+    quizzes::*,
+    shared::AppResult,
 };
+
+use std::collections::HashMap;
+use sword::prelude::*;
+
+type PointMappingFn<'a> = Box<dyn Fn(bool, CertaintyLevel, Option<&'a CertaintyTable>) -> i16 + 'a>;
+
+pub struct QuestionGradingOutput {
+    pub question_id: QuestionId,
+    pub is_correct: bool,
+    pub awarded_points: i16,
+}
 
 pub struct GradingOutput {
     pub score_points: i16,
-    pub score_points_max: i16,
     pub grade: f64,
-    pub questions: Vec<QuestionResultView>,
+    pub question_results: Vec<QuestionGradingOutput>,
 }
 
 #[injectable]
 pub struct GradingService;
 
 impl GradingService {
-    pub fn grade_attempt(
+    pub async fn grade_attempt(
         &self,
-        question_order: &[Uuid],
-        questions_by_id: &HashMap<Uuid, Question>,
-        answers: &[AttemptAnswer],
-        quiz_kind: QuizKind,
-        certainty_table: Option<CertaintyTable>,
-    ) -> GradingOutput {
-        let answers_by_question = answers
-            .iter()
-            .map(|answer| (answer.question_id, answer))
-            .collect::<HashMap<_, _>>();
+        quiz: &Quiz,
+        questions: &HashMap<QuestionId, Question>,
+        answers: &HashMap<QuestionId, AttemptAnswer>,
+    ) -> AppResult<GradingOutput> {
+        let score_points_max = quiz.max_score;
+        let table = quiz.certainty_table.as_ref();
 
-        let mut score_points = 0i16;
-        let score_points_max = question_order.len() as i16;
-        let mut question_results = Vec::with_capacity(question_order.len());
+        let mut score_points = 0_i16;
+        let mut question_results = Vec::new();
 
-        for question_id in question_order {
-            let Some(question) = questions_by_id.get(question_id) else {
+        let calc_points_fn = self.calc_points_fn(quiz.kind);
+
+        for (question_id, question) in questions.iter() {
+            let Some(submitted_answer) = answers.get(question_id) else {
                 continue;
             };
 
-            let answer = answers_by_question.get(question_id).copied();
-            let selected_index = answer.map(|a| a.answer_index);
-            let certainty_level = answer.and_then(|a| a.certainty_level.clone());
+            let is_correct = question.answer_index == submitted_answer.answer_index;
 
-            let is_correct = selected_index
-                .map(|idx| idx == question.answer_index)
-                .unwrap_or(false);
+            // Uses `unwrap_or_default` even if the quiz isn't certainty based
+            // The closure ignores the certainty_level if the quiz it's traditional.
 
-            let awarded_points = match quiz_kind {
-                QuizKind::Traditional => {
-                    if is_correct {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                QuizKind::Certainty => self.awarded_points_for_certainty(
-                    is_correct,
-                    certainty_level.clone(),
-                    &certainty_table,
-                ),
-            };
+            let certainty_level = submitted_answer.certainty_level.unwrap_or_default();
+            let awarded_points = calc_points_fn(is_correct, certainty_level, table);
 
             score_points += awarded_points;
 
-            question_results.push(QuestionResultView {
-                question_id: question.id,
-                question: question.prompt.clone(),
-                options: question.options.clone(),
-                images: question.images.clone(),
-                answer_index: selected_index,
-                correct_answer_index: question.answer_index,
-                certainty_level,
+            question_results.push(QuestionGradingOutput {
+                question_id: *question_id,
                 is_correct,
                 awarded_points,
             });
         }
 
-        let grade = if score_points_max > 0 {
-            let raw_grade = ((score_points as f64 / score_points_max as f64) * 6.0) + 1.0;
-            raw_grade.max(1.0)
-        } else {
-            1.0
-        };
+        let mut grade = self.calculate_grade(score_points, score_points_max);
 
-        GradingOutput {
+        if score_points <= 0 {
+            grade = 1_f64
+        }
+
+        Ok(GradingOutput {
             score_points,
-            score_points_max,
             grade,
-            questions: question_results,
+            question_results,
+        })
+    }
+
+    fn calculate_grade(&self, p: i16, p_max: i16) -> f64 {
+        ((p as f64 / p_max as f64) * 6_f64) + 1_f64
+    }
+
+    fn calc_points_fn(&self, quiz_kind: QuizKind) -> PointMappingFn<'_> {
+        match quiz_kind {
+            QuizKind::Traditional => {
+                Box::new(|is_correct, _, _| self.calc_traditional_points(is_correct))
+            }
+            QuizKind::Certainty => Box::new(|is_correct, level, table| {
+                self.calc_certainty_points(is_correct, level, table)
+            }),
         }
     }
 
-    fn awarded_points_for_certainty(
+    fn calc_traditional_points(&self, is_correct: bool) -> i16 {
+        if is_correct { 1 } else { 0 }
+    }
+
+    fn calc_certainty_points(
         &self,
         is_correct: bool,
-        certainty_level: Option<CertaintyLevel>,
-        table: &Option<CertaintyTable>,
+        level: CertaintyLevel,
+        table: Option<&CertaintyTable>,
     ) -> i16 {
         let Some(table) = table else {
-            return if is_correct { 1 } else { 0 };
-        };
-
-        let Some(level) = certainty_level else {
             return 0;
         };
 
         match (level, is_correct) {
             (CertaintyLevel::Low, true) => table.low.correct,
             (CertaintyLevel::Low, false) => table.low.incorrect,
+
             (CertaintyLevel::Medium, true) => table.medium.correct,
             (CertaintyLevel::Medium, false) => table.medium.incorrect,
+
             (CertaintyLevel::High, true) => table.high.correct,
             (CertaintyLevel::High, false) => table.high.incorrect,
         }

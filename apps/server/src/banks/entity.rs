@@ -7,8 +7,8 @@ use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use uuid::Uuid;
 
+pub type QuestionId = Id<Question>;
 pub type QuestionBankId = Id<QuestionBank>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
@@ -28,20 +28,26 @@ impl Entity for QuestionBank {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Type, Builder)]
+#[derive(Clone, Debug, Serialize, Deserialize, Type, Builder, PartialEq, Hash, Eq)]
 #[sqlx(type_name = "question")]
 pub struct Question {
-    #[builder(default = Uuid::new_v4())]
-    pub id: Uuid,
+    #[builder(default = QuestionId::new())]
+    pub id: QuestionId,
     pub prompt: String,
     pub options: Vec<String>,
     pub answer_index: i16,
     pub images: Vec<String>,
 }
 
+impl Entity for Question {
+    fn key_name() -> &'static str {
+        "question"
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct QuestionView {
-    pub id: Uuid,
+    pub id: QuestionId,
     pub prompt: String,
     pub options: Vec<String>,
     pub images: Vec<String>,

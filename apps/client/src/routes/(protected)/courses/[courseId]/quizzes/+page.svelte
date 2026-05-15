@@ -20,10 +20,7 @@
 	import { coursesService } from "$lib/courses/courses.service"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
-	import {
-		createQuizSchema,
-		type CreateQuizFormValues,
-	} from "$lib/quizzes/quizzes.schema"
+	import { createQuizSchema } from "$lib/quizzes/quizzes.schema"
 	import type { CreateQuizInput } from "$lib/quizzes/types"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { quizKindLabel } from "$lib/shared/labels"
@@ -232,9 +229,11 @@
 					<tbody>
 						{#each quizzesQuery.data as quiz (quiz.id)}
 							<tr
-								class="table-row row-hover cursor-pointer"
+								class="row-hover table-row cursor-pointer"
 								onclick={() =>
-									goto(resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`))}
+									goto(
+										resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)
+									)}
 							>
 								<td class="px-3 py-2 text-zinc-900">{quiz.title}</td>
 								<td class="px-3 py-2 text-zinc-700">{quizKindLabel(quiz.kind)}</td>
@@ -253,8 +252,8 @@
 								<td class="px-3 py-2 text-zinc-700">
 									<button
 										type="button"
-									class="code-chip"
-									title="Copiar código"
+										class="code-chip"
+										title="Copiar código"
 										onclick={e => {
 											e.stopPropagation()
 											void copyJoinCode(quiz.joinCode)
@@ -287,16 +286,16 @@
 											>
 										{/if}
 										<button
-									class="icon-btn icon-btn-danger"
-									title="Eliminar"
-									type="button"
-									onclick={e => {
-										e.stopPropagation()
-										quizToDelete = { id: quiz.id, title: quiz.title }
-									}}
-									disabled={isActionPending}
-									><Trash2 size={15} aria-hidden="true" /></button
-								>
+											class="icon-btn icon-btn-danger"
+											title="Eliminar"
+											type="button"
+											onclick={e => {
+												e.stopPropagation()
+												quizToDelete = { id: quiz.id, title: quiz.title }
+											}}
+											disabled={isActionPending}
+											><Trash2 size={15} aria-hidden="true" /></button
+										>
 									</div>
 								</td>
 							</tr>

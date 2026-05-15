@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { createForm, Field, Form, type SubmitEventHandler } from "@formisch/svelte"
 	import { browser } from "$app/environment"
@@ -7,9 +8,7 @@
 	import { Search, History } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { joinCodeSchema } from "$lib/attempts/attempts.schema"
-	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 
 	const initialJoinCode = browser
 		? (localStorage.getItem("last-submitted-join-code") ?? "")
@@ -57,9 +56,9 @@
 
 	const byJoinCodeMutation = createMutation(() => ({
 		mutationFn: (joinCode: string) =>
-			quizzesService.getMyResultByCodeOrThrow(joinCode),
+			attemptsService.getResultsByJoinCodeOrThrow(joinCode),
 		onSuccess: async (_data, joinCode) => {
-			await goto(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`)
+			await goto(resolve(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`))
 		},
 		onError: error => {
 			noticeTone = "danger"
@@ -68,36 +67,22 @@
 		},
 	}))
 
-	const byAttemptIdMutation = createMutation(() => ({
-		mutationFn: (attemptId: string) => attemptsService.getResultsOrThrow(attemptId),
-		onSuccess: data => {
-			noticeTone = "ok"
-			resultNotice = `Resultado encontrado. Puntaje: ${data.score}/${data.maxScore}, Nota: ${GradeValue.format(data.grade)}.`
-			toast.success("Resultado cargado correctamente.")
-		},
-		onError: error => {
-			noticeTone = "danger"
-			resultNotice = getResultErrorMessage(error)
-			toast.error(resultNotice)
-		},
-	}))
+	const loadLastAttempt = async () => {
+		if (!browser) return
+		const joinCode = localStorage.getItem("last-submitted-join-code")
+		if (!joinCode) {
+			toast.error("No hay un intento reciente guardado.")
+			return
+		}
+
+		await byJoinCodeMutation.mutateAsync(joinCode)
+	}
 
 	const submitLookup: SubmitEventHandler<typeof joinCodeSchema> = async output => {
 		if (browser) {
 			localStorage.setItem("last-submitted-join-code", output.joinCode)
 		}
 		await byJoinCodeMutation.mutateAsync(output.joinCode)
-	}
-
-	const loadLastAttempt = async () => {
-		if (!browser) return
-		const attemptId = localStorage.getItem("last-submitted-attempt-id")
-		if (!attemptId) {
-			toast.error("No hay un intento reciente guardado.")
-			return
-		}
-
-		await byAttemptIdMutation.mutateAsync(attemptId)
 	}
 </script>
 

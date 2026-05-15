@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { createForm, Field, Form, type SubmitEventHandler } from "@formisch/svelte"
 	import { Search } from "lucide-svelte"
@@ -20,7 +21,9 @@
 		mutationFn: ({ joinCode }: JoinCodeFormValues) =>
 			quizzesService.joinByCodeOrThrow(joinCode),
 		onSuccess: async (_preview, input) => {
-			await goto(`/join/lobby?joinCode=${encodeURIComponent(input.joinCode)}`)
+			await goto(
+				resolve(`/join/lobby?joinCode=${encodeURIComponent(input.joinCode)}`)
+			)
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))

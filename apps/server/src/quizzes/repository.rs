@@ -64,7 +64,6 @@ impl QuizRepository {
                 certainty_table,
                 attempt_duration_minutes,
                 starts_at,
-                closed_at,
                 results_published_at,
                 created_at,
                 deleted_at
@@ -81,7 +80,6 @@ impl QuizRepository {
                 certainty_table = EXCLUDED.certainty_table,
                 attempt_duration_minutes = EXCLUDED.attempt_duration_minutes,
                 starts_at = EXCLUDED.starts_at,
-                closed_at = EXCLUDED.closed_at,
                 results_published_at = EXCLUDED.results_published_at,
                 created_at = EXCLUDED.created_at,
                 deleted_at = EXCLUDED.deleted_at
@@ -91,13 +89,12 @@ impl QuizRepository {
         .bind(quiz.course_id)
         .bind(quiz.snapshot_id)
         .bind(&quiz.title)
-        .bind(&quiz.kind)
+        .bind(quiz.kind)
         .bind(&quiz.join_code)
         .bind(quiz.question_count)
         .bind(&quiz.certainty_table)
         .bind(quiz.attempt_duration_minutes)
         .bind(quiz.starts_at)
-        .bind(quiz.closed_at)
         .bind(quiz.results_published_at)
         .bind(quiz.created_at)
         .bind(quiz.deleted_at)
@@ -105,22 +102,6 @@ impl QuizRepository {
         .await?;
 
         Ok(quiz)
-    }
-
-    pub async fn close_quiz(&self, quiz_id: &QuizId) -> AppResult<bool> {
-        let now = Utc::now();
-
-        let result = sqlx::query(
-            "UPDATE quizzes
-              SET closed_at = COALESCE(closed_at, $2)
-              WHERE id = $1 AND deleted_at IS NULL",
-        )
-        .bind(quiz_id)
-        .bind(now)
-        .execute(self.db.get_pool())
-        .await?;
-
-        Ok(result.rows_affected() > 0)
     }
 
     pub async fn publish_results(&self, quiz_id: &QuizId) -> AppResult<bool> {

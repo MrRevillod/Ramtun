@@ -102,7 +102,6 @@ fn is_attempt_action(action: AuthzAction) -> bool {
         AuthzAction::AttemptList
             | AuthzAction::AttemptInitialize
             | AuthzAction::AttemptSubmit
-            | AuthzAction::AttemptViewResults
             | AuthzAction::AttemptViewResultsManaged
     )
 }

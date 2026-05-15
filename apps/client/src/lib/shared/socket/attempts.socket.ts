@@ -49,9 +49,7 @@ export const disconnectAttemptsSocket = () => {
 	socket.disconnect()
 }
 
-export const onAttemptsSubmit = (
-	handler: (payload: AttemptSubmitView) => void
-) => {
+export const onAttemptsSubmit = (handler: (payload: AttemptSubmitView) => void) => {
 	const currentSocket = connectAttemptsSocket()
 
 	if (!currentSocket) return () => {}

@@ -21,10 +21,10 @@ pub struct Quiz {
     pub kind: QuizKind,
     pub join_code: String,
     pub question_count: i16,
+    pub max_score: i16,
     pub certainty_table: Option<CertaintyTable>,
     pub attempt_duration_minutes: i16,
     pub starts_at: DateTime<Utc>,
-    pub closed_at: Option<DateTime<Utc>>,
     pub results_published_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
@@ -36,7 +36,7 @@ impl Entity for Quiz {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Type, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Type, Default, PartialEq, Eq, Copy)]
 #[sqlx(type_name = "quiz_kind", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum QuizKind {
@@ -61,11 +61,31 @@ pub struct CertaintyTable {
     pub high: CertaintyScore,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Type)]
+#[derive(Clone, Debug, Serialize, Deserialize, Type, Copy, Default)]
 #[sqlx(type_name = "certainty_level", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum CertaintyLevel {
+    #[default]
     Low,
     Medium,
     High,
+}
+
+impl Default for CertaintyTable {
+    fn default() -> Self {
+        CertaintyTable {
+            low: CertaintyScore {
+                correct: 1,
+                incorrect: 0,
+            },
+            medium: CertaintyScore {
+                correct: 2,
+                incorrect: -4,
+            },
+            high: CertaintyScore {
+                correct: 3,
+                incorrect: -6,
+            },
+        }
+    }
 }

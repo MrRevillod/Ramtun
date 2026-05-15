@@ -16,17 +16,6 @@ pub struct AttemptRepository {
 }
 
 impl AttemptRepository {
-    pub async fn find_by_id(&self, attempt_id: &AttemptId) -> AppResult<Option<Attempt>> {
-        let attempt = sqlx::query_as::<_, Attempt>(
-            "SELECT * FROM attempts WHERE id = $1 AND deleted_at IS NULL",
-        )
-        .bind(attempt_id)
-        .fetch_optional(self.db.get_pool())
-        .await?;
-
-        Ok(attempt)
-    }
-
     pub async fn find_by_quiz_and_student(
         &self,
         quiz_id: &QuizId,
@@ -38,6 +27,17 @@ impl AttemptRepository {
         )
         .bind(quiz_id)
         .bind(student_id)
+        .fetch_optional(self.db.get_pool())
+        .await?;
+
+        Ok(attempt)
+    }
+
+    pub async fn find_by_id(&self, attempt_id: &AttemptId) -> AppResult<Option<Attempt>> {
+        let attempt = sqlx::query_as::<_, Attempt>(
+            "SELECT * FROM attempts WHERE id = $1 AND deleted_at IS NULL",
+        )
+        .bind(attempt_id)
         .fetch_optional(self.db.get_pool())
         .await?;
 
@@ -144,17 +144,28 @@ impl AttemptRepository {
 
     pub async fn upsert_attempt_answer(&self, answer: &AttemptAnswer) -> AppResult<()> {
         sqlx::query(
-            "INSERT INTO attempt_answers (attempt_id, question_id, answer_index, certainty_level)
-             VALUES ($1, $2, $3, $4)
+            "INSERT INTO attempt_answers (
+                attempt_id,
+                question_id,
+                answer_index,
+                certainty_level,
+                is_correct,
+                awarded_points
+             )
+             VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (attempt_id, question_id)
              DO UPDATE SET
                 answer_index = EXCLUDED.answer_index,
-                certainty_level = EXCLUDED.certainty_level",
+                certainty_level = EXCLUDED.certainty_level,
+                is_correct = EXCLUDED.is_correct,
+                awarded_points = EXCLUDED.awarded_points",
         )
         .bind(answer.attempt_id)
         .bind(answer.question_id)
         .bind(answer.answer_index)
-        .bind(answer.certainty_level.clone())
+        .bind(answer.certainty_level)
+        .bind(answer.is_correct)
+        .bind(answer.awarded_points)
         .execute(self.db.get_pool())
         .await?;
 

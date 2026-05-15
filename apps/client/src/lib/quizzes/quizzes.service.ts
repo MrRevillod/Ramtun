@@ -1,7 +1,6 @@
 import { request } from "$lib/shared/http/http"
 import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
 import type { CreateQuizInput, JoinQuizPreview, Quiz } from "$lib/quizzes/types"
-import type { AttemptResult } from "$lib/attempts/types"
 
 class QuizzesService {
 	public listManaged(): AppResultAsync<Quiz[]> {
@@ -38,28 +37,6 @@ class QuizzesService {
 		return unwrapResultOrThrow(await this.remove(quizId))
 	}
 
-	public close(quizId: string): AppResultAsync<void> {
-		return request<void>({
-			method: "POST",
-			url: `/quizzes/${quizId}/close`,
-		})
-	}
-
-	public async closeOrThrow(quizId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.close(quizId))
-	}
-
-	public publishResults(quizId: string): AppResultAsync<void> {
-		return request<void>({
-			method: "POST",
-			url: `/quizzes/${quizId}/publish-results`,
-		})
-	}
-
-	public async publishResultsOrThrow(quizId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.publishResults(quizId))
-	}
-
 	public closeAndPublish(quizId: string): AppResultAsync<void> {
 		return request<void>({
 			method: "POST",
@@ -80,17 +57,6 @@ class QuizzesService {
 
 	public async joinByCodeOrThrow(joinCode: string): Promise<JoinQuizPreview> {
 		return unwrapResultOrThrow(await this.joinByCode(joinCode))
-	}
-
-	public getMyResultByCode(joinCode: string): AppResultAsync<AttemptResult> {
-		return request<AttemptResult>({
-			method: "GET",
-			url: `/quizzes/join/${joinCode}/attempts/me/result`,
-		})
-	}
-
-	public async getMyResultByCodeOrThrow(joinCode: string): Promise<AttemptResult> {
-		return unwrapResultOrThrow(await this.getMyResultByCode(joinCode))
 	}
 }
 

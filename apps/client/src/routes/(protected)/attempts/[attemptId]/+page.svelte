@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { browser } from "$app/environment"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { onDestroy } from "svelte"
@@ -46,14 +47,14 @@
 		if (!browser) return
 		const raw = localStorage.getItem(ATTEMPT_SESSION_KEY)
 		if (!raw) {
-			await goto("/join")
+			await goto(resolve("/join"))
 			return
 		}
 
 		try {
 			const parsed = JSON.parse(raw) as AttemptSession
 			if (parsed.attempt.attemptId !== data.attemptId) {
-				await goto("/join")
+				await goto(resolve("/join"))
 				return
 			}
 
@@ -64,7 +65,7 @@
 			)
 			answers = parsed.answers
 		} catch {
-			await goto("/join")
+			await goto(resolve("/join"))
 		}
 	}
 
@@ -126,15 +127,15 @@
 			attemptsService.saveAnswerOrThrow(payload.attemptId, payload.questionId, {
 				answerIndex: payload.answerIndex,
 				certaintyLevel: payload.certaintyLevel,
+				questionId: payload.questionId,
 			}),
 	}))
 
 	const submitMutation = createMutation(() => ({
 		mutationFn: (attemptId: string) => attemptsService.submitOrThrow(attemptId),
-		onSuccess: submitted => {
+		onSuccess: () => {
 			if (browser) {
 				localStorage.removeItem(ATTEMPT_SESSION_KEY)
-				localStorage.setItem("last-submitted-attempt-id", submitted.attemptId)
 				if (session)
 					localStorage.setItem("last-submitted-join-code", session.joinCode)
 			}
@@ -369,14 +370,18 @@
 					type="button"
 					onclick={() =>
 						goto(
-							`/results/lobby?joinCode=${encodeURIComponent(session ? session.joinCode : "")}`
+							resolve(
+								`/results/lobby?joinCode=${encodeURIComponent(session ? session.joinCode : "")}`
+							)
 						)}
 				>
 					<ArrowUpRight size={16} aria-hidden="true" />
 					Ir a sala de espera de resultados
 				</button>
-				<button class="btn-secondary" type="button" onclick={() => goto("/")}
-					>Volver al Inicio</button
+				<button
+					class="btn-secondary"
+					type="button"
+					onclick={() => goto(resolve("/"))}>Volver al Inicio</button
 				>
 			</div>
 		</div>

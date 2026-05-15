@@ -36,7 +36,7 @@ impl QuizPolicy {
         quiz_id: &QuizId,
     ) -> AppResult<Quiz> {
         let Some(quiz) = self.quizzes.find_by_id(quiz_id).await? else {
-            return Err(QuizError::NotFound(quiz_id.to_string()))?;
+            return Err(QuizError::NotFound(*quiz_id))?;
         };
 
         if current_user.role == UserRole::Admin {

@@ -97,9 +97,7 @@
 				<h3 class="mt-2 mb-0 text-xl text-black">
 					{courseQuery.data?.name ?? "Curso"} - Miembros
 				</h3>
-				<p class="mt-2 mb-0 text-zinc-700">
-					Agrega o retira participantes.
-				</p>
+				<p class="mt-2 mb-0 text-zinc-700">Agrega o retira participantes.</p>
 			</div>
 			<button
 				class="btn-primary flex items-center gap-1.5"
@@ -139,16 +137,16 @@
 								<td class="px-3 py-2 text-zinc-700">{roleLabel(member.role)}</td>
 								<td class="px-3 py-2">
 									<button
-									class="icon-btn icon-btn-danger"
-									title="Quitar"
-									type="button"
-									onclick={() =>
-										(memberToRemove = {
-											userId: member.userId,
-											username: member.username,
-										})}
-									disabled={removeMemberMutation.isPending}
-								>
+										class="icon-btn icon-btn-danger"
+										title="Quitar"
+										type="button"
+										onclick={() =>
+											(memberToRemove = {
+												userId: member.userId,
+												username: member.username,
+											})}
+										disabled={removeMemberMutation.isPending}
+									>
 										<Trash2 size={15} aria-hidden="true" />
 									</button>
 								</td>

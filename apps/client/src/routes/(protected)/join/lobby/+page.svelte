@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { page } from "$app/state"
 	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { browser } from "$app/environment"
 	import { createMutation, createQuery } from "@tanstack/svelte-query"
-	import { Clock, Play, TimerReset } from "lucide-svelte"
+	import { Play, TimerReset } from "lucide-svelte"
 	import { toast } from "svelte-sonner"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
@@ -48,7 +49,7 @@
 				localStorage.setItem(ATTEMPT_SESSION_KEY, JSON.stringify(session))
 			}
 
-			await goto(`/attempts/${attempt.attemptId}`)
+			await goto(resolve(`/attempts/${attempt.attemptId}`))
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
@@ -217,7 +218,7 @@
 
 			<div class="keyline"></div>
 			<div class="mt-auto flex flex-wrap items-center justify-between gap-3">
-				<a class="btn-tertiary" href="/join">
+				<a class="btn-tertiary" href={resolve("/join")}>
 					<TimerReset size={14} class="mr-1 inline" />
 					Cambiar código
 				</a>

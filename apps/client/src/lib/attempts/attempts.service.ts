@@ -47,7 +47,10 @@ class AttemptsService {
 		return request<void>({
 			method: "PUT",
 			url: `/attempts/${attemptId}/answers/${questionId}`,
-			data: input,
+			data: {
+				...input,
+				questionId,
+			},
 		})
 	}
 
@@ -70,15 +73,17 @@ class AttemptsService {
 		return unwrapResultOrThrow(await this.submit(attemptId))
 	}
 
-	public getResults(attemptId: string): AppResultAsync<AttemptResult> {
+	public getResultsByJoinCode(joinCode: string): AppResultAsync<AttemptResult> {
 		return request<AttemptResult>({
 			method: "GET",
-			url: `/attempts/${attemptId}/results`,
+			url: `/attempts/join/${joinCode}/results/me`,
 		})
 	}
 
-	public async getResultsOrThrow(attemptId: string): Promise<AttemptResult> {
-		return unwrapResultOrThrow(await this.getResults(attemptId))
+	public async getResultsByJoinCodeOrThrow(
+		joinCode: string
+	): Promise<AttemptResult> {
+		return unwrapResultOrThrow(await this.getResultsByJoinCode(joinCode))
 	}
 
 	public getAttemptResultsManaged(attemptId: string): AppResultAsync<AttemptResult> {

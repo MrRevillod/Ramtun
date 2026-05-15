@@ -1,11 +1,13 @@
 use sword::web::HttpError;
 use thiserror::Error;
 
+use crate::{banks::QuestionId, quizzes::QuizId};
+
 #[derive(Debug, Error, HttpError)]
 pub enum QuizError {
     #[http(code = 404, message = "No se encontró el quiz solicitado.")]
     #[error("Quiz not found: {0}")]
-    NotFound(String),
+    NotFound(QuizId),
 
     #[http(code = 400, message = "El ID del quiz proporcionado no es válido.")]
     #[error("Invalid quiz ID")]
@@ -96,5 +98,5 @@ pub enum QuizError {
 
     #[http(code = 400, message = "Una o más preguntas no son válidas.")]
     #[error("One or more questions are invalid: {0}")]
-    QuestionNotFound(String),
+    QuestionNotFound(QuestionId),
 }

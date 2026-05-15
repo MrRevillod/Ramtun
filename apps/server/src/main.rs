@@ -1,3 +1,5 @@
+#![allow(clippy::wrong_self_convention)]
+
 mod attempts;
 mod auth;
 mod authz;

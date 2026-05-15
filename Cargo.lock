@@ -2521,6 +2521,7 @@ version = "0.1.0"
 dependencies = [
  "bon",
  "chrono",
+ "futures",
  "jsonwebtoken",
  "ldap3",
  "rand 0.10.1",
@@ -2530,10 +2531,8 @@ dependencies = [
  "sqlx",
  "sword",
  "thiserror",
- "tokio",
  "tower-http",
  "tracing",
- "tracing-subscriber",
  "uuid",
  "validator",
 ]

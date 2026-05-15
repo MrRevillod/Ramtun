@@ -2,9 +2,9 @@ use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use uuid::Uuid;
 
 use crate::{
+    banks::QuestionId,
     courses::CourseId,
     quizzes::{CertaintyLevel, QuizId},
     shared::{Entity, Id},
@@ -19,7 +19,7 @@ pub struct Attempt {
     pub id: AttemptId,
     pub student_id: UserId,
     pub quiz_id: QuizId,
-    pub question_order: Vec<Uuid>,
+    pub question_order: Vec<QuestionId>,
     pub score: Option<i16>,
     pub grade: Option<f64>,
     pub started_at: DateTime<Utc>,
@@ -32,9 +32,11 @@ pub struct Attempt {
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, FromRow)]
 pub struct AttemptAnswer {
     pub attempt_id: AttemptId,
-    pub question_id: Uuid,
+    pub question_id: QuestionId,
     pub answer_index: i16,
     pub certainty_level: Option<CertaintyLevel>,
+    pub is_correct: Option<bool>,
+    pub awarded_points: Option<i16>,
 }
 
 impl Entity for Attempt {

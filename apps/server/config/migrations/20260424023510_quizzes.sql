@@ -26,10 +26,10 @@ CREATE TABLE quizzes (
 	kind quiz_kind NOT NULL,
 	join_code TEXT NOT NULL UNIQUE,
 	question_count SMALLINT NOT NULL,
+	max_score SMALLINT NOT NULL,
 	certainty_table certainty_table,
 	attempt_duration_minutes SMALLINT NOT NULL,
 	starts_at TIMESTAMPTZ NOT NULL,
-	closed_at TIMESTAMPTZ,
 	created_at TIMESTAMPTZ NOT NULL,
 	deleted_at TIMESTAMPTZ
 );
@@ -45,7 +45,6 @@ CREATE INDEX idx_quizzes_course_id ON quizzes(course_id);
 CREATE INDEX idx_quizzes_snapshot_id ON quizzes(snapshot_id);
 CREATE INDEX idx_quizzes_join_code ON quizzes(join_code);
 CREATE INDEX idx_quizzes_starts_at ON quizzes(starts_at);
-CREATE INDEX idx_quizzes_closed_at ON quizzes(closed_at);
 CREATE INDEX idx_quizzes_deleted_at ON quizzes(deleted_at);
 
 CREATE INDEX idx_quiz_question_banks_quiz_id ON quiz_question_banks(quiz_id);

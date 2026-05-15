@@ -30,6 +30,7 @@ impl Module for AttemptsModule {
         components.register::<AttemptsService>();
         components.register::<QuestionService>();
         components.register::<GradingService>();
+        components.register::<AnswerService>();
     }
 
     fn register_controllers(controllers: &ControllerRegistry) {
