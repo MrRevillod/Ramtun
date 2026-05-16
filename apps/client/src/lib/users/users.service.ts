@@ -1,4 +1,4 @@
-import type { ManagedUser } from "$lib/users/types"
+import type { ManagedUser } from "$lib/users/users.dtos"
 
 import { request } from "$lib/shared/http/http"
 import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"

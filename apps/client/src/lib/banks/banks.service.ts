@@ -1,6 +1,6 @@
 import { request } from "$lib/shared/http/http"
 import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
-import type { CreateQuestionBankInput, QuestionBank } from "$lib/banks/types"
+import type { CreateQuestionBankInput, QuestionBank } from "$lib/banks/banks.dtos"
 
 class BanksService {
 	public listByCourse(courseId: string): AppResultAsync<QuestionBank[]> {

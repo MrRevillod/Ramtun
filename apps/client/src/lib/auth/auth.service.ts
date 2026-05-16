@@ -2,7 +2,7 @@ import { err, ok, unwrapResultOrThrow, type AppResult } from "$lib/shared/result
 import { authStore } from "$lib/auth/auth.store.svelte"
 import { sessionManager } from "$lib/shared/auth/session.manager"
 import { request } from "$lib/shared/http/http"
-import type { AuthTokens, LoginInput, LoginResponse } from "$lib/auth/types"
+import type { AuthTokens, LoginInput, LoginResponse } from "$lib/auth/auth.dtos"
 
 class AuthService {
 	#bootstrapPromise: Promise<AppResult<void>> | null = null

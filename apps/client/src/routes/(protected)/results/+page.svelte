@@ -2,23 +2,19 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { createMutation } from "@tanstack/svelte-query"
-	import { createForm, Field, Form, type SubmitEventHandler } from "@formisch/svelte"
 	import { browser } from "$app/environment"
 	import { toast } from "svelte-sonner"
 	import { Search, History } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import { joinCodeSchema } from "$lib/attempts/attempts.schema"
+	import { joinCodeSchema } from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
 
-	const initialJoinCode = browser
-		? (localStorage.getItem("last-submitted-join-code") ?? "")
-		: ""
-
-	const resultLookupForm = createForm({
-		schema: joinCodeSchema,
-		initialInput: { joinCode: initialJoinCode },
-	})
-
+	let joinCode = $state(
+		browser
+			? (localStorage.getItem("last-submitted-join-code") ?? "")
+			: ""
+	)
+	let joinError = $state("")
 	let resultNotice = $state("")
 	let noticeTone = $state<"ok" | "warn" | "danger">("warn")
 
@@ -69,20 +65,27 @@
 
 	const loadLastAttempt = async () => {
 		if (!browser) return
-		const joinCode = localStorage.getItem("last-submitted-join-code")
-		if (!joinCode) {
+		const code = localStorage.getItem("last-submitted-join-code")
+		if (!code) {
 			toast.error("No hay un intento reciente guardado.")
 			return
 		}
 
-		await byJoinCodeMutation.mutateAsync(joinCode)
+		await byJoinCodeMutation.mutateAsync(code)
 	}
 
-	const submitLookup: SubmitEventHandler<typeof joinCodeSchema> = async output => {
-		if (browser) {
-			localStorage.setItem("last-submitted-join-code", output.joinCode)
+	const handleSubmit = () => {
+		joinError = ""
+		const result = joinCodeSchema.safeParse({ joinCode })
+		if (!result.success) {
+			joinError = result.issues[0].message
+			return
 		}
-		await byJoinCodeMutation.mutateAsync(output.joinCode)
+
+		if (browser) {
+			localStorage.setItem("last-submitted-join-code", result.output.joinCode)
+		}
+		void byJoinCodeMutation.mutateAsync(result.output.joinCode)
 	}
 </script>
 
@@ -95,46 +98,42 @@
 	</header>
 
 	<section class="panel-elevated p-5 sm:p-6">
-		<Form
-			of={resultLookupForm}
-			onsubmit={submitLookup}
-			class="grid gap-3 lg:grid-cols-[3fr_1fr_1fr] lg:items-end"
-		>
-			<Field of={resultLookupForm} path={["joinCode"]}>
-				{#snippet children(field)}
-					<div class="grid gap-1.5">
-						<input
-							{...field.props}
-							class="input-base"
-							aria-label="Código de quiz"
-							value={field.input ?? ""}
-							placeholder="Ingrese un código de Quiz. Ej: ABC1234"
-						/>
-						{#if field.errors?.[0]}
-							<span class="text-sm text-red-700">{field.errors[0]}</span>
-						{/if}
-					</div>
-				{/snippet}
-			</Field>
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+			<div class="flex-1">
+				<div class="grid gap-1.5">
+					<input
+						class="input-base"
+						type="text"
+						aria-label="Código de quiz"
+						bind:value={joinCode}
+						placeholder="Ingrese un código de Quiz. Ej: ABC1234"
+						oninput={() => (joinError = "")}
+					/>
+					{#if joinError}
+						<span class="text-sm text-red-700">{joinError}</span>
+					{/if}
+				</div>
+			</div>
 
 			<button
-				class="btn-primary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
-				type="submit"
+				class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+				type="button"
 				disabled={byJoinCodeMutation.isPending}
+				onclick={handleSubmit}
 			>
 				<Search size={16} aria-hidden="true" />
 				{byJoinCodeMutation.isPending ? "Consultando..." : "Ir a sala de espera"}
 			</button>
 
 			<button
-				class="btn-secondary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
+				class="btn-secondary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
 				type="button"
 				onclick={loadLastAttempt}
 			>
 				<History size={16} aria-hidden="true" />
 				Cargar último intento
 			</button>
-		</Form>
+		</div>
 
 		<div class="keyline mt-4"></div>
 		<p class="mt-4 mb-0 text-sm text-zinc-600">

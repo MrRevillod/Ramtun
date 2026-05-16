@@ -1,7 +1,7 @@
-import type { QuizKind } from "$lib/quizzes/types"
-import type { CertaintyLevel } from "$lib/attempts/types"
-import type { User } from "$lib/auth/types"
-import type { CourseMemberRole } from "$lib/courses/types"
+import type { QuizKind } from "$lib/quizzes/quizzes.dtos"
+import type { CertaintyLevel } from "$lib/attempts/attempts.dtos"
+import type { User } from "$lib/auth/auth.dtos"
+import type { CourseMemberRole } from "$lib/courses/courses.dtos"
 
 type AnyRole = User["role"] | CourseMemberRole
 

@@ -10,19 +10,10 @@
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { quizKindLabel } from "$lib/shared/labels"
+	import type { AttemptSession } from "$lib/attempts/attempts.dtos"
+	import { ATTEMPT_SESSION_KEY } from "$lib/shared/constants"
+	import CertaintyTableView from "$lib/quizzes/components/CertaintyTableView.svelte"
 
-	type AttemptSession = {
-		joinCode: string
-		preview: Awaited<ReturnType<typeof quizzesService.joinByCodeOrThrow>>
-		attempt: Awaited<ReturnType<typeof attemptsService.initializeOrThrow>>
-		answers: Record<
-			string,
-			{ answerIndex: number; certaintyLevel: "low" | "medium" | "high" | null }
-		>
-		index: number
-	}
-
-	const ATTEMPT_SESSION_KEY = "join-attempt-session"
 	const joinCode = $derived(page.url.searchParams.get("joinCode") ?? "")
 
 	const previewQuery = createQuery(() => ({
@@ -166,51 +157,7 @@
 					<div class="panel-muted space-y-3 p-4">
 						<p class="m-0 text-sm font-medium text-black">Tabla de certeza</p>
 						<div class="overflow-x-auto">
-							<table class="w-full border-collapse text-xs">
-								<thead class="bg-zinc-100/90 text-zinc-700">
-									<tr>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left"
-											>Nivel</th
-										>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left"
-											>Correcta</th
-										>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left"
-											>Incorrecta</th
-										>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5">Baja</td>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.low.correct}</td
-										>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.low.incorrect}</td
-										>
-									</tr>
-									<tr>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5">Media</td
-										>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.medium.correct}</td
-										>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.medium.incorrect}</td
-										>
-									</tr>
-									<tr>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5">Alta</td>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.high.correct}</td
-										>
-										<td class="border border-zinc-300 bg-white px-2 py-1.5"
-											>{previewQuery.data.certaintyTable.high.incorrect}</td
-										>
-									</tr>
-								</tbody>
-							</table>
+							<CertaintyTableView table={previewQuery.data.certaintyTable} />
 						</div>
 					</div>
 				{/if}

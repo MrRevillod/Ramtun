@@ -6,23 +6,13 @@
 	} from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
-	import {
-		createForm,
-		Field,
-		Form,
-		type SubmitEventHandler,
-		reset,
-	} from "@formisch/svelte"
 	import { toast } from "svelte-sonner"
-	import { fade, scale } from "svelte/transition"
-	import { Plus, RefreshCw, Users, Trash2, X } from "lucide-svelte"
-	import {
-		createCourseSchema,
-		type CreateCourseFormValues,
-	} from "$lib/courses/courses.schema"
+	import { Plus, Users, Trash2 } from "lucide-svelte"
+	import type { CreateCourseFormValues } from "$lib/courses/courses.dtos"
 	import { coursesService } from "$lib/courses/courses.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import CreateCourseModal from "$lib/courses/components/CreateCourseModal.svelte"
 
 	const queryClient = useQueryClient()
 	const coursesKey = ["courses"]
@@ -37,7 +27,6 @@
 			coursesService.createOrThrow(input),
 		onSuccess: async created => {
 			toast.success(`Curso ${created.code} creado correctamente.`)
-			reset(createCourseForm)
 			await queryClient.invalidateQueries({ queryKey: coursesKey })
 		},
 		onError: error => {
@@ -54,22 +43,6 @@
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
-
-	const createCourseForm = createForm({
-		schema: createCourseSchema,
-		initialInput: {
-			name: "",
-			code: "",
-			year: new Date().getFullYear(),
-		},
-	})
-
-	const submitCourse: SubmitEventHandler<
-		typeof createCourseSchema
-	> = async output => {
-		await createCourseMutation.mutateAsync(output)
-		showCreateModal = false
-	}
 
 	let showCreateModal = $state(false)
 	let courseToDelete = $state<{ id: string; name: string } | null>(null)
@@ -158,93 +131,12 @@
 		{/if}
 	</section>
 
-	{#if showCreateModal}
-		<div
-			class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			transition:fade={{ duration: 180 }}
-			onclick={() => (showCreateModal = false)}
-			onkeydown={e => {
-				if (e.key === "Escape") showCreateModal = false
-			}}
-		>
-			<section
-				class="panel-elevated w-full max-w-xl p-5 sm:p-6"
-				role="presentation"
-				tabindex="-1"
-				transition:scale={{ duration: 190, start: 0.98 }}
-				onclick={e => e.stopPropagation()}
-			>
-				<div class="mb-3 flex items-center justify-between gap-2">
-					<h3 class="m-0 text-lg text-black">Crear curso</h3>
-					<button
-						class="btn-tertiary p-1"
-						type="button"
-						onclick={() => (showCreateModal = false)}
-						><X size={18} aria-hidden="true" /></button
-					>
-				</div>
-				<Form of={createCourseForm} onsubmit={submitCourse} class="form-stack">
-					<Field of={createCourseForm} path={["name"]}
-						>{#snippet children(field)}<label class="grid gap-1.5"
-								><span class="text-sm text-zinc-800">Nombre</span><input
-									{...field.props}
-									class="input-base"
-									value={field.input ?? ""}
-									placeholder="Ej: Matematica Discreta"
-								/>{#if field.errors?.[0]}<span class="text-sm text-red-700"
-										>{field.errors[0]}</span
-									>{/if}</label
-							>{/snippet}</Field
-					>
-					<div class="form-grid-2">
-						<Field of={createCourseForm} path={["code"]}
-							>{#snippet children(field)}<label class="grid gap-1.5"
-									><span class="text-sm text-zinc-800">Código</span><input
-										{...field.props}
-										class="input-base"
-										value={field.input ?? ""}
-										placeholder="Ej: MAT123"
-									/>{#if field.errors?.[0]}<span class="text-sm text-red-700"
-											>{field.errors[0]}</span
-										>{/if}</label
-								>{/snippet}</Field
-						>
-						<Field of={createCourseForm} path={["year"]}
-							>{#snippet children(field)}<label class="grid gap-1.5"
-									><span class="text-sm text-zinc-800">Año</span><input
-										{...field.props}
-										class="input-base"
-										type="number"
-										value={field.input ?? ""}
-									/>{#if field.errors?.[0]}<span class="text-sm text-red-700"
-											>{field.errors[0]}</span
-										>{/if}</label
-								>{/snippet}</Field
-						>
-					</div>
-					<div class="flex justify-end gap-2">
-						<button
-							class="btn-tertiary"
-							type="button"
-							onclick={() => (showCreateModal = false)}>Cancelar</button
-						><button class="btn-primary flex items-center gap-1.5" type="submit"
-							>{#if createCourseMutation.isPending}<span class="animate-spin"
-									><RefreshCw size={16} aria-hidden="true" /></span
-								>{:else}<Plus
-									size={16}
-									aria-hidden="true"
-								/>{/if}{createCourseMutation.isPending
-								? "Creando..."
-								: "Crear curso"}</button
-						>
-					</div>
-				</Form>
-			</section>
-		</div>
-	{/if}
+	<CreateCourseModal
+		open={showCreateModal}
+		onclose={() => (showCreateModal = false)}
+		onsuccess={() => (showCreateModal = false)}
+		mutation={createCourseMutation}
+	/>
 
 	<ConfirmActionModal
 		open={!!courseToDelete}

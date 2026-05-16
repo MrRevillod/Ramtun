@@ -1,5 +1,5 @@
 import { authStore } from "$lib/auth/auth.store.svelte"
-import type { AuthTokens, LoginResponse, User } from "$lib/auth/types"
+import type { AuthTokens, LoginResponse, User } from "$lib/auth/auth.dtos"
 
 class SessionManager {
 	public getAccessToken(): string | null {

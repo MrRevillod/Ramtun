@@ -1,7 +1,7 @@
 import { browser } from "$app/environment"
 import { io, type Socket } from "socket.io-client"
 import { sessionManager } from "$lib/shared/auth/session.manager"
-import type { AttemptSubmitView } from "$lib/attempts/types"
+import type { AttemptSubmitView } from "$lib/attempts/attempts.dtos"
 
 type AttemptsSocket = Socket
 

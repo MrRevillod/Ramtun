@@ -7,7 +7,7 @@
 		disconnectAttemptsSocket,
 		onAttemptsSubmit,
 	} from "$lib/shared/socket/attempts.socket"
-	import type { AttemptListItem, AttemptResult } from "$lib/attempts/types"
+	import type { AttemptListItem, AttemptResult } from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
@@ -44,7 +44,7 @@
 
 	const closeDetail = () => {
 		showDetailModal = false
-		selectedAttempt = null
+		_selectedAttempt = null
 		detailResult = null
 		detailLoading = false
 	}

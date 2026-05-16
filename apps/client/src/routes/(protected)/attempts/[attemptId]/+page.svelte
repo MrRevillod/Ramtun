@@ -5,34 +5,20 @@
 	import { createMutation } from "@tanstack/svelte-query"
 	import { onDestroy } from "svelte"
 	import { toast } from "svelte-sonner"
-	import {
-		Clock,
-		ArrowRight,
-		Send,
-		X,
-		CheckCircle2,
-		ArrowUpRight,
-	} from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import type { AttemptView, CertaintyLevel } from "$lib/attempts/types"
-	import type { JoinQuizPreview } from "$lib/quizzes/types"
+	import type {
+		AnswerState,
+		AttemptSession,
+		CertaintyLevel,
+	} from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { certaintyLevelLabel } from "$lib/shared/labels"
-
-	type AnswerState = {
-		answerIndex: number
-		certaintyLevel: CertaintyLevel | null
-	}
-
-	type AttemptSession = {
-		joinCode: string
-		preview: JoinQuizPreview
-		attempt: AttemptView
-		answers: Record<string, AnswerState>
-		index: number
-	}
-
-	const ATTEMPT_SESSION_KEY = "join-attempt-session"
+	import { ATTEMPT_SESSION_KEY } from "$lib/shared/constants"
+	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
+	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
+	import QuizOption from "$lib/attempts/components/QuizOption.svelte"
+	import CertaintySelector from "$lib/attempts/components/CertaintySelector.svelte"
+	import QuizNavigation from "$lib/attempts/components/QuizNavigation.svelte"
+	import SubmitSuccessModal from "$lib/attempts/components/SubmitSuccessModal.svelte"
 
 	let { data } = $props()
 	let session = $state<AttemptSession | null>(null)
@@ -228,14 +214,6 @@
 	const progress = $derived(
 		session ? `${currentIndex + 1}/${session.attempt.questions.length}` : "0/0"
 	)
-	const progressPercent = $derived(
-		totalQuestions > 0 ? ((currentIndex + 1) / totalQuestions) * 100 : 0
-	)
-	const timerLabel = $derived.by(() => {
-		const min = Math.floor(remainingSeconds / 60)
-		const sec = remainingSeconds % 60
-		return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
-	})
 </script>
 
 {#if session && currentQuestion}
@@ -245,21 +223,11 @@
 				<div>
 					<h3 class="m-0 text-xl text-black">{session.preview.title}</h3>
 					<p class="mt-1 mb-0 text-sm text-zinc-600">Pregunta {progress}</p>
-					<div class="mt-2 h-1.5 w-56 overflow-hidden rounded-full bg-zinc-200">
-						<div
-							class="h-full rounded-full bg-zinc-900 transition-all duration-200"
-							style={`width: ${progressPercent}%`}
-						></div>
+					<div class="mt-2">
+						<ProgressBar current={currentIndex + 1} total={totalQuestions} />
 					</div>
 				</div>
-				<div
-					class="notice {remainingSeconds <= 120
-						? 'notice-danger'
-						: 'notice-warn'} font-medium"
-				>
-					<Clock size={14} class="-mt-0.5 mr-0.5 inline-block" aria-hidden="true" />
-					Tiempo restante: {timerLabel}
-				</div>
+				<QuizTimer {remainingSeconds} />
 			</header>
 
 			<div class="keyline"></div>
@@ -269,121 +237,41 @@
 
 			<div class="mt-6 grid gap-3">
 				{#each currentQuestion.options as option, optionIndex (optionIndex)}
-					<button
-						type="button"
-						class="quiz-option"
-						data-active={currentAnswer?.answerIndex === optionIndex}
+					<QuizOption
+						text={option}
+						isSelected={currentAnswer?.answerIndex === optionIndex}
 						onclick={() => selectOption(currentQuestion.id, optionIndex)}
-					>
-						{option}
-					</button>
+					/>
 				{/each}
 			</div>
 
 			{#if session.preview.kind === "certainty"}
-				<p class="mt-7 mb-0 text-sm font-medium text-zinc-800">Nivel de certeza</p>
-				<div class="mt-2 grid gap-2 sm:grid-cols-3">
-					{#each ["low", "medium", "high"] as level (level)}
-						<button
-							type="button"
-							class={currentAnswer?.certaintyLevel === level
-								? "btn-primary"
-								: "btn-tertiary"}
-							onclick={() =>
-								selectCertainty(currentQuestion.id, level as CertaintyLevel)}
-						>
-							{certaintyLevelLabel(level as CertaintyLevel)}
-						</button>
-					{/each}
-				</div>
+				<CertaintySelector
+					selected={currentAnswer?.certaintyLevel ?? null}
+					onclick={level => selectCertainty(currentQuestion.id, level)}
+				/>
 			{/if}
 
-			<div class="mt-7 flex flex-wrap justify-end gap-2">
-				{#if currentIndex < totalQuestions - 1}
-					<button
-						class="btn-secondary flex items-center gap-1.5"
-						type="button"
-						onclick={() => {
-							currentIndex = Math.min(totalQuestions - 1, currentIndex + 1)
-							persistSession()
-						}}
-					>
-						Siguiente pregunta
-						<ArrowRight size={16} aria-hidden="true" />
-					</button>
-				{:else}
-					<button
-						class="btn-primary flex items-center gap-1.5"
-						type="button"
-						onclick={() => submitAttempt()}
-					>
-						<Send size={16} aria-hidden="true" />
-						{submitMutation.isPending || autoSubmitting
-							? "Enviando..."
-							: "Finalizar intento"}
-					</button>
-				{/if}
-			</div>
+			<QuizNavigation
+				{currentIndex}
+				{totalQuestions}
+				isLast={currentIndex >= totalQuestions - 1}
+				isPending={submitMutation.isPending}
+				{autoSubmitting}
+				onnavigate={index => {
+					currentIndex = index
+					persistSession()
+				}}
+				onsubmit={() => submitAttempt()}
+			/>
 		</section>
 	</section>
 {:else}
 	<p class="text-zinc-600">Cargando intento...</p>
 {/if}
 
-{#if showSubmitModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={() => (showSubmitModal = false)}
-		onkeydown={e => {
-			if (e.key === "Escape") showSubmitModal = false
-		}}
-	>
-		<div
-			class="panel-surface w-full max-w-md p-6"
-			role="presentation"
-			tabindex="-1"
-			onclick={e => e.stopPropagation()}
-		>
-			<div class="mb-4 flex items-center justify-between">
-				<h3 class="m-0 flex items-center gap-2 text-xl text-black">
-					<CheckCircle2 size={20} class="text-emerald-600" aria-hidden="true" />
-					Intento enviado
-				</h3>
-				<button
-					class="btn-tertiary p-1"
-					type="button"
-					onclick={() => (showSubmitModal = false)}
-				>
-					<X size={18} aria-hidden="true" />
-				</button>
-			</div>
-			<p class="mb-4 text-sm text-zinc-700">
-				Tu intento fue enviado correctamente. Los resultados estarán disponibles
-				cuando el docente los publique.
-			</p>
-			<div class="grid gap-2">
-				<button
-					class="btn-primary flex items-center justify-center gap-1.5"
-					type="button"
-					onclick={() =>
-						goto(
-							resolve(
-								`/results/lobby?joinCode=${encodeURIComponent(session ? session.joinCode : "")}`
-							)
-						)}
-				>
-					<ArrowUpRight size={16} aria-hidden="true" />
-					Ir a sala de espera de resultados
-				</button>
-				<button
-					class="btn-secondary"
-					type="button"
-					onclick={() => goto(resolve("/"))}>Volver al Inicio</button
-				>
-			</div>
-		</div>
-	</div>
-{/if}
+<SubmitSuccessModal
+	open={showSubmitModal}
+	joinCode={session?.joinCode ?? ""}
+	onautoclose={() => (showSubmitModal = false)}
+/>

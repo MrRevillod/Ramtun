@@ -65,8 +65,10 @@
 	})
 </script>
 
-<main class="app-shell">
-	<header class="panel-elevated mx-auto w-full max-w-[74rem] p-4 sm:p-5">
+<main
+	class="mx-auto flex max-h-dvh min-h-dvh max-w-312 flex-col gap-3 p-4 sm:p-4 lg:p-6"
+>
+	<header class="panel-elevated mx-auto w-full gap-4 p-4 sm:p-5">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div>
 				<p class="section-kicker m-0">INF-UCT: RAMTUN</p>
@@ -114,48 +116,46 @@
 		</div>
 	</header>
 
-	<section class="mx-auto mt-3 w-full max-w-[74rem] flex-1">
-		<nav class="panel-muted grid grid-cols-3 gap-1.5 p-2 lg:grid-cols-3">
+	<nav class="panel-elevated flex w-full gap-1.5 px-4 py-2">
+		<a
+			class="action-tab flex-1 justify-center"
+			data-active={isActive("/join")}
+			href={resolve("/join")}
+		>
+			<DoorOpen size={16} aria-hidden="true" />
+			Unirse
+		</a>
+		<a
+			class="action-tab flex-1 justify-center"
+			data-active={isActive("/results")}
+			href={resolve("/results")}
+		>
+			<ClipboardList size={16} aria-hidden="true" />
+			Resultados
+		</a>
+		{#if showTeachingNav}
 			<a
-				class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
-				data-active={isActive("/join")}
-				href={resolve("/join")}
+				class="action-tab flex-1 justify-center"
+				data-active={isActive("/courses")}
+				href={resolve("/courses")}
 			>
-				<DoorOpen size={16} aria-hidden="true" />
-				Unirse
+				<Layers size={16} aria-hidden="true" />
+				Cursos
 			</a>
+		{/if}
+		{#if showUsersNav}
 			<a
-				class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
-				data-active={isActive("/results")}
-				href={resolve("/results")}
+				class="action-tab flex-1 justify-center"
+				data-active={isActive("/admin/users")}
+				href={resolve("/admin/users")}
 			>
-				<ClipboardList size={16} aria-hidden="true" />
-				Resultados
+				<Users size={16} aria-hidden="true" />
+				Usuarios
 			</a>
-			{#if showTeachingNav}
-				<a
-					class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
-					data-active={isActive("/courses")}
-					href={resolve("/courses")}
-				>
-					<Layers size={16} aria-hidden="true" />
-					Cursos
-				</a>
-			{/if}
-			{#if showUsersNav}
-				<a
-					class="action-tab flex items-center justify-center gap-1.5 whitespace-nowrap"
-					data-active={isActive("/admin/users")}
-					href={resolve("/admin/users")}
-				>
-					<Users size={16} aria-hidden="true" />
-					Usuarios
-				</a>
-			{/if}
-		</nav>
+		{/if}
+	</nav>
 
-		<section class="panel-elevated mt-3 min-w-0 p-4 sm:p-5 lg:p-6">
-			{@render children()}
-		</section>
+	<section class="panel-elevated mx-auto w-full min-w-0 p-4">
+		{@render children()}
 	</section>
 </main>

@@ -2,34 +2,31 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { createMutation } from "@tanstack/svelte-query"
-	import { createForm, Field, Form, type SubmitEventHandler } from "@formisch/svelte"
 	import { Search } from "lucide-svelte"
 	import { toast } from "svelte-sonner"
-	import {
-		joinCodeSchema,
-		type JoinCodeFormValues,
-	} from "$lib/attempts/attempts.schema"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { joinCodeSchema } from "$lib/attempts/attempts.dtos"
 
-	const joinForm = createForm({
-		schema: joinCodeSchema,
-		initialInput: { joinCode: "" },
-	})
+	let joinCode = $state("")
+	let joinError = $state("")
 
 	const joinMutation = createMutation(() => ({
-		mutationFn: ({ joinCode }: JoinCodeFormValues) =>
-			quizzesService.joinByCodeOrThrow(joinCode),
-		onSuccess: async (_preview, input) => {
-			await goto(
-				resolve(`/join/lobby?joinCode=${encodeURIComponent(input.joinCode)}`)
-			)
+		mutationFn: (code: string) => quizzesService.joinByCodeOrThrow(code),
+		onSuccess: async (_preview, code) => {
+			await goto(resolve(`/join/lobby?joinCode=${encodeURIComponent(code)}`))
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
 
-	const submitJoin: SubmitEventHandler<typeof joinCodeSchema> = async output => {
-		await joinMutation.mutateAsync(output)
+	const handleSubmit = () => {
+		joinError = ""
+		const result = joinCodeSchema.safeParse({ joinCode })
+		if (!result.success) {
+			joinError = result.issues[0].message
+			return
+		}
+		void joinMutation.mutateAsync(result.output.joinCode)
 	}
 </script>
 
@@ -42,36 +39,32 @@
 	</header>
 
 	<section class="panel-elevated p-5 sm:p-6">
-		<Form
-			of={joinForm}
-			onsubmit={submitJoin}
-			class="grid gap-3 lg:grid-cols-[3fr_1fr] lg:items-end"
-		>
-			<Field of={joinForm} path={["joinCode"]}>
-				{#snippet children(field)}
-					<div class="grid gap-1.5">
-						<input
-							{...field.props}
-							class="input-base"
-							aria-label="Código de quiz"
-							value={field.input ?? ""}
-							placeholder="Ingrese un código de Quiz. Ej: ABC1234"
-						/>
-						{#if field.errors?.[0]}
-							<span class="text-sm text-red-700">{field.errors[0]}</span>
-						{/if}
-					</div>
-				{/snippet}
-			</Field>
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+			<div class="flex-1">
+				<div class="grid gap-1.5">
+					<input
+						class="input-base"
+						type="text"
+						aria-label="Código de quiz"
+						bind:value={joinCode}
+						placeholder="Ingrese un código de Quiz. Ej: ABC1234"
+						oninput={() => (joinError = "")}
+					/>
+					{#if joinError}
+						<span class="text-sm text-red-700">{joinError}</span>
+					{/if}
+				</div>
+			</div>
 
 			<button
-				class="btn-primary flex h-11 items-center gap-1.5 px-3 text-xs sm:text-sm"
-				type="submit"
+				class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+				type="button"
 				disabled={joinMutation.isPending}
+				onclick={handleSubmit}
 			>
 				<Search size={16} aria-hidden="true" />
 				{joinMutation.isPending ? "Validando..." : "Entrar"}
 			</button>
-		</Form>
+		</div>
 	</section>
 </section>

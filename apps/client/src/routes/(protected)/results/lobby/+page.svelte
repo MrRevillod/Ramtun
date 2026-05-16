@@ -4,7 +4,7 @@
 	import { createQuery } from "@tanstack/svelte-query"
 	import { onMount } from "svelte"
 	import { Loader2, RefreshCw, ArrowLeft, BadgeCheck } from "lucide-svelte"
-	import type { AttemptResult } from "$lib/attempts/types"
+	import type { AttemptResult } from "$lib/attempts/attempts.dtos"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 

@@ -6,7 +6,7 @@ import type {
 	AttemptSubmitView,
 	AttemptView,
 	SaveAnswerInput,
-} from "$lib/attempts/types"
+} from "$lib/attempts/attempts.dtos"
 
 const COURSE_ID_PLACEHOLDER = "00000000-0000-0000-0000-000000000000"
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { CheckCircle2, XCircle } from "lucide-svelte"
-	import type { AttemptResult } from "$lib/attempts/types"
+	import type { AttemptResult } from "$lib/attempts/attempts.dtos"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { certaintyLevelLabel } from "$lib/shared/labels"
 

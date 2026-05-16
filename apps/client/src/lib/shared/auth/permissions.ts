@@ -1,4 +1,4 @@
-import type { User } from "$lib/auth/types"
+import type { User } from "$lib/auth/auth.dtos"
 
 export const isStudent = (role?: User["role"]): boolean => role === "student"
 export const isAssistant = (role?: User["role"]): boolean => role === "assistant"

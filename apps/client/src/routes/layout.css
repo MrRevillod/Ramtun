@@ -14,9 +14,6 @@
 	--accent: #2d241c;
 	--accent-soft: #615446;
 	--highlight: #a36b2c;
-	--shadow-soft: 0 12px 28px rgba(50, 40, 28, 0.07);
-	--shadow-float: 0 20px 44px rgba(50, 40, 28, 0.12);
-	--shadow-hard: 0 16px 34px rgba(35, 27, 18, 0.16);
 	--ok: #1c6c48;
 	--warn: #b26a18;
 	--danger: #9f2f2f;
@@ -38,9 +35,6 @@ html.dark {
 	--accent: #111111;
 	--accent-soft: #2a2a2a;
 	--highlight: #c9c9c9;
-	--shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.28);
-	--shadow-float: 0 20px 44px rgba(0, 0, 0, 0.35);
-	--shadow-hard: 0 16px 34px rgba(0, 0, 0, 0.45);
 	--ok: #38a169;
 	--warn: #d69e2e;
 	--danger: #f56565;
@@ -105,10 +99,6 @@ body {
 }
 
 @layer components {
-	.app-shell {
-		@apply mx-auto flex min-h-dvh w-full max-w-[78rem] flex-col p-3 sm:p-4 lg:p-6;
-	}
-
 	.shell-grid {
 		@apply grid gap-3;
 		grid-template-columns: minmax(0, 1fr);
@@ -140,14 +130,12 @@ body {
 		@apply sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-md border p-2.5;
 		border-color: color-mix(in srgb, var(--line) 88%, white);
 		background: color-mix(in srgb, white 90%, var(--paper-soft));
-		box-shadow: var(--shadow-soft);
 	}
 
 	.panel-surface {
 		@apply rounded-md border;
 		border-color: color-mix(in srgb, var(--line) 88%, white);
 		background: color-mix(in srgb, var(--paper-soft) 90%, white);
-		box-shadow: var(--shadow-soft);
 	}
 
 	.panel-elevated {
@@ -160,7 +148,6 @@ body {
 				color-mix(in srgb, var(--paper-soft) 92%, var(--paper)) 100%
 			),
 			var(--paper-soft);
-		box-shadow: var(--shadow-float);
 	}
 
 	.panel-muted {
@@ -227,7 +214,6 @@ body {
 			var(--accent) 100%
 		);
 		min-height: 42px;
-		box-shadow: 0 8px 16px rgba(45, 36, 28, 0.2);
 	}
 
 	.btn-primary:hover:not(:disabled) {
@@ -265,23 +251,32 @@ body {
 
 	.action-tab {
 		@apply inline-flex items-center gap-2 rounded-[4px] border px-3 py-2 text-sm font-medium tracking-[0.005em];
+		position: relative;
 		color: var(--ink-soft);
-		justify-content: flex-start;
 		border-color: color-mix(in srgb, var(--line-strong) 85%, white);
 		background: color-mix(in srgb, white 88%, var(--paper-soft));
 		min-height: 38px;
 		transition:
 			background-color 180ms ease,
 			border-color 180ms ease,
-			color 180ms ease,
-			box-shadow 180ms ease;
+			color 180ms ease;
 	}
 
 	.action-tab[data-active="true"] {
 		color: var(--ink);
-		border-color: color-mix(in srgb, #8a8a8a 35%, white);
-		background: color-mix(in srgb, #b5b5b5 14%, white);
-		box-shadow: inset 2px 0 0 #111111;
+		border-color: var(--accent);
+		background: color-mix(in srgb, white 88%, var(--paper-soft));
+	}
+
+	.action-tab[data-active="true"]::before {
+		content: "";
+		position: absolute;
+		left: -2px;
+		top: 0;
+		bottom: 0;
+		width: 4px;
+		border-radius: 0 4px 4px 0;
+		background: var(--accent);
 	}
 
 	.action-tab:hover:not([data-active="true"]) {
@@ -387,7 +382,6 @@ body {
 			color-mix(in srgb, var(--accent) 85%, black) 0%,
 			var(--accent) 100%
 		);
-		box-shadow: 0 8px 18px rgba(42, 33, 25, 0.18);
 	}
 
 	.notice {
@@ -454,19 +448,16 @@ body {
 	html.dark .panel-elevated {
 		border-color: color-mix(in srgb, var(--line-strong) 78%, black);
 		background: #1b1b1b;
-		box-shadow: none;
 	}
 
 	html.dark .panel-muted {
 		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
 		background: #1a1a1a;
-		box-shadow: none;
 	}
 
 	html.dark .panel-surface {
 		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
 		background: #1d1d1d;
-		box-shadow: none;
 	}
 
 	html.dark .stat-card {
@@ -497,10 +488,9 @@ body {
 	}
 
 	html.dark .action-tab[data-active="true"] {
-		border-color: color-mix(in srgb, var(--line-strong) 82%, black);
-		background: #2b2b2b;
+		border-color: var(--accent);
+		background: #202020;
 		color: #ffffff;
-		box-shadow: inset 2px 0 0 #ffffff;
 	}
 
 	html.dark .btn-secondary,

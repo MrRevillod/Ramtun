@@ -1,5 +1,5 @@
 import { PersistedState } from "runed"
-import type { AuthTokens, LoginResponse, User } from "$lib/auth/types"
+import type { AuthTokens, LoginResponse, User } from "$lib/auth/auth.dtos"
 
 class AuthStore {
 	#tokens = new PersistedState<AuthTokens | null>("auth-tokens", null, {

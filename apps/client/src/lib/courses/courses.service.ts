@@ -6,7 +6,7 @@ import type {
 	CourseMember,
 	CourseView,
 	CreateCourseInput,
-} from "$lib/courses/types"
+} from "$lib/courses/courses.dtos"
 
 class CoursesService {
 	public list(): AppResultAsync<CourseView[]> {

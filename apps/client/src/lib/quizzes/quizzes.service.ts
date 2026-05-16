@@ -1,6 +1,10 @@
 import { request } from "$lib/shared/http/http"
 import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
-import type { CreateQuizInput, JoinQuizPreview, Quiz } from "$lib/quizzes/types"
+import type {
+	CreateQuizInput,
+	JoinQuizPreview,
+	Quiz,
+} from "$lib/quizzes/quizzes.dtos"
 
 class QuizzesService {
 	public listManaged(): AppResultAsync<Quiz[]> {

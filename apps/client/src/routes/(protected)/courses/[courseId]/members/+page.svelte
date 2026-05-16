@@ -4,25 +4,14 @@
 		createQuery,
 		useQueryClient,
 	} from "@tanstack/svelte-query"
-	import {
-		createForm,
-		Field,
-		Form,
-		type SubmitEventHandler,
-		reset,
-	} from "@formisch/svelte"
 	import { toast } from "svelte-sonner"
-	import { fade, scale } from "svelte/transition"
-	import { Plus, Trash2, X } from "lucide-svelte"
-	import {
-		addCourseMemberSchema,
-		type AddCourseMemberFormValues,
-	} from "$lib/courses/courses.schema"
+	import { Plus, Trash2 } from "lucide-svelte"
 	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { usersService } from "$lib/users/users.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import { roleLabel } from "$lib/shared/labels"
+	import AddMemberModal from "$lib/courses/components/AddMemberModal.svelte"
 
 	let { data } = $props()
 
@@ -44,11 +33,10 @@
 	}))
 
 	const addMemberMutation = createMutation(() => ({
-		mutationFn: (input: AddCourseMemberFormValues) =>
+		mutationFn: (input: { userId: string }) =>
 			coursesService.addMemberOrThrow(data.courseId, input),
 		onSuccess: async () => {
 			toast.success("Miembro agregado correctamente.")
-			reset(addMemberForm)
 			await queryClient.invalidateQueries({
 				queryKey: ["course-members", data.courseId],
 			})
@@ -67,18 +55,6 @@
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
-
-	const addMemberForm = createForm({
-		schema: addCourseMemberSchema,
-		initialInput: { userId: "" },
-	})
-
-	const submitAddMember: SubmitEventHandler<
-		typeof addCourseMemberSchema
-	> = async output => {
-		await addMemberMutation.mutateAsync(output)
-		showAddModal = false
-	}
 
 	let showAddModal = $state(false)
 	let memberToRemove = $state<{ userId: string; username: string } | null>(null)
@@ -158,66 +134,12 @@
 		{/if}
 	</section>
 
-	{#if showAddModal}
-		<div
-			class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			transition:fade={{ duration: 180 }}
-			onclick={() => (showAddModal = false)}
-			onkeydown={e => {
-				if (e.key === "Escape") showAddModal = false
-			}}
-		>
-			<section
-				class="panel-elevated w-full max-w-xl p-5"
-				role="presentation"
-				tabindex="-1"
-				transition:scale={{ duration: 190, start: 0.98 }}
-				onclick={e => e.stopPropagation()}
-			>
-				<div class="mb-3 flex items-center justify-between gap-2">
-					<h4 class="m-0 text-base text-black">Agregar miembro</h4>
-					<button
-						class="btn-tertiary p-1"
-						type="button"
-						onclick={() => (showAddModal = false)}
-						><X size={18} aria-hidden="true" /></button
-					>
-				</div>
-				<Form of={addMemberForm} onsubmit={submitAddMember} class="form-stack">
-					<Field of={addMemberForm} path={["userId"]}
-						>{#snippet children(field)}<label class="grid gap-1.5"
-								><span class="text-sm text-zinc-800">Usuario</span><select
-									{...field.props}
-									class="input-base"
-									value={field.input ?? ""}
-									><option value="">Selecciona un usuario</option
-									>{#each candidatesQuery.data ?? [] as candidate (candidate.id)}<option
-											value={candidate.id}
-											>{candidate.username} · {candidate.name}</option
-										>{/each}</select
-								>{#if field.errors?.[0]}<span class="text-sm text-red-700"
-										>{field.errors[0]}</span
-									>{/if}</label
-							>{/snippet}</Field
-					>
-					<div class="flex justify-end gap-2">
-						<button
-							class="btn-tertiary"
-							type="button"
-							onclick={() => (showAddModal = false)}>Cancelar</button
-						><button class="btn-primary flex items-center gap-1.5" type="submit"
-							><Plus size={16} aria-hidden="true" />{addMemberMutation.isPending
-								? "Agregando..."
-								: "Agregar miembro"}</button
-						>
-					</div>
-				</Form>
-			</section>
-		</div>
-	{/if}
+	<AddMemberModal
+		open={showAddModal}
+		candidates={candidatesQuery.data ?? []}
+		oncancel={() => (showAddModal = false)}
+		mutation={addMemberMutation}
+	/>
 
 	<ConfirmActionModal
 		open={!!memberToRemove}

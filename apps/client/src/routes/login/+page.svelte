@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { LoginInput } from "$lib/auth/types"
+	import type { LoginInput } from "$lib/auth/auth.dtos"
 
 	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
