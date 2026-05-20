@@ -67,11 +67,13 @@ impl AttemptsController {
 
         let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
 
-        self.socket_io
-            .broadcast()
-            .emit("attempts:new-submit", &attempt)
-            .await
-            .ok();
+        if let Some(attempts_socketio_namespace) = self.socket_io.of("/attempts") {
+            attempts_socketio_namespace
+                .broadcast()
+                .emit("attempts:new-submit", &attempt)
+                .await
+                .ok();
+        }
 
         Ok(JsonResponse::Ok().data(attempt))
     }

@@ -12,7 +12,6 @@
 		CertaintyLevel,
 	} from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { ATTEMPT_SESSION_KEY } from "$lib/shared/constants"
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
 	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
 	import QuizOption from "$lib/attempts/components/QuizOption.svelte"
@@ -31,7 +30,7 @@
 
 	const loadSession = async () => {
 		if (!browser) return
-		const raw = localStorage.getItem(ATTEMPT_SESSION_KEY)
+		const raw = localStorage.getItem("last-attempt-session")
 		if (!raw) {
 			await goto(resolve("/join"))
 			return
@@ -51,7 +50,7 @@
 			)
 			answers = parsed.answers
 		} catch {
-			await goto(resolve("/join"))
+			await goto("/join")
 		}
 	}
 
@@ -60,7 +59,7 @@
 	const persistSession = () => {
 		if (!browser || !session) return
 		localStorage.setItem(
-			ATTEMPT_SESSION_KEY,
+			"last-attempt-session",
 			JSON.stringify({
 				...session,
 				index: currentIndex,
@@ -121,7 +120,7 @@
 		mutationFn: (attemptId: string) => attemptsService.submitOrThrow(attemptId),
 		onSuccess: () => {
 			if (browser) {
-				localStorage.removeItem(ATTEMPT_SESSION_KEY)
+				localStorage.removeItem("last-attempt-session")
 				if (session)
 					localStorage.setItem("last-submitted-join-code", session.joinCode)
 			}

@@ -11,6 +11,8 @@
 	import type { CreateQuizInput } from "$lib/quizzes/quizzes.dtos"
 	import { createQuizSchema } from "$lib/quizzes/quizzes.dtos"
 	import BankSelector from "$lib/quizzes/components/BankSelector.svelte"
+	import { toast } from "svelte-sonner"
+	import { getErrorMessage } from "$lib/shared/errors"
 
 	interface CreateQuizModalProps {
 		open: boolean
@@ -60,41 +62,47 @@
 	}
 
 	const handleSubmit: SubmitEventHandler<typeof createQuizSchema> = async output => {
-		if (selectedBankIds.length === 0) return
+		try {
+			if (selectedBankIds.length === 0) {
+				toast.error("Selecciona al menos un banco.")
+				return
+			}
 
-		const startsAtDate = new Date(output.startsAt)
-		const isCertainty = output.kind === "certainty"
+			const isCertainty = output.kind === "certainty"
 
-		const certaintyConfig = isCertainty
-			? {
-					low: { correct: 1, incorrect: 0 },
-					medium: { correct: 2, incorrect: -1 },
-					high: { correct: 3, incorrect: -2 },
-				}
-			: null
+			const certaintyConfig = isCertainty
+				? {
+						low: { correct: 1, incorrect: 0 },
+						medium: { correct: 2, incorrect: -1 },
+						high: { correct: 3, incorrect: -2 },
+					}
+				: null
 
-		const created = await mutation.mutateAsync({
-			courseId,
-			title: output.title,
-			kind: output.kind,
-			startsAt: startsAtDate.toISOString(),
-			attemptDurationMinutes: Number(output.attemptDurationMinutes),
-			questionCount: Number(output.questionCount),
-			bankIds: selectedBankIds,
-			certaintyConfig,
-		})
+			const created = await mutation.mutateAsync({
+				courseId,
+				title: output.title,
+				kind: output.kind,
+				startsAt: output.startsAt,
+				attemptDurationMinutes: output.attemptDurationMinutes,
+				questionCount: output.questionCount,
+				bankIds: selectedBankIds,
+				certaintyConfig,
+			})
 
-		selectedBankIds = []
-		reset(form, {
-			initialInput: {
-				title: "",
-				kind: "traditional",
-				startsAt: initialStartsAt,
-				attemptDurationMinutes: "30",
-				questionCount: "10",
-			},
-		})
-		onsuccess(created)
+			selectedBankIds = []
+			reset(form, {
+				initialInput: {
+					title: "",
+					kind: "traditional",
+					startsAt: initialStartsAt,
+					attemptDurationMinutes: "30",
+					questionCount: "10",
+				},
+			})
+			onsuccess(created)
+		} catch (err) {
+			toast.error(getErrorMessage(err))
+		}
 	}
 </script>
 

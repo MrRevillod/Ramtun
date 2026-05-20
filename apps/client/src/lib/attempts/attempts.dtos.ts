@@ -1,19 +1,21 @@
 import * as v from "valibot"
+import type { JoinQuizPreview } from "$lib/quizzes/quizzes.dtos"
 
-export const joinCodeSchema = v.object({
-	joinCode: v.pipe(
-		v.string(),
-		v.trim(),
-		v.minLength(4, (info) =>
-			info.input === ""
-				? "Ingresa un código."
-				: "El código es demasiado corto."
+export const joinCodeFormSchema = v.object({
+	joinCode: v.nonOptional(
+		v.pipe(
+			v.string(),
+			v.trim(),
+			v.minLength(4, info =>
+				info.input === "" ? "Ingresa un código." : "El código es demasiado corto."
+			),
+			v.maxLength(32, "El código es demasiado largo.")
 		),
-		v.maxLength(32, "El código es demasiado largo.")
+		"El código es obligatorio."
 	),
 })
 
-export type JoinCodeFormValues = v.InferInput<typeof joinCodeSchema>
+export type JoinCodeFormData = v.InferInput<typeof joinCodeFormSchema>
 
 export type CertaintyLevel = "low" | "medium" | "high"
 
@@ -91,7 +93,7 @@ export type AnswerState = {
 
 export type AttemptSession = {
 	joinCode: string
-	preview: import("$lib/quizzes/quizzes.dtos").JoinQuizPreview
+	preview: JoinQuizPreview
 	attempt: AttemptView
 	answers: Record<string, AnswerState>
 	index: number

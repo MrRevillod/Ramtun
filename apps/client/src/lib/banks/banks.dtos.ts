@@ -57,46 +57,21 @@ export const newQuestionSchema = v.object({
 	images: v.optional(v.array(v.string())),
 })
 
-export const legacyQuestionSchema = v.object({
-	question: v.string(),
-	options: v.array(v.string()),
-	answer: v.number(),
-	images: v.optional(v.array(v.string())),
-})
-
-export const legacyBankSchema = v.object({
-	questions: v.array(legacyQuestionSchema),
-})
-
 export type BankUploadValues = v.InferInput<typeof bankUploadSchema>
 export type QuestionInput = v.InferInput<typeof questionInputSchema>
 export type NewQuestion = v.InferInput<typeof newQuestionSchema>
-export type LegacyQuestion = v.InferInput<typeof legacyQuestionSchema>
 
 export const normalizeQuestions = (parsed: unknown): QuestionInput[] => {
-	const newResult = v.safeParse(v.array(newQuestionSchema), parsed)
-	if (newResult.success) {
-		return newResult.output.map((q: NewQuestion) => ({
-			prompt: q.prompt,
-			options: q.options,
-			answerIndex: q.answerIndex,
-			images: q.images ?? [],
-		}))
+	const result = v.safeParse(v.array(newQuestionSchema), parsed)
+	if (!result.success) {
+		throw new Error("El JSON debe ser un array de preguntas.")
 	}
-
-	const legacyResult = v.safeParse(legacyBankSchema, parsed)
-	if (legacyResult.success) {
-		return legacyResult.output.questions.map((q: LegacyQuestion) => ({
-			prompt: q.question,
-			options: q.options,
-			answerIndex: q.answer,
-			images: q.images ?? [],
-		}))
-	}
-
-	throw new Error(
-		"El JSON debe ser un array de preguntas o un objeto con 'questions'."
-	)
+	return result.output.map(q => ({
+		prompt: q.prompt,
+		options: q.options,
+		answerIndex: q.answerIndex,
+		images: q.images ?? [],
+	}))
 }
 
 export type Question = {

@@ -14,7 +14,7 @@ args ?=
 docker_tty ?= -it
 
 .DEFAULT_GOAL := run
-.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup deployer
+.PHONY: run detach clean fmt lint migration machete clean-db db npmi npmu npmci setup deployer down
 
 setup:
 	rm -rf $(CLIENT)/node_modules
@@ -24,6 +24,9 @@ setup:
 
 run:
 	docker compose up
+
+down:
+	docker compose down
 
 detach:
 	docker compose up -d
@@ -45,6 +48,7 @@ fmt:
 lint:
 	cargo clippy --workspace --all-targets --all-features -- -D warnings
 	cd $(CLIENT) && corepack pnpm run lint
+	cd $(CLIENT) && corepack pnpm run check
 
 migration:
 	cd $(SERVER) && sqlx migrate add --source ./config/migrations "$(name)"

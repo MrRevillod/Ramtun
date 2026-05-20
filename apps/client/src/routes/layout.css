@@ -264,19 +264,11 @@ body {
 
 	.action-tab[data-active="true"] {
 		color: var(--ink);
-		border-color: var(--accent);
+		border-color: color-mix(in srgb, var(--line-strong) 85%, white);
+		border-left-color: var(--accent);
+		border-left: 3px solid var(--accent);
+		padding-left: 11px;
 		background: color-mix(in srgb, white 88%, var(--paper-soft));
-	}
-
-	.action-tab[data-active="true"]::before {
-		content: "";
-		position: absolute;
-		left: -2px;
-		top: 0;
-		bottom: 0;
-		width: 4px;
-		border-radius: 0 4px 4px 0;
-		background: var(--accent);
 	}
 
 	.action-tab:hover:not([data-active="true"]) {
@@ -487,8 +479,11 @@ body {
 		color: #d4d4d4;
 	}
 
-	html.dark .action-tab[data-active="true"] {
-		border-color: var(--accent);
+html.dark .action-tab[data-active="true"] {
+		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
+		border-left-color: #e5e5e5;
+		border-left: 3px solid #e5e5e5;
+		padding-left: 11px;
 		background: #202020;
 		color: #ffffff;
 	}
@@ -529,5 +524,10 @@ body {
 	html.dark .bg-zinc-100,
 	html.dark .bg-zinc-200 {
 		background-color: color-mix(in srgb, var(--paper-muted) 90%, black);
+	}
+
+	html.dark .sticky-actions {
+		border-color: color-mix(in srgb, var(--line) 80%, black);
+		background: color-mix(in srgb, var(--paper-soft) 88%, black);
 	}
 }

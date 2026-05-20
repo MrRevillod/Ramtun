@@ -8,7 +8,15 @@ export const createQuizSchema = v.object({
 		v.maxLength(100, "Maximo 100 caracteres.")
 	),
 	kind: v.picklist(["traditional", "certainty"]),
-	startsAt: v.pipe(v.string(), v.minLength(1, "La fecha de inicio es obligatoria.")),
+	startsAt: v.pipe(
+		v.string(),
+		v.minLength(1, "La fecha de inicio es obligatoria."),
+		v.check(
+			value => new Date(value) > new Date(),
+			"La fecha de inicio debe estar en el futuro."
+		),
+		v.transform(value => new Date(value).toISOString())
+	),
 	attemptDurationMinutes: v.pipe(
 		v.string(),
 		v.toNumber(),

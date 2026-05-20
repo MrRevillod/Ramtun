@@ -5,6 +5,8 @@
 	import type { QuestionInput } from "$lib/banks/banks.dtos"
 	import { bankQuestionsSchema, normalizeQuestions } from "$lib/banks/banks.dtos"
 	import CodeBlock from "$lib/shared/components/CodeBlock.svelte"
+	import { toast } from "svelte-sonner"
+	import { getErrorMessage } from "$lib/shared/errors"
 
 	interface BankUploadModalProps {
 		open: boolean
@@ -30,36 +32,19 @@
 	let showFormatModal = $state(false)
 
 	const code1 = `[
- 	{
- 	    "prompt": "¿Cuál es la capital de Francia?",
- 	    "options": ["París", "Londres", "Berlín"],
- 	    "answerIndex": 0,
- 	    "images": []
- 	},
+  	{
+  	    "prompt": "¿Cuál es la capital de Francia?",
+  	    "options": ["París", "Londres", "Berlín"],
+  	    "answerIndex": 0,
+  	    "images": []
+  	},
    	{
- 	    "prompt": "¿Cuánto es 2 + 2?",
- 	    "options": ["3", "4", "5", "6"],
- 	    "answerIndex": 1,
- 	    "images": []
+  	    "prompt": "¿Cuánto es 2 + 2?",
+  	    "options": ["3", "4", "5", "6"],
+  	    "answerIndex": 1,
+  	    "images": []
      }
-]`
-
-	const code2 = `{
-   "questions": [
-     {
-       "question": "¿Cuál es la capital de Francia?",
-       "options": ["París", "Londres", "Berlín"],
-       "answer": 0,
-       "images": []
-     },
-     {
-       "question": "¿Cuánto es 2 + 2?",
-       "options": ["3", "4", "5", "6"],
-       "answer": 1,
-       "images": []
-     }
-   ]
- }`
+  ]`
 
 	const handleFileChange = (e: Event) => {
 		const input = e.target as HTMLInputElement
@@ -67,44 +52,48 @@
 	}
 
 	const handleSubmit = async () => {
-		if (!selectedFile) return
-
-		const text = await selectedFile.text()
-		let parsed: unknown
-
 		try {
-			parsed = JSON.parse(text)
-		} catch {
-			return
-		}
+			if (!selectedFile) return
 
-		const rawQuestions = normalizeQuestions(parsed)
+			const text = await selectedFile.text()
+			let parsed: unknown
 
-		const mapped = rawQuestions.map(q => ({
-			...q,
-			images: q.images ?? [],
-		}))
+			try {
+				parsed = JSON.parse(text)
+			} catch {
+				throw new Error("El archivo no contiene un JSON válido.")
+			}
 
-		const questionsResult = v.safeParse(bankQuestionsSchema, mapped)
-		if (!questionsResult.success) return
+			const rawQuestions = normalizeQuestions(parsed)
 
-		const questions = questionsResult.output as QuestionInput[]
+			const mapped = rawQuestions.map(q => ({
+				...q,
+				images: q.images ?? [],
+			}))
 
-		const nameResult = v.safeParse(
-			v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(120)),
-			bankName
-		)
-		if (!nameResult.success) return
+			const questionsResult = v.safeParse(bankQuestionsSchema, mapped)
+			if (!questionsResult.success) {
+				const issues = questionsResult.issues.map(i => i.message).join("; ")
+				throw new Error(`Datos inválidos: ${issues}`)
+			}
 
-		try {
+			const nameResult = v.safeParse(
+				v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(120)),
+				bankName
+			)
+			if (!nameResult.success) {
+				throw new Error("El nombre del banco es obligatorio.")
+			}
+
 			await mutation.mutateAsync({
 				courseId,
 				name: nameResult.output,
-				questions,
+				questions: questionsResult.output as QuestionInput[],
 			})
+
 			onsuccess()
-		} catch {
-			// handled by parent
+		} catch (err) {
+			toast.error(getErrorMessage(err))
 		}
 	}
 </script>
@@ -115,7 +104,7 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		{onclick}
+		onclick={onclose}
 		onkeydown={e => {
 			if (e.key === "Escape") onclose()
 		}}
@@ -135,11 +124,6 @@
 			</div>
 			<section class="page-main">
 				<div class="form-stack">
-					<h4 class="mt-2 mb-0 text-base text-black">Subir banco de preguntas</h4>
-					<p class="mt-1 mb-0 text-sm text-zinc-600">
-						Selecciona un archivo JSON validado.
-					</p>
-
 					<div class="form-stack mt-3">
 						<label class="grid gap-1.5">
 							<span class="text-sm text-zinc-800">Nombre del banco</span>
@@ -165,7 +149,7 @@
 							{/if}
 						</label>
 
-						<div class="sticky-actions">
+						<div class="sticky-actions mt-">
 							<button
 								class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
 								type="button"
@@ -210,12 +194,10 @@
 		>
 			<h4 class="m-0 text-lg text-black">Formato JSON esperado</h4>
 			<p class="mt-2 mb-4 text-sm text-zinc-600">
-				Se aceptan dos formatos. El primero es el recomendado.
+				El archivo debe ser un JSON con un array de preguntas.
 			</p>
 
-			<p class="mt-2 mb-1 text-sm font-semibold text-zinc-800">
-				Formato actual (recomendado)
-			</p>
+			<p class="mt-2 mb-1 text-sm font-semibold text-zinc-800">Formato</p>
 			<CodeBlock code={code1} class="mt-2" />
 
 			<ul class="mt-4 mb-0 list-inside list-disc text-sm text-zinc-700">
@@ -235,18 +217,6 @@
 					(opcional, máx 5)
 				</li>
 			</ul>
-
-			<p class="mt-4 mb-1 text-sm font-semibold text-zinc-800">
-				Formato legado (compatible)
-			</p>
-			<CodeBlock code={code2} class="mt-4" />
-
-			<p class="mt-2 mb-0 text-sm text-zinc-600">
-				Usa <code class="text-zinc-900">question</code> y
-				<code class="text-zinc-900">answer</code> en lugar de
-				<code class="text-zinc-900">prompt</code> y
-				<code class="text-zinc-900">answerIndex</code>.
-			</p>
 
 			<div class="mt-5 flex justify-end">
 				<button

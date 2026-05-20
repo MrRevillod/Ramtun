@@ -17,16 +17,21 @@
 		queryKey: ["bank", data.bankId],
 		queryFn: () => banksService.getByIdOrThrow(data.bankId),
 	}))
+
+	const correctIndex = (question: {
+		answer_index?: number
+		answerIndex?: number
+	}) => question.answer_index ?? question.answerIndex
 </script>
 
 <section class="grid gap-4">
 	<header class="flex flex-wrap items-start justify-between gap-3">
 		<div>
 			<h3 class="mt-2 mb-0 text-xl text-black">
-				{courseQuery.data?.name ?? "Curso"} - Vista previa del banco
+				{courseQuery.data?.name ?? "Curso"} - {bankQuery.data?.name ?? "Banco"}
 			</h3>
 			<p class="m-0 mt-2 text-zinc-700">
-				Revisa preguntas y alternativas del banco seleccionado.
+				{bankQuery.data?.questions.length ?? 0} preguntas
 			</p>
 		</div>
 		<a
@@ -45,41 +50,23 @@
 			<p class="m-0 text-red-700">{getErrorMessage(bankQuery.error)}</p>
 		{:else if bankQuery.data}
 			<div class="grid gap-4">
-				<div class="rounded-md border border-zinc-200 bg-zinc-50 p-3">
-					<p class="m-0 text-sm text-zinc-800">
-						<strong>Banco:</strong>
-						{bankQuery.data.name}
-					</p>
-					<p class="m-0 mt-1 text-sm text-zinc-700">
-						<strong>Total de preguntas:</strong>
-						{bankQuery.data.questions.length}
-					</p>
-				</div>
-
-				<div class="grid gap-3">
-					{#each bankQuery.data.questions as question, index (question.id)}
-						<article class="rounded-md border border-zinc-200 bg-white/80 p-3">
-							<p class="m-0 font-medium text-zinc-900">
-								{index + 1}. {question.prompt}
-							</p>
-							<ul class="mt-2 grid gap-1 pl-4 text-sm text-zinc-700">
-								{#each question.options as option, optionIndex (option)}
-									<li
-										class={optionIndex ===
-										(question.answer_index ?? question.answerIndex)
-											? "font-medium text-zinc-900"
-											: ""}
-									>
-										{option}
-										{#if optionIndex === (question.answer_index ?? question.answerIndex)}
-											<span class="ml-2 text-xs text-zinc-500">(Correcta)</span>
-										{/if}
-									</li>
-								{/each}
-							</ul>
-						</article>
-					{/each}
-				</div>
+				{#each bankQuery.data.questions as question, index (question.id)}
+					<article class="panel-surface p-4 sm:p-5">
+						<h4 class="mt-0 mb-4 text-base leading-relaxed text-black">
+							{index + 1}. {question.prompt}
+						</h4>
+						<div class="grid gap-2">
+							{#each question.options as option, optionIndex (optionIndex)}
+								<div
+									class="quiz-option"
+									data-active={optionIndex === correctIndex(question)}
+								>
+									{option}
+								</div>
+							{/each}
+						</div>
+					</article>
+				{/each}
 			</div>
 		{/if}
 	</section>

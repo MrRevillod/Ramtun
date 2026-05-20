@@ -6,15 +6,20 @@
 	import { toast } from "svelte-sonner"
 	import { Search, History } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import { joinCodeSchema } from "$lib/attempts/attempts.dtos"
+	import { joinCodeFormSchema, type JoinCodeFormData } from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { createForm, Field, Form } from "@formisch/svelte"
 
-	let joinCode = $state(
-		browser
-			? (localStorage.getItem("last-submitted-join-code") ?? "")
-			: ""
-	)
-	let joinError = $state("")
+	const form = createForm({
+		schema: joinCodeFormSchema,
+		validate: "blur",
+		initialInput: {
+			joinCode: browser
+				? (localStorage.getItem("last-submitted-join-code") ?? "")
+				: "",
+		},
+	})
+
 	let resultNotice = $state("")
 	let noticeTone = $state<"ok" | "warn" | "danger">("warn")
 
@@ -74,18 +79,11 @@
 		await byJoinCodeMutation.mutateAsync(code)
 	}
 
-	const handleSubmit = () => {
-		joinError = ""
-		const result = joinCodeSchema.safeParse({ joinCode })
-		if (!result.success) {
-			joinError = result.issues[0].message
-			return
-		}
-
+	const handleSubmit = (input: JoinCodeFormData) => {
 		if (browser) {
-			localStorage.setItem("last-submitted-join-code", result.output.joinCode)
+			localStorage.setItem("last-submitted-join-code", input.joinCode)
 		}
-		void byJoinCodeMutation.mutateAsync(result.output.joinCode)
+		byJoinCodeMutation.mutateAsync(input.joinCode)
 	}
 </script>
 
@@ -98,42 +96,51 @@
 	</header>
 
 	<section class="panel-elevated p-5 sm:p-6">
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-			<div class="flex-1">
-				<div class="grid gap-1.5">
-					<input
-						class="input-base"
-						type="text"
-						aria-label="Código de quiz"
-						bind:value={joinCode}
-						placeholder="Ingrese un código de Quiz. Ej: ABC1234"
-						oninput={() => (joinError = "")}
-					/>
-					{#if joinError}
-						<span class="text-sm text-red-700">{joinError}</span>
-					{/if}
+		<Form of={form} onsubmit={handleSubmit}>
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+				<div class="flex-1">
+					<Field of={form} path={["joinCode"]}>
+						{#snippet children(field)}
+							<label class="grid gap-1.5">
+								<input
+									class="input-base"
+									type="text"
+									aria-label="Código de quiz"
+									{...field.props}
+									value={field.input}
+									placeholder="Ingrese un código de Quiz. Ej: ABC1234"
+								/>
+								<span
+									class="text-sm text-red-700"
+									class:invisible={!field.errors?.[0]}
+									aria-live="polite"
+								>
+									{field.errors?.[0] ?? " "}
+								</span>
+							</label>
+						{/snippet}
+					</Field>
 				</div>
+
+				<button
+					class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+					type="submit"
+					disabled={byJoinCodeMutation.isPending}
+				>
+					<Search size={16} aria-hidden="true" />
+					{byJoinCodeMutation.isPending ? "Consultando..." : "Ir a sala de espera"}
+				</button>
+
+				<button
+					class="btn-secondary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+					type="button"
+					onclick={loadLastAttempt}
+				>
+					<History size={16} aria-hidden="true" />
+					Cargar último intento
+				</button>
 			</div>
-
-			<button
-				class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
-				type="button"
-				disabled={byJoinCodeMutation.isPending}
-				onclick={handleSubmit}
-			>
-				<Search size={16} aria-hidden="true" />
-				{byJoinCodeMutation.isPending ? "Consultando..." : "Ir a sala de espera"}
-			</button>
-
-			<button
-				class="btn-secondary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
-				type="button"
-				onclick={loadLastAttempt}
-			>
-				<History size={16} aria-hidden="true" />
-				Cargar último intento
-			</button>
-		</div>
+		</Form>
 
 		<div class="keyline mt-4"></div>
 		<p class="mt-4 mb-0 text-sm text-zinc-600">

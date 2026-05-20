@@ -61,6 +61,7 @@ impl QuizRepository {
                 kind,
                 join_code,
                 question_count,
+                max_score,
                 certainty_table,
                 attempt_duration_minutes,
                 starts_at,
@@ -77,6 +78,7 @@ impl QuizRepository {
                 kind = EXCLUDED.kind,
                 join_code = EXCLUDED.join_code,
                 question_count = EXCLUDED.question_count,
+                max_score = EXCLUDED.max_score,
                 certainty_table = EXCLUDED.certainty_table,
                 attempt_duration_minutes = EXCLUDED.attempt_duration_minutes,
                 starts_at = EXCLUDED.starts_at,
@@ -92,6 +94,7 @@ impl QuizRepository {
         .bind(quiz.kind)
         .bind(&quiz.join_code)
         .bind(quiz.question_count)
+        .bind(quiz.max_score)
         .bind(&quiz.certainty_table)
         .bind(quiz.attempt_duration_minutes)
         .bind(quiz.starts_at)

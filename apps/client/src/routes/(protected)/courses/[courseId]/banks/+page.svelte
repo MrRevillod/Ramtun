@@ -11,9 +11,10 @@
 	import { banksService } from "$lib/banks/banks.service"
 	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { formatCreatedAt } from "$lib/shared/value-objects/date.value"
-	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import { DateValue } from "$lib/shared/value-objects/date.value"
+
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 
 	let { data } = $props()
 
@@ -33,7 +34,7 @@
 	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
 	const uploadBankMutation = createMutation(() => ({
-		mutationFn: banksService.createOrThrow,
+		mutationFn: (input) => banksService.createOrThrow(input),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
@@ -55,19 +56,17 @@
 	}
 </script>
 
-<section class="page-main">
-	<header class="page-header">
-		<h2 class="page-title">Bancos de preguntas</h2>
-		<p class="page-subtitle">
-			Subidos en el curso
-			{#await courseQuery.data then course}
-				{course.name}
-			{/await}
-		</p>
-	</header>
-
-	<div class="page-content">
-		<div class="mb-4 flex justify-end">
+<section class="grid gap-4">
+	<header>
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div>
+				<h3 class="mt-2 mb-0 text-xl text-black">
+					{courseQuery.data?.name ?? "Curso"} - Bancos de preguntas
+				</h3>
+				<p class="m-0 mt-2 text-zinc-700">
+					Sube y gestiona bancos de preguntas en formato JSON.
+				</p>
+			</div>
 			<button
 				class="btn-primary flex items-center gap-1.5"
 				type="button"
@@ -77,11 +76,13 @@
 				Nuevo banco
 			</button>
 		</div>
+	</header>
 
+	<section class="panel-elevated p-4">
 		{#if banksQuery.isLoading}
-			<p class="text-zinc-600">Cargando bancos...</p>
+			<p class="m-0 text-zinc-600">Cargando bancos...</p>
 		{:else if banksQuery.isError}
-			<p class="text-red-600">Error al cargar los bancos.</p>
+			<p class="m-0 text-red-700">Error al cargar los bancos.</p>
 		{:else if !banksQuery.data?.length}
 			<div class="panel-surface py-10 text-center">
 				<p class="mb-2 text-zinc-600">No hay bancos de preguntas.</p>
@@ -90,9 +91,9 @@
 				</p>
 			</div>
 		{:else}
-			<div class="table-container">
-				<table class="table">
-					<thead>
+			<div class="overflow-x-auto">
+				<table class="min-w-full border-collapse text-sm">
+					<thead class="table-head">
 						<tr>
 							<th class="px-3 py-2 text-left font-medium">Nombre</th>
 							<th class="px-3 py-2 text-left font-medium">Preguntas</th>
@@ -110,7 +111,7 @@
 								<td class="px-3 py-2 text-zinc-900">{bank.name}</td>
 								<td class="px-3 py-2 text-zinc-700">{bank.questions.length}</td>
 								<td class="px-3 py-2 text-zinc-700"
-									>{formatCreatedAt(bank.created_at ?? bank.createdAt ?? "")}</td
+									>{DateValue.format(bank.created_at ?? bank.createdAt ?? "")}</td
 								>
 								<td class="px-3 py-2">
 									<button
@@ -132,7 +133,7 @@
 				</table>
 			</div>
 		{/if}
-	</div>
+	</section>
 </section>
 
 <BankUploadModal
