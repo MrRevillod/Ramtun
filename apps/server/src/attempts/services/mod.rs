@@ -269,11 +269,15 @@ impl AttemptsService {
             return Err(QuizError::InvalidCode)?;
         };
 
+        if quiz.results_published_at.is_none() {
+            return Err(QuizError::ResultsNotPublished)?;
+        }
+
         let attempt = self
             .repository
             .find_by_quiz_and_student(&quiz.id, &user.id)
             .await?
-            .ok_or(AttemptError::Forbidden)?;
+            .ok_or(AttemptError::NoActiveAttempts)?;
 
         self.view_results(attempt.id, user).await
     }

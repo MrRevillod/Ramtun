@@ -69,4 +69,8 @@ pub enum AttemptError {
     #[http(code = 409, message = "El estudiante aun no ha enviado este intento")]
     #[error("Attempt has not been submitted yet")]
     NotSubmitted,
+
+    #[http(code = 409, message = "No tienes intentos en este quiz")]
+    #[error("No active attempts for quiz")]
+    NoActiveAttempts,
 }

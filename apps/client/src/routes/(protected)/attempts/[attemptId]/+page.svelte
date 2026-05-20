@@ -191,16 +191,32 @@
 		})
 	}
 
+	const firstUnansweredIndex = () => {
+		if (!session) return -1
+		return session.attempt.questions.findIndex(
+			q => !answers[q.id]?.answerIndex
+		)
+	}
+
 	const submitAttempt = async (force = false) => {
 		if (!session) return
-		if (!force && hasCertaintyGap()) {
-			const gapIndex = firstCertaintyGapIndex()
-			if (gapIndex >= 0) {
-				currentIndex = gapIndex
+		if (!force) {
+			const unansweredIdx = firstUnansweredIndex()
+			if (unansweredIdx >= 0) {
+				currentIndex = unansweredIdx
 				persistSession()
+				toast.error("Debes responder todas las preguntas antes de enviar.")
+				return
 			}
-			toast.error("Te falta seleccionar nivel de certeza en una o más preguntas.")
-			return
+			if (hasCertaintyGap()) {
+				const gapIndex = firstCertaintyGapIndex()
+				if (gapIndex >= 0) {
+					currentIndex = gapIndex
+					persistSession()
+				}
+				toast.error("Te falta seleccionar nivel de certeza en una o más preguntas.")
+				return
+			}
 		}
 		await submitMutation.mutateAsync(session.attempt.attemptId)
 	}
@@ -258,6 +274,19 @@
 				isPending={submitMutation.isPending}
 				{autoSubmitting}
 				onnavigate={index => {
+					const currentQuestionId = session!.attempt.questions[currentIndex].id
+					const currentAnswer = answers[currentQuestionId]
+					if (!currentAnswer?.answerIndex) {
+						toast.error("Debes seleccionar una alternativa antes de continuar.")
+						return
+					}
+					if (
+						session!.preview.kind === "certainty" &&
+						!currentAnswer.certaintyLevel
+					) {
+						toast.error("Debes seleccionar un nivel de certeza antes de continuar.")
+						return
+					}
 					currentIndex = index
 					persistSession()
 				}}

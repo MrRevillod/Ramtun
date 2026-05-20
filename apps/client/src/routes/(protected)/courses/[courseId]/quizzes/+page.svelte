@@ -164,16 +164,18 @@
 								<td class="px-3 py-2">
 									<div class="flex items-center gap-1">
 										<a
-											class="icon-btn"
+											class="icon-btn cursor-pointer"
 											title="Ver intentos"
 											onclick={e => e.stopPropagation()}
 											href={resolve(
 												`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`
-											)}><Eye size={15} aria-hidden="true" /></a
+											)}
+										>
+											<Eye size={15} aria-hidden="true" /></a
 										>
 										{#if !quiz.resultsPublishedAt}
 											<button
-												class="icon-btn border-amber-300 text-amber-800 hover:bg-amber-50"
+												class="icon-btn cursor-pointer border-amber-300 text-amber-800 hover:bg-amber-50"
 												title="Finalizar y publicar"
 												type="button"
 												onclick={e => {
@@ -181,11 +183,12 @@
 													closeAndPublishMutation.mutate(quiz.id)
 												}}
 												disabled={isActionPending || !!quiz.closedAt}
-												><CircleStop size={15} aria-hidden="true" /></button
+											>
+												<CircleStop size={15} aria-hidden="true" /></button
 											>
 										{/if}
 										<button
-											class="icon-btn icon-btn-danger"
+											class="icon-btn icon-btn-danger cursor-pointer"
 											title="Eliminar"
 											type="button"
 											onclick={e => {
@@ -193,7 +196,8 @@
 												quizToDelete = { id: quiz.id, title: quiz.title }
 											}}
 											disabled={isActionPending}
-											><Trash2 size={15} aria-hidden="true" /></button
+										>
+											<Trash2 size={15} aria-hidden="true" /></button
 										>
 									</div>
 								</td>

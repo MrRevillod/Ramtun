@@ -1,89 +1,46 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { createMutation } from "@tanstack/svelte-query"
-	import { browser } from "$app/environment"
 	import { toast } from "svelte-sonner"
 	import { Search, History } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import { joinCodeFormSchema, type JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+	import {
+		joinCodeFormSchema,
+		type JoinCodeFormData,
+	} from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { createForm, Field, Form } from "@formisch/svelte"
 
 	const form = createForm({
 		schema: joinCodeFormSchema,
 		validate: "blur",
-		initialInput: {
-			joinCode: browser
-				? (localStorage.getItem("last-submitted-join-code") ?? "")
-				: "",
-		},
 	})
-
-	let resultNotice = $state("")
-	let noticeTone = $state<"ok" | "warn" | "danger">("warn")
-
-	const getResultErrorMessage = (error: unknown): string => {
-		if (!error || typeof error !== "object") {
-			return getErrorMessage(error)
-		}
-
-		const maybe = error as { kind?: string; status?: number; message?: string }
-		const normalized =
-			typeof maybe.message === "string" ? maybe.message.toLowerCase() : ""
-
-		if (
-			maybe.kind === "http" &&
-			maybe.status === 409 &&
-			normalized.includes("not published")
-		) {
-			return "El docente aun no publica los resultados de este quiz."
-		}
-
-		if (maybe.kind === "http" && maybe.status === 404) {
-			return "No encontramos un intento para ese codigo en tu cuenta."
-		}
-
-		if (maybe.kind === "http" && maybe.status === 403) {
-			if (normalized.includes("not published")) {
-				return "El docente aun no publica los resultados de este quiz."
-			}
-
-			return "No tienes acceso a esos resultados con tu cuenta actual."
-		}
-
-		return getErrorMessage(error)
-	}
 
 	const byJoinCodeMutation = createMutation(() => ({
 		mutationFn: (joinCode: string) =>
 			attemptsService.getResultsByJoinCodeOrThrow(joinCode),
-		onSuccess: async (_data, joinCode) => {
-			await goto(resolve(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`))
+		onSuccess: async (_, joinCode) => {
+			await goto(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`)
 		},
 		onError: error => {
-			noticeTone = "danger"
-			resultNotice = getResultErrorMessage(error)
-			toast.error(resultNotice)
+			toast.error(getErrorMessage(error))
 		},
 	}))
 
 	const loadLastAttempt = async () => {
-		if (!browser) return
 		const code = localStorage.getItem("last-submitted-join-code")
+
 		if (!code) {
 			toast.error("No hay un intento reciente guardado.")
 			return
 		}
 
-		await byJoinCodeMutation.mutateAsync(code)
+		byJoinCodeMutation.mutate(code)
 	}
 
 	const handleSubmit = (input: JoinCodeFormData) => {
-		if (browser) {
-			localStorage.setItem("last-submitted-join-code", input.joinCode)
-		}
-		byJoinCodeMutation.mutateAsync(input.joinCode)
+		localStorage.setItem("last-submitted-join-code", input.joinCode)
+		byJoinCodeMutation.mutate(input.joinCode)
 	}
 </script>
 
@@ -128,7 +85,7 @@
 					disabled={byJoinCodeMutation.isPending}
 				>
 					<Search size={16} aria-hidden="true" />
-					{byJoinCodeMutation.isPending ? "Consultando..." : "Ir a sala de espera"}
+					{byJoinCodeMutation.isPending ? "Consultando..." : "Ver resultados"}
 				</button>
 
 				<button
@@ -147,16 +104,5 @@
 			Si el resultado aún no está publicado, te llevaremos a una sala de espera con
 			actualización automática.
 		</p>
-
-		{#if resultNotice}
-			<p
-				class="notice mt-4 mb-0"
-				class:notice-ok={noticeTone === "ok"}
-				class:notice-warn={noticeTone === "warn"}
-				class:notice-danger={noticeTone === "danger"}
-			>
-				{resultNotice}
-			</p>
-		{/if}
 	</section>
 </section>

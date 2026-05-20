@@ -3,7 +3,7 @@
 	import { resolve } from "$app/paths"
 	import { createQuery } from "@tanstack/svelte-query"
 	import { onMount } from "svelte"
-	import { Loader2, RefreshCw, ArrowLeft, BadgeCheck } from "lucide-svelte"
+	import { Loader2, RefreshCw, ArrowLeft } from "lucide-svelte"
 	import type { AttemptResult } from "$lib/attempts/attempts.dtos"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
@@ -135,14 +135,9 @@
 		<header>
 			<h2 class="mt-2 mb-0 text-2xl text-black">Resultados disponibles</h2>
 			<p class="mt-2 max-w-3xl text-zinc-700">
-				Los resultados ya estan publicados. Revisa tu desempeno a continuacion.
+				Revisa tu desempeño, respuestas y puntaje.
 			</p>
 		</header>
-
-		<p class="notice notice-ok m-0 inline-flex w-fit items-center gap-1.5">
-			<BadgeCheck size={16} aria-hidden="true" />
-			Tu resultado esta disponible para revision.
-		</p>
 
 		{#if result}
 			<AttemptResultReview {result} />
