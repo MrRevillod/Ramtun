@@ -1,35 +1,61 @@
 <script lang="ts">
 	import { page } from "$app/state"
 	import { resolve } from "$app/paths"
+	import { goto } from "$app/navigation"
+	import { toast } from "svelte-sonner"
+	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import { quizKindLabel } from "$lib/shared/labels"
+	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { Play, TimerReset } from "lucide-svelte"
-	import {
-		useInitAttemptMutation,
-		useJoinAttemptPreviewQuery,
-	} from "$lib/attempts/hooks.svelte"
+	import { createMutation, createQuery } from "@tanstack/svelte-query"
+	import type { AttemptSession } from "$lib/attempts/attempts.dtos"
 
 	import CertaintyTableView from "$lib/quizzes/components/CertaintyTableView.svelte"
-	import { DateValue } from "$lib/shared/value-objects/date.value"
 
-	const joinCode = $derived(page.url.searchParams.get("joinCode") ?? "")
+	const joinCode = $derived.by(() => page.url.searchParams.get("joinCode") ?? "")
 
-	const {
-		data: previewData,
-		isLoading: isPreviewLoading,
-		error: previewError,
-	} = useJoinAttemptPreviewQuery(() => joinCode)
+	const previewQuery = createQuery(() => ({
+		queryKey: ["join-preview", joinCode],
+		queryFn: () => quizzesService.joinByCodeOrThrow(joinCode),
+		enabled: joinCode.length > 0,
+	}))
 
-	const hasCertaintyTable = $derived(() => {
+	const previewData = $derived.by(() => previewQuery.data)
+	const isPreviewLoading = $derived.by(() => previewQuery.isLoading)
+	const previewError = $derived.by(() => previewQuery.error)
+
+	const hasCertaintyTable = $derived.by(() => {
 		if (!previewData) return false
 		return previewData.kind === "certainty" && !!previewData.certaintyTable
 	})
 
-	const { mutate: initializeAttempt, isPending: isInitializePending } =
-		useInitAttemptMutation({
-			joinCode: () => joinCode,
-			previewData: () => previewData,
-		})
+	const initializeAttemptMutation = createMutation(() => ({
+		mutationFn: (quizId: string) => attemptsService.initializeOrThrow(quizId),
+		onSuccess: async attempt => {
+			if (!previewData) {
+				toast.error("No se pudo obtener la información del intento.")
+				return
+			}
+
+			const session: AttemptSession = {
+				joinCode,
+				preview: previewData,
+				attempt,
+				answers: {},
+				index: 0,
+			}
+
+			localStorage.setItem("last-attempt-session", JSON.stringify(session))
+
+			await goto(`/attempts/${attempt.attemptId}`)
+		},
+		onError: error => toast.error(getErrorMessage(error)),
+	}))
+
+	const initializeAttempt = $derived.by(() => initializeAttemptMutation.mutate)
+	const isInitializePending = $derived.by(() => initializeAttemptMutation.isPending)
 
 	let preAttemptSeconds = $state(0)
 	let preAttemptTimerId: ReturnType<typeof setInterval> | null = null
@@ -122,7 +148,7 @@
 				</div>
 			</div>
 
-			<div class={hasCertaintyTable() ? "grid gap-3 lg:grid-cols-2" : "grid"}>
+			<div class={hasCertaintyTable ? "grid gap-3 lg:grid-cols-2" : "grid"}>
 				<div class="panel-muted space-y-3 p-4">
 					<p class="m-0 text-sm font-medium text-black">Antes de comenzar</p>
 					<ul class="space-y-1.5 pl-5 text-sm leading-relaxed text-zinc-700">
@@ -134,7 +160,7 @@
 					</ul>
 				</div>
 
-				{#if hasCertaintyTable()}
+				{#if hasCertaintyTable}
 					<div class="panel-muted space-y-3 p-4">
 						<p class="m-0 text-sm font-medium text-black">Tabla de certeza</p>
 						<div class="overflow-x-auto">

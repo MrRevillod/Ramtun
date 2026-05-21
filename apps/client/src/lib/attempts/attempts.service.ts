@@ -50,6 +50,7 @@ class AttemptsService {
 			data: {
 				...input,
 				questionId,
+				attemptId,
 			},
 		})
 	}
