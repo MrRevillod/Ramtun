@@ -194,7 +194,7 @@
 	const firstUnansweredIndex = () => {
 		if (!session) return -1
 		return session.attempt.questions.findIndex(
-			q => !answers[q.id]?.answerIndex
+			q => answers[q.id]?.answerIndex === undefined
 		)
 	}
 
@@ -276,7 +276,7 @@
 				onnavigate={index => {
 					const currentQuestionId = session!.attempt.questions[currentIndex].id
 					const currentAnswer = answers[currentQuestionId]
-					if (!currentAnswer?.answerIndex) {
+					if (currentAnswer?.answerIndex === undefined) {
 						toast.error("Debes seleccionar una alternativa antes de continuar.")
 						return
 					}
