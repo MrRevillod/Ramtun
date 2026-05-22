@@ -54,11 +54,13 @@
 	})
 
 	let selectedBankIds = $state<string[]>([])
+	let selectedKind = $state("traditional")
 	let certaintyConfig = $state({
 		low: { correct: 1, incorrect: 0 },
 		medium: { correct: 2, incorrect: -1 },
 		high: { correct: 3, incorrect: -2 },
 	})
+
 
 	const toggleBank = (bankId: string, selected: boolean) => {
 		selectedBankIds = selected
@@ -96,6 +98,7 @@
 					questionCount: "10",
 				},
 			})
+			selectedKind = "traditional"
 			certaintyConfig = {
 				low: { correct: 1, incorrect: 0 },
 				medium: { correct: 2, incorrect: -1 },
@@ -147,33 +150,23 @@
 					{/snippet}
 				</Field>
 
-				<div class="form-grid-2 xl:grid-cols-3">
+				<div class="form-grid-2 grid-cols-2">
 					<Field of={form} path={["kind"]}>
 						{#snippet children(field)}
 							<label class="grid gap-1.5">
 								<span class="text-sm text-zinc-800">Tipo</span>
-								<select
-									{...field.props}
-									class="input-base"
-									value={field.input ?? "traditional"}
-								>
-									<option value="traditional">Tradicional</option>
-									<option value="certainty">Certeza</option>
-								</select>
-							</label>
-						{/snippet}
-					</Field>
-
-					<Field of={form} path={["attemptDurationMinutes"]}>
-						{#snippet children(field)}
-							<label class="grid gap-1.5">
-								<span class="text-sm text-zinc-800">Duracion (min)</span>
-								<input
-									{...field.props}
-									type="number"
-									class="input-base"
-									value={field.input ?? 30}
-								/>
+							<select
+								{...field.props}
+								class="input-base"
+								value={field.input ?? "traditional"}
+								oninput={event => {
+									field.props.oninput?.(event)
+									selectedKind = (event.target as HTMLSelectElement).value
+								}}
+							>
+								<option value="traditional">Tradicional</option>
+								<option value="certainty">Certeza</option>
+							</select>
 							</label>
 						{/snippet}
 					</Field>
@@ -193,26 +186,42 @@
 					</Field>
 				</div>
 
-				<Field of={form} path={["startsAt"]}>
-					{#snippet children(field)}
-						<label class="grid gap-1.5 sm:max-w-sm">
-							<span class="text-sm text-zinc-800">Inicio</span>
-							<input
-								{...field.props}
-								type="datetime-local"
-								class="input-base"
-								value={field.input ?? ""}
-							/>
-						</label>
-					{/snippet}
-				</Field>
+				<div class="form-grid-2 grid-cols-2">
+					<Field of={form} path={["startsAt"]}>
+						{#snippet children(field)}
+							<label class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Inicio</span>
+								<input
+									{...field.props}
+									type="datetime-local"
+									class="input-base"
+									value={field.input ?? ""}
+								/>
+							</label>
+						{/snippet}
+					</Field>
+
+					<Field of={form} path={["attemptDurationMinutes"]}>
+						{#snippet children(field)}
+							<label class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Duracion (min)</span>
+								<input
+									{...field.props}
+									type="number"
+									class="input-base"
+									value={field.input ?? 30}
+								/>
+							</label>
+						{/snippet}
+					</Field>
+				</div>
 
 				<div class="grid gap-2">
 					<span class="text-sm text-zinc-800">Bancos fuente</span>
 					<BankSelector {courseId} {selectedBankIds} onchange={toggleBank} />
 				</div>
 
-				{#if form.state?.input?.kind === "certainty"}
+				{#if selectedKind === "certainty"}
 					<div class="grid gap-3">
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-zinc-800">Tabla de certeza</span>
@@ -222,7 +231,7 @@
 						</div>
 						<div class="overflow-x-auto">
 							<table class="w-full border-collapse text-xs">
-								<thead class="bg-zinc-100/90 text-zinc-700">
+								<thead class="bg-zinc-100/90 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
 									<tr>
 										<th class="border border-zinc-300 px-2 py-1.5 text-left">
 											Nivel
