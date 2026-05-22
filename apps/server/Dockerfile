@@ -31,7 +31,7 @@ CMD ["/bin/bash", "/app/apps/server/config/scripts/entrypoint.sh"]
 # Build Stage
 # ==============================================================================
 
-FROM rust:1.92-alpine AS builder
+FROM rust:1.95-alpine AS builder
 
 RUN apk add --no-cache \
 	build-base \
