@@ -14,7 +14,7 @@
 	let password = $state("")
 
 	const loginMutation = createMutation(() => ({
-		mutationFn: (payload: LoginInput) => authService.loginOrThrow(payload),
+		mutationFn: (payload: LoginInput) => authService.login(payload),
 		onSuccess: async session => {
 			sessionManager.setSession(session)
 			await goto(resolve("/"))

@@ -13,10 +13,10 @@
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import type { CreateQuizInput } from "$lib/quizzes/quizzes.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { quizKindLabel } from "$lib/shared/labels"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import CreateQuizModal from "$lib/quizzes/components/CreateQuizModal.svelte"
 	import QuizStatusBadge from "$lib/quizzes/components/QuizStatusBadge.svelte"
+	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values.js"
 
 	let { data } = $props()
 
@@ -24,19 +24,19 @@
 
 	const courseQuery = createQuery(() => ({
 		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.getOrThrow(data.courseId),
+		queryFn: () => coursesService.get(data.courseId),
 	}))
 
 	const quizzesQuery = createQuery(() => ({
 		queryKey: ["quizzes", "managed", data.courseId],
 		queryFn: async () => {
-			const all = await quizzesService.listManagedOrThrow()
+			const all = await quizzesService.listManaged()
 			return all.filter(quiz => quiz.course.id === data.courseId)
 		},
 	}))
 
 	const createQuizMutation = createMutation(() => ({
-		mutationFn: (input: CreateQuizInput) => quizzesService.createOrThrow(input),
+		mutationFn: (input: CreateQuizInput) => quizzesService.create(input),
 		onSuccess: async created => {
 			toast.success(`Quiz ${created.title} creado.`)
 			await queryClient.invalidateQueries({
@@ -47,7 +47,7 @@
 	}))
 
 	const deleteQuizMutation = createMutation(() => ({
-		mutationFn: (quizId: string) => quizzesService.removeOrThrow(quizId),
+		mutationFn: (quizId: string) => quizzesService.remove(quizId),
 		onSuccess: async () => {
 			toast.success("Quiz eliminado correctamente.")
 			await queryClient.invalidateQueries({
@@ -58,7 +58,7 @@
 	}))
 
 	const closeAndPublishMutation = createMutation(() => ({
-		mutationFn: (quizId: string) => quizzesService.closeAndPublishOrThrow(quizId),
+		mutationFn: (quizId: string) => quizzesService.closeAndPublish(quizId),
 		onSuccess: async () => {
 			toast.success("Quiz finalizado y resultados publicados.")
 			await queryClient.invalidateQueries({
@@ -105,7 +105,7 @@
 				</p>
 			</div>
 			<button
-				class="btn-primary flex items-center gap-1.5"
+				class="btn-primary flex cursor-pointer items-center gap-1.5"
 				type="button"
 				onclick={() => (showCreateModal = true)}
 			>
@@ -144,14 +144,16 @@
 									)}
 							>
 								<td class="px-3 py-2 text-zinc-900">{quiz.title}</td>
-								<td class="px-3 py-2 text-zinc-700">{quizKindLabel(quiz.kind)}</td>
+								<td class="px-3 py-2 text-zinc-700"
+									>{QuizKindValue.format(quiz.kind)}</td
+								>
 								<td class="px-3 py-2 text-zinc-700">
 									<QuizStatusBadge closedAt={quiz.closedAt} />
 								</td>
 								<td class="px-3 py-2 text-zinc-700">
 									<button
 										type="button"
-										class="code-chip"
+										class="code-chip cursor-pointer"
 										title="Copiar código"
 										onclick={e => {
 											e.stopPropagation()

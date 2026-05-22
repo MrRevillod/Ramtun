@@ -10,8 +10,8 @@
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { usersService } from "$lib/users/users.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
-	import { roleLabel } from "$lib/shared/labels"
 	import AddMemberModal from "$lib/courses/components/AddMemberModal.svelte"
+	import { RoleValue } from "$lib/shared/value-objects/role.value.js"
 
 	let { data } = $props()
 
@@ -19,22 +19,22 @@
 
 	const courseQuery = createQuery(() => ({
 		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.getOrThrow(data.courseId),
+		queryFn: () => coursesService.get(data.courseId),
 	}))
 
 	const membersQuery = createQuery(() => ({
 		queryKey: ["course-members", data.courseId],
-		queryFn: () => coursesService.listMembersOrThrow(data.courseId),
+		queryFn: () => coursesService.listMembers(data.courseId),
 	}))
 
 	const candidatesQuery = createQuery(() => ({
 		queryKey: ["collaborator-candidates", data.courseId],
-		queryFn: () => usersService.listCollaboratorCandidatesOrThrow(),
+		queryFn: () => usersService.listCollaboratorCandidates(),
 	}))
 
 	const addMemberMutation = createMutation(() => ({
 		mutationFn: (input: { userId: string }) =>
-			coursesService.addMemberOrThrow(data.courseId, input),
+			coursesService.addMember(data.courseId, input),
 		onSuccess: async () => {
 			toast.success("Miembro agregado correctamente.")
 			await queryClient.invalidateQueries({
@@ -46,7 +46,7 @@
 
 	const removeMemberMutation = createMutation(() => ({
 		mutationFn: (userId: string) =>
-			coursesService.removeMemberOrThrow(data.courseId, userId),
+			coursesService.removeMember(data.courseId, userId),
 		onSuccess: async () => {
 			toast.success("Miembro removido correctamente.")
 			await queryClient.invalidateQueries({
@@ -110,7 +110,9 @@
 								<td class="px-3 py-2 font-medium text-zinc-900">{member.username}</td
 								>
 								<td class="px-3 py-2 text-zinc-800">{member.name}</td>
-								<td class="px-3 py-2 text-zinc-700">{roleLabel(member.role)}</td>
+								<td class="px-3 py-2 text-zinc-700"
+									>{RoleValue.format(member.role)}</td
+								>
 								<td class="px-3 py-2">
 									<button
 										class="icon-btn icon-btn-danger"

@@ -19,12 +19,12 @@
 
 	const coursesQuery = createQuery(() => ({
 		queryKey: coursesKey,
-		queryFn: async () => await coursesService.listOrThrow(),
+		queryFn: async () => await coursesService.list(),
 	}))
 
 	const createCourseMutation = createMutation(() => ({
 		mutationFn: (input: CreateCourseFormValues) =>
-			coursesService.createOrThrow(input),
+			coursesService.create(input),
 		onSuccess: async created => {
 			toast.success(`Curso ${created.code} creado correctamente.`)
 			await queryClient.invalidateQueries({ queryKey: coursesKey })
@@ -35,7 +35,7 @@
 	}))
 
 	const deleteCourseMutation = createMutation(() => ({
-		mutationFn: (courseId: string) => coursesService.removeOrThrow(courseId),
+		mutationFn: (courseId: string) => coursesService.remove(courseId),
 		onSuccess: async () => {
 			toast.success("Curso eliminado correctamente.")
 			courseToDelete = null
@@ -64,7 +64,7 @@
 				</p>
 			</div>
 			<button
-				class="btn-primary flex items-center gap-1.5"
+				class="btn-primary flex cursor-pointer items-center gap-1.5"
 				type="button"
 				onclick={() => (showCreateModal = true)}
 			>
@@ -111,7 +111,7 @@
 								<td class="px-3 py-2">
 									<div class="flex items-center gap-1">
 										<button
-											class="icon-btn icon-btn-danger"
+											class="icon-btn icon-btn-danger cursor-pointer"
 											title="Eliminar curso"
 											type="button"
 											onclick={e => {

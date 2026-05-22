@@ -37,7 +37,7 @@ impl AttemptsController {
         Ok(JsonResponse::Ok().data(attempts))
     }
 
-    #[post("/course/{courseId}/quiz/{quizId}")]
+    #[post("/quiz/{quizId}")]
     #[interceptor(AuthzGuard, config = AuthzAction::AttemptInitialize)]
     async fn initialize_attempt(&self, req: Request) -> WebResult {
         let quiz_id = req.param::<QuizId>("quizId")?;

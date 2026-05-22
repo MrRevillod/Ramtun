@@ -1,7 +1,4 @@
-import { browser } from "$app/environment"
-
 const STORAGE_KEY = "ui-theme"
-
 export type ThemePreference = "light" | "dark"
 
 class ThemeStore {
@@ -22,9 +19,7 @@ class ThemeStore {
 	public setPreference(preference: ThemePreference) {
 		this.preference = preference
 
-		if (browser) {
-			localStorage.setItem(STORAGE_KEY, preference)
-		}
+		localStorage.setItem(STORAGE_KEY, preference)
 
 		this.applyThemeClass()
 	}
@@ -34,7 +29,6 @@ class ThemeStore {
 	}
 
 	private applyThemeClass() {
-		if (!browser) return
 		document.documentElement.classList.toggle("dark", this.preference === "dark")
 	}
 }

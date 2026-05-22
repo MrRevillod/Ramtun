@@ -1,6 +1,4 @@
 import { request } from "$lib/shared/http/http"
-import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
-
 import type {
 	AddCourseMemberInput,
 	CourseMember,
@@ -9,18 +7,14 @@ import type {
 } from "$lib/courses/courses.dtos"
 
 class CoursesService {
-	public list(): AppResultAsync<CourseView[]> {
+	public list(): Promise<CourseView[]> {
 		return request<CourseView[]>({
 			method: "GET",
 			url: "/courses",
 		})
 	}
 
-	public async listOrThrow(): Promise<CourseView[]> {
-		return unwrapResultOrThrow(await this.list())
-	}
-
-	public create(input: CreateCourseInput): AppResultAsync<CourseView> {
+	public create(input: CreateCourseInput): Promise<CourseView> {
 		return request<CourseView>({
 			method: "POST",
 			url: "/courses",
@@ -28,36 +22,21 @@ class CoursesService {
 		})
 	}
 
-	public async createOrThrow(input: CreateCourseInput): Promise<CourseView> {
-		return unwrapResultOrThrow(await this.create(input))
-	}
-
-	public get(courseId: string): AppResultAsync<CourseView> {
+	public get(courseId: string): Promise<CourseView> {
 		return request<CourseView>({
 			method: "GET",
 			url: `/courses/${courseId}`,
 		})
 	}
 
-	public async getOrThrow(courseId: string): Promise<CourseView> {
-		return unwrapResultOrThrow(await this.get(courseId))
-	}
-
-	public listMembers(courseId: string): AppResultAsync<CourseMember[]> {
+	public listMembers(courseId: string): Promise<CourseMember[]> {
 		return request<CourseMember[]>({
 			method: "GET",
 			url: `/courses/${courseId}/members`,
 		})
 	}
 
-	public async listMembersOrThrow(courseId: string): Promise<CourseMember[]> {
-		return unwrapResultOrThrow(await this.listMembers(courseId))
-	}
-
-	public addMember(
-		courseId: string,
-		input: AddCourseMemberInput
-	): AppResultAsync<void> {
+	public addMember(courseId: string, input: AddCourseMemberInput): Promise<void> {
 		return request<void>({
 			method: "POST",
 			url: `/courses/${courseId}/members`,
@@ -65,33 +44,18 @@ class CoursesService {
 		})
 	}
 
-	public async addMemberOrThrow(
-		courseId: string,
-		input: AddCourseMemberInput
-	): Promise<void> {
-		return unwrapResultOrThrow(await this.addMember(courseId, input))
-	}
-
-	public removeMember(courseId: string, userId: string): AppResultAsync<void> {
+	public removeMember(courseId: string, userId: string): Promise<void> {
 		return request<void>({
 			method: "DELETE",
 			url: `/courses/${courseId}/members/${userId}`,
 		})
 	}
 
-	public async removeMemberOrThrow(courseId: string, userId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.removeMember(courseId, userId))
-	}
-
-	public remove(courseId: string): AppResultAsync<void> {
+	public remove(courseId: string): Promise<void> {
 		return request<void>({
 			method: "DELETE",
 			url: `/courses/${courseId}`,
 		})
-	}
-
-	public async removeOrThrow(courseId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.remove(courseId))
 	}
 }
 

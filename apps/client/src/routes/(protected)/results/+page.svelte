@@ -18,7 +18,7 @@
 
 	const byJoinCodeMutation = createMutation(() => ({
 		mutationFn: (joinCode: string) =>
-			attemptsService.getResultsByJoinCodeOrThrow(joinCode),
+			attemptsService.getResultsByJoinCode(joinCode),
 		onSuccess: async (results, joinCode) => {
 			await goto(`/results/view?joinCode=${encodeURIComponent(joinCode)}`, {
 				state: { results },
@@ -82,7 +82,7 @@
 				</div>
 
 				<button
-					class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+					class="btn-primary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
 					type="submit"
 					disabled={byJoinCodeMutation.isPending}
 				>
@@ -91,7 +91,7 @@
 				</button>
 
 				<button
-					class="btn-secondary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+					class="btn-secondary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
 					type="button"
 					onclick={loadLastAttempt}
 				>

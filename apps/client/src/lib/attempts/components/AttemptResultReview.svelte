@@ -122,8 +122,7 @@
 				<div class="mt-4 grid gap-2.5">
 					{#each question.options as option, optionIndex (`${question.questionId}-${optionIndex}`)}
 						{@const isSelected =
-							question.answerIndex !== null &&
-							optionIndex === question.answerIndex}
+							question.answerIndex !== null && optionIndex === question.answerIndex}
 						<div
 							class={`rounded-sm border px-4 py-3 text-left text-base leading-relaxed ${getOptionClass(
 								optionIndex,

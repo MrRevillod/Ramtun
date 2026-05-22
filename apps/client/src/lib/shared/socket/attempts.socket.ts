@@ -1,4 +1,3 @@
-import { browser } from "$app/environment"
 import { io, type Socket } from "socket.io-client"
 import { sessionManager } from "$lib/shared/auth/session.manager"
 import type { AttemptSubmitView } from "$lib/attempts/attempts.dtos"
@@ -11,8 +10,6 @@ const NAMESPACE = "/attempts"
 let socket: AttemptsSocket | null = null
 
 const getSocket = () => {
-	if (!browser) return null
-
 	if (!socket) {
 		socket = io(NAMESPACE, {
 			autoConnect: false,

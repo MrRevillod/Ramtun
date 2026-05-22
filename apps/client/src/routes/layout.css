@@ -479,7 +479,7 @@ body {
 		color: #d4d4d4;
 	}
 
-html.dark .action-tab[data-active="true"] {
+	html.dark .action-tab[data-active="true"] {
 		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
 		border-left-color: #e5e5e5;
 		border-left: 3px solid #e5e5e5;

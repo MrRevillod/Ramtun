@@ -1,31 +1,22 @@
 import { request } from "$lib/shared/http/http"
-import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
 import type { CreateQuestionBankInput, QuestionBank } from "$lib/banks/banks.dtos"
 
 class BanksService {
-	public listByCourse(courseId: string): AppResultAsync<QuestionBank[]> {
+	public listByCourse(courseId: string): Promise<QuestionBank[]> {
 		return request<QuestionBank[]>({
 			method: "GET",
 			url: `/banks/course/${courseId}`,
 		})
 	}
 
-	public async listByCourseOrThrow(courseId: string): Promise<QuestionBank[]> {
-		return unwrapResultOrThrow(await this.listByCourse(courseId))
-	}
-
-	public getById(bankId: string): AppResultAsync<QuestionBank> {
+	public getById(bankId: string): Promise<QuestionBank> {
 		return request<QuestionBank>({
 			method: "GET",
 			url: `/banks/${bankId}`,
 		})
 	}
 
-	public async getByIdOrThrow(bankId: string): Promise<QuestionBank> {
-		return unwrapResultOrThrow(await this.getById(bankId))
-	}
-
-	public create(input: CreateQuestionBankInput): AppResultAsync<void> {
+	public create(input: CreateQuestionBankInput): Promise<void> {
 		return request<void>({
 			method: "POST",
 			url: "/banks",
@@ -33,19 +24,11 @@ class BanksService {
 		})
 	}
 
-	public async createOrThrow(input: CreateQuestionBankInput): Promise<void> {
-		return unwrapResultOrThrow(await this.create(input))
-	}
-
-	public softDelete(bankId: string): AppResultAsync<void> {
+	public softDelete(bankId: string): Promise<void> {
 		return request<void>({
 			method: "DELETE",
 			url: `/banks/${bankId}`,
 		})
-	}
-
-	public async softDeleteOrThrow(bankId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.softDelete(bankId))
 	}
 }
 

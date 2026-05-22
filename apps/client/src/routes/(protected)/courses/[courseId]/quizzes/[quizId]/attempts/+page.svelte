@@ -11,12 +11,13 @@
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
+	import { DateValue } from "$lib/shared/value-objects/date.value"
 
 	let { data } = $props()
 
 	const attemptsQuery = createQuery(() => ({
 		queryKey: ["attempts", "managed", data.courseId, data.quizId],
-		queryFn: () => attemptsService.listAttemptsOrThrow(data.courseId, data.quizId),
+		queryFn: () => attemptsService.listAttempts(data.courseId, data.quizId),
 	}))
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -32,7 +33,7 @@
 		detailResult = null
 
 		try {
-			detailResult = await attemptsService.getAttemptResultsManagedOrThrow(
+			detailResult = await attemptsService.getAttemptResultsManaged(
 				attempt.attemptId
 			)
 		} catch (error) {
@@ -60,11 +61,6 @@
 			disconnectAttemptsSocket()
 		}
 	})
-
-	const formatDatetime = (iso: string | null) => {
-		if (!iso) return "-"
-		return new Date(iso).toLocaleString()
-	}
 </script>
 
 <section class="grid gap-4">
@@ -110,10 +106,10 @@
 									>{attempt.userName}</td
 								>
 								<td class="px-3 py-2 text-zinc-700"
-									>{formatDatetime(attempt.startedAt)}</td
+									>{DateValue.format(attempt.startedAt)}</td
 								>
 								<td class="px-3 py-2 text-zinc-700"
-									>{formatDatetime(attempt.submittedAt)}</td
+									>{DateValue.format(attempt.submittedAt)}</td
 								>
 								<td class="px-3 py-2 text-zinc-700">
 									{attempt.score !== null ? attempt.score : "-"}

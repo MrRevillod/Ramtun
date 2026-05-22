@@ -10,18 +10,16 @@
 
 	const courseQuery = createQuery(() => ({
 		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.getOrThrow(data.courseId),
+		queryFn: () => coursesService.get(data.courseId),
 	}))
 
 	const bankQuery = createQuery(() => ({
 		queryKey: ["bank", data.bankId],
-		queryFn: () => banksService.getByIdOrThrow(data.bankId),
+		queryFn: () => banksService.getById(data.bankId),
 	}))
 
-	const correctIndex = (question: {
-		answer_index?: number
-		answerIndex?: number
-	}) => question.answer_index ?? question.answerIndex
+	const correctIndex = (question: { answer_index?: number; answerIndex?: number }) =>
+		question.answer_index ?? question.answerIndex
 </script>
 
 <section class="grid gap-4">

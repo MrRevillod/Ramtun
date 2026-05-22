@@ -12,7 +12,7 @@
 
 	const banksQuery = createQuery(() => ({
 		queryKey: ["banks", courseId],
-		queryFn: () => banksService.listByCourseOrThrow(courseId),
+		queryFn: () => banksService.listByCourse(courseId),
 	}))
 </script>
 

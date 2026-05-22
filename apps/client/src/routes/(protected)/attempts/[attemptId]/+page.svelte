@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import { browser } from "$app/environment"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { onDestroy } from "svelte"
 	import { toast } from "svelte-sonner"
@@ -29,7 +28,6 @@
 	const debugSave = true
 
 	const loadSession = async () => {
-		if (!browser) return
 		const raw = localStorage.getItem("last-attempt-session")
 		if (!raw) {
 			await goto("/join")
@@ -57,7 +55,7 @@
 	void loadSession()
 
 	const persistSession = () => {
-		if (!browser || !session) return
+		if (!session) return
 		localStorage.setItem(
 			"last-attempt-session",
 			JSON.stringify({
@@ -142,7 +140,7 @@
 			answerIndex: number
 			certaintyLevel: CertaintyLevel | null
 		}) =>
-			attemptsService.saveAnswerOrThrow(payload.attemptId, payload.questionId, {
+			attemptsService.saveAnswer(payload.attemptId, payload.questionId, {
 				answerIndex: payload.answerIndex,
 				certaintyLevel: payload.certaintyLevel,
 				questionId: payload.questionId,
@@ -150,13 +148,10 @@
 	}))
 
 	const submitMutation = createMutation(() => ({
-		mutationFn: (attemptId: string) => attemptsService.submitOrThrow(attemptId),
+		mutationFn: (attemptId: string) => attemptsService.submit(attemptId),
 		onSuccess: () => {
-			if (browser) {
-				localStorage.removeItem("last-attempt-session")
-				if (session)
-					localStorage.setItem("last-submitted-join-code", session.joinCode)
-			}
+			localStorage.removeItem("last-attempt-session")
+			if (session) localStorage.setItem("last-submitted-join-code", session.joinCode)
 			clearTimer()
 			showSubmitModal = true
 		},

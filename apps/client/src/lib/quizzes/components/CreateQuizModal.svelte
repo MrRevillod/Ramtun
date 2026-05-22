@@ -61,7 +61,6 @@
 		high: { correct: 3, incorrect: -2 },
 	})
 
-
 	const toggleBank = (bankId: string, selected: boolean) => {
 		selectedBankIds = selected
 			? [...selectedBankIds, bankId]
@@ -155,18 +154,18 @@
 						{#snippet children(field)}
 							<label class="grid gap-1.5">
 								<span class="text-sm text-zinc-800">Tipo</span>
-							<select
-								{...field.props}
-								class="input-base"
-								value={field.input ?? "traditional"}
-								oninput={event => {
-									field.props.oninput?.(event)
-									selectedKind = (event.target as HTMLSelectElement).value
-								}}
-							>
-								<option value="traditional">Tradicional</option>
-								<option value="certainty">Certeza</option>
-							</select>
+								<select
+									{...field.props}
+									class="input-base"
+									value={field.input ?? "traditional"}
+									oninput={event => {
+										field.props.oninput?.(event)
+										selectedKind = (event.target as HTMLSelectElement).value
+									}}
+								>
+									<option value="traditional">Tradicional</option>
+									<option value="certainty">Certeza</option>
+								</select>
 							</label>
 						{/snippet}
 					</Field>
@@ -225,13 +224,13 @@
 					<div class="grid gap-3">
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-zinc-800">Tabla de certeza</span>
-							<span class="text-xs text-zinc-500">
-								Puntaje por respuesta
-							</span>
+							<span class="text-xs text-zinc-500"> Puntaje por respuesta </span>
 						</div>
 						<div class="overflow-x-auto">
 							<table class="w-full border-collapse text-xs">
-								<thead class="bg-zinc-100/90 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+								<thead
+									class="bg-zinc-100/90 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+								>
 									<tr>
 										<th class="border border-zinc-300 px-2 py-1.5 text-left">
 											Nivel
@@ -275,7 +274,9 @@
 														...certaintyConfig,
 														low: {
 															...certaintyConfig.low,
-															incorrect: Number((e.target as HTMLInputElement).value),
+															incorrect: Number(
+																(e.target as HTMLInputElement).value
+															),
 														},
 													}
 												}}
@@ -312,7 +313,9 @@
 														...certaintyConfig,
 														medium: {
 															...certaintyConfig.medium,
-															incorrect: Number((e.target as HTMLInputElement).value),
+															incorrect: Number(
+																(e.target as HTMLInputElement).value
+															),
 														},
 													}
 												}}
@@ -349,7 +352,9 @@
 														...certaintyConfig,
 														high: {
 															...certaintyConfig.high,
-															incorrect: Number((e.target as HTMLInputElement).value),
+															incorrect: Number(
+																(e.target as HTMLInputElement).value
+															),
 														},
 													}
 												}}

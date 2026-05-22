@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { CertaintyLevel } from "$lib/attempts/attempts.dtos"
-	import { certaintyLevelLabel } from "$lib/shared/labels"
+	import { CertaintyValue } from "$lib/shared/value-objects/certainty.value"
 
 	interface CertaintySelectorProps {
 		selected: CertaintyLevel | null
@@ -18,7 +18,7 @@
 			class={selected === level ? "btn-primary" : "btn-tertiary"}
 			onclick={() => onclick(level)}
 		>
-			{certaintyLevelLabel(level)}
+			{CertaintyValue.format(level)}
 		</button>
 	{/each}
 </div>

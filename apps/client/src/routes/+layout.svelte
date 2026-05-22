@@ -1,19 +1,29 @@
 <script lang="ts">
-	import { QueryClientProvider } from "@tanstack/svelte-query"
-	import { browser } from "$app/environment"
+	import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query"
 	import { Toaster } from "svelte-sonner"
-	import "./layout.css"
 	import { setupApiInterceptors } from "$lib/shared/http/api.interceptors"
-	import { queryClient } from "$lib/shared/query.client"
-	import { themeStore } from "$lib/shared/theme/theme.store.svelte"
+	import { themeStore } from "$lib/shared/theme.store.svelte"
+
+	import "./layout.css"
 
 	let { children } = $props()
 
 	setupApiInterceptors()
 
-	if (browser) {
-		themeStore.init()
-	}
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				staleTime: 30_000,
+				refetchOnWindowFocus: false,
+				retry: false,
+			},
+			mutations: {
+				retry: false,
+			},
+		},
+	})
+
+	themeStore.init()
 </script>
 
 <svelte:head>

@@ -8,7 +8,6 @@
 	let result = (page.state as { results?: AttemptResult })?.results
 
 	onMount(async () => {
-		console.log("Loaded result from state:", result)
 		if (!result) await goto("/results")
 	})
 </script>

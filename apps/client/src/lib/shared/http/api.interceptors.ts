@@ -1,4 +1,3 @@
-import { browser } from "$app/environment"
 import { AxiosHeaders, type AxiosError } from "axios"
 import { authService } from "$lib/auth/auth.service"
 import { sessionManager } from "$lib/shared/auth/session.manager"
@@ -12,7 +11,7 @@ let teardownInterceptors: (() => void) | null = null
 const refreshAccessToken = async (): Promise<string | null> => {
 	return refreshCoordinator.run(async () => {
 		try {
-			const tokens = await authService.refreshOrThrow()
+			const tokens = await authService.refresh()
 			sessionManager.updateTokens(tokens)
 			return tokens.accessToken
 		} catch {
@@ -78,11 +77,7 @@ export const setupApiInterceptors = () => {
 
 			if (!originalConfig) return Promise.reject(error)
 
-			if (
-				browser &&
-				shouldAttemptRefresh(status) &&
-				window.location.pathname === "/login"
-			) {
+			if (shouldAttemptRefresh(status) && window.location.pathname === "/login") {
 				return Promise.reject(error)
 			}
 

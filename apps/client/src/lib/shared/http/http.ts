@@ -1,7 +1,6 @@
 import axios, { isAxiosError } from "axios"
 import type { AxiosRequestConfig } from "axios"
 import type { AppError } from "$lib/shared/errors"
-import { ResultAsync, err, ok, type AppResult } from "$lib/shared/result"
 
 type ApiResponse<T = unknown> = {
 	code: number
@@ -87,30 +86,32 @@ const mapTransportError = (error: unknown): AppError => {
 	}
 }
 
-export const request = <T>(config: ApiRequestConfig): ResultAsync<T, AppError> =>
-	ResultAsync.fromPromise(
-		apiClient.request<ApiResponse<T>>(config),
-		mapTransportError
-	).andThen((response): AppResult<T> => {
-		if (!response || !isApiResponse(response.data)) {
-			return err<T, AppError>({
-				kind: "decode",
-				code: "invalid_envelope",
-				message: "Respuesta del servidor inválida.",
-				details: response?.data ?? null,
-			})
+export const request = <T>(config: ApiRequestConfig): Promise<T> =>
+	apiClient.request<ApiResponse<T>>(config).then(
+		(response): T => {
+			if (!isApiResponse(response.data)) {
+				throw {
+					kind: "decode",
+					code: "invalid_envelope",
+					message: "Respuesta del servidor inválida.",
+					details: response?.data ?? null,
+				} satisfies AppError
+			}
+
+			const payload = response.data
+
+			if (!payload.success) {
+				throw {
+					kind: "http",
+					status: payload.code,
+					message: payload.message,
+					details: payload.error ?? null,
+				} satisfies AppError
+			}
+
+			return payload.data as T
+		},
+		(error: unknown): never => {
+			throw mapTransportError(error)
 		}
-
-		const payload = response.data
-
-		if (!payload.success) {
-			return err<T, AppError>({
-				kind: "http",
-				status: payload.code,
-				message: payload.message,
-				details: payload.error ?? null,
-			})
-		}
-
-		return ok(payload.data as T)
-	})
+	)

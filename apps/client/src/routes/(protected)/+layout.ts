@@ -4,9 +4,9 @@ import { authStore } from "$lib/auth/auth.store.svelte"
 import { sessionManager } from "$lib/shared/auth/session.manager"
 
 export const load = async () => {
-	const bootstrapResult = await authService.bootstrapSession()
-
-	if (bootstrapResult.isErr()) {
+	try {
+		await authService.bootstrapSession()
+	} catch {
 		sessionManager.clearSession()
 	}
 

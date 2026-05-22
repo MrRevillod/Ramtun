@@ -18,7 +18,7 @@
 <section class="grid gap-3">
 	<nav class="panel-muted grid gap-2 rounded-md p-2 sm:grid-cols-4">
 		<a
-			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
+			class="action-tab flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5"
 			data-active={isQuizzes}
 			href={quizzesHref}
 		>
@@ -26,7 +26,7 @@
 			Quizzes
 		</a>
 		<a
-			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
+			class="action-tab flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5"
 			data-active={isBanks}
 			href={banksHref}
 		>
@@ -34,7 +34,7 @@
 			Bancos de preguntas
 		</a>
 		<a
-			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
+			class="action-tab flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5"
 			data-active={isMembers}
 			href={membersHref}
 		>
@@ -42,7 +42,7 @@
 			Miembros del curso
 		</a>
 		<a
-			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
+			class="action-tab flex w-full cursor-pointer items-center justify-center gap-1.5 py-2.5"
 			href="/courses"
 		>
 			<ArrowLeft size={16} aria-hidden="true" />

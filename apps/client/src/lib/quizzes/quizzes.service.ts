@@ -1,5 +1,4 @@
 import { request } from "$lib/shared/http/http"
-import { unwrapResultOrThrow, type AppResultAsync } from "$lib/shared/result"
 import type {
 	CreateQuizInput,
 	JoinQuizPreview,
@@ -7,18 +6,14 @@ import type {
 } from "$lib/quizzes/quizzes.dtos"
 
 class QuizzesService {
-	public listManaged(): AppResultAsync<Quiz[]> {
+	public listManaged(): Promise<Quiz[]> {
 		return request<Quiz[]>({
 			method: "GET",
 			url: "/quizzes/me",
 		})
 	}
 
-	public async listManagedOrThrow(): Promise<Quiz[]> {
-		return unwrapResultOrThrow(await this.listManaged())
-	}
-
-	public create(input: CreateQuizInput): AppResultAsync<Quiz> {
+	public create(input: CreateQuizInput): Promise<Quiz> {
 		return request<Quiz>({
 			method: "POST",
 			url: "/quizzes",
@@ -26,41 +21,25 @@ class QuizzesService {
 		})
 	}
 
-	public async createOrThrow(input: CreateQuizInput): Promise<Quiz> {
-		return unwrapResultOrThrow(await this.create(input))
-	}
-
-	public remove(quizId: string): AppResultAsync<void> {
+	public remove(quizId: string): Promise<void> {
 		return request<void>({
 			method: "DELETE",
 			url: `/quizzes/${quizId}`,
 		})
 	}
 
-	public async removeOrThrow(quizId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.remove(quizId))
-	}
-
-	public closeAndPublish(quizId: string): AppResultAsync<void> {
+	public closeAndPublish(quizId: string): Promise<void> {
 		return request<void>({
 			method: "POST",
 			url: `/quizzes/${quizId}/close-and-publish`,
 		})
 	}
 
-	public async closeAndPublishOrThrow(quizId: string): Promise<void> {
-		return unwrapResultOrThrow(await this.closeAndPublish(quizId))
-	}
-
-	public joinByCode(joinCode: string): AppResultAsync<JoinQuizPreview> {
+	public joinByCode(joinCode: string): Promise<JoinQuizPreview> {
 		return request<JoinQuizPreview>({
 			method: "POST",
 			url: `/quizzes/join/${joinCode}`,
 		})
-	}
-
-	public async joinByCodeOrThrow(joinCode: string): Promise<JoinQuizPreview> {
-		return unwrapResultOrThrow(await this.joinByCode(joinCode))
 	}
 }
 

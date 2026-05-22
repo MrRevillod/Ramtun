@@ -17,17 +17,17 @@
 	import { canManageUsers, isTeachingRole } from "$lib/shared/auth/permissions"
 	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { roleLabel } from "$lib/shared/labels"
 	import {
 		connectAttemptsSocket,
 		disconnectAttemptsSocket,
 	} from "$lib/shared/socket/attempts.socket"
-	import { themeStore } from "$lib/shared/theme/theme.store.svelte"
+	import { themeStore } from "$lib/shared/theme.store.svelte"
+	import { RoleValue } from "$lib/shared/value-objects/role.value"
 
 	let { children } = $props()
 
 	const logoutMutation = createMutation(() => ({
-		mutationFn: () => authService.logoutOrThrow(),
+		mutationFn: () => authService.logout(),
 		onSuccess: async () => {
 			sessionManager.clearSession()
 			await goto("/login")
@@ -44,7 +44,7 @@
 	}
 
 	const role = $derived(authStore.session?.user.role)
-	const displayRole = $derived(role ? roleLabel(role) : "")
+	const displayRole = $derived(role ? RoleValue.format(role) : "")
 	const showTeachingNav = $derived(isTeachingRole(role))
 	const showUsersNav = $derived(canManageUsers(role))
 	const isActive = (href: string) => page.url.pathname.startsWith(href)
@@ -78,7 +78,7 @@
 
 			<div class="flex w-full items-stretch gap-2 sm:w-auto">
 				<button
-					class="inline-flex size-11 items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
+					class="inline-flex size-11 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
 					type="button"
 					onclick={() => themeStore.toggle()}
 					title={themeStore.preference === "dark"
@@ -101,7 +101,7 @@
 					<p class="text-xs text-zinc-600">{displayRole}</p>
 				</div>
 				<button
-					class="inline-flex size-11 items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
+					class="inline-flex size-11 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
 					type="button"
 					onclick={handleLogout}
 					title="Cerrar sesión"

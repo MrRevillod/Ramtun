@@ -49,7 +49,6 @@
 		"katex": "^0.16.25",
 		"lucide-svelte": "^1.0.1",
 		"marked": "^17.0.4",
-		"neverthrow": "^8.2.0",
 		"runed": "^0.37.1",
 		"socket.io-client": "^4.8.1",
 		"svelte-sonner": "^1.1.0",

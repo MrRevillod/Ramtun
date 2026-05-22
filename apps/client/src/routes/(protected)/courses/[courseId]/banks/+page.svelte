@@ -23,19 +23,20 @@
 
 	const courseQuery = createQuery(() => ({
 		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.getOrThrow(data.courseId),
+		queryFn: () => coursesService.get(data.courseId),
 	}))
 
 	const banksQuery = createQuery(() => ({
 		queryKey: ["banks", data.courseId],
-		queryFn: () => banksService.listByCourseOrThrow(data.courseId),
+		queryFn: () => banksService.listByCourse(data.courseId),
 	}))
 
 	let showCreateModal = $state(false)
 	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
 	const uploadBankMutation = createMutation(() => ({
-		mutationFn: (input: CreateQuestionBankInput) => banksService.createOrThrow(input),
+		mutationFn: (input: CreateQuestionBankInput) =>
+			banksService.create(input),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
@@ -43,7 +44,7 @@
 	}))
 
 	const deleteBankMutation = createMutation(() => ({
-		mutationFn: (bankId: string) => banksService.softDeleteOrThrow(bankId),
+		mutationFn: (bankId: string) => banksService.softDelete(bankId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 			bankToDelete = null

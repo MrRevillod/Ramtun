@@ -1,13 +1,12 @@
-import { err, ok, unwrapResultOrThrow, type AppResult } from "$lib/shared/result"
 import { authStore } from "$lib/auth/auth.store.svelte"
 import { sessionManager } from "$lib/shared/auth/session.manager"
 import { request } from "$lib/shared/http/http"
 import type { AuthTokens, LoginInput, LoginResponse } from "$lib/auth/auth.dtos"
 
 class AuthService {
-	#bootstrapPromise: Promise<AppResult<void>> | null = null
+	#bootstrapPromise: Promise<void> | null = null
 
-	public async login(input: LoginInput): Promise<AppResult<LoginResponse>> {
+	public login(input: LoginInput): Promise<LoginResponse> {
 		return request<LoginResponse>({
 			method: "POST",
 			url: "/auth/login",
@@ -17,22 +16,18 @@ class AuthService {
 		})
 	}
 
-	public async loginOrThrow(input: LoginInput): Promise<LoginResponse> {
-		return unwrapResultOrThrow(await this.login(input))
-	}
-
-	public async refresh(): Promise<AppResult<AuthTokens>> {
+	public async refresh(): Promise<AuthTokens> {
 		const refreshToken = sessionManager.getRefreshToken()
 
 		if (!refreshToken) {
-			return err({
+			throw {
 				kind: "auth",
 				code: "missing_refresh_token",
 				message: "No se encontró el token de refresco de la sesión.",
-			})
+			} as const
 		}
 
-		const refreshResult = await request<AuthTokens>({
+		const tokens = await request<AuthTokens>({
 			method: "POST",
 			url: "/auth/refresh",
 			data: null,
@@ -43,29 +38,23 @@ class AuthService {
 			skipRefresh: true,
 		})
 
-		if (refreshResult.isErr()) return err(refreshResult.error)
-
 		if (!sessionManager.getUser()) {
-			return err({
+			throw {
 				kind: "auth",
 				code: "invalid_session",
 				message: "No es posible refrescar tokens sin un usuario autenticado.",
-			})
+			} as const
 		}
 
-		return ok(refreshResult.value)
+		return tokens
 	}
 
-	public async refreshOrThrow(): Promise<AuthTokens> {
-		return unwrapResultOrThrow(await this.refresh())
-	}
-
-	public async logout(): Promise<AppResult<void>> {
+	public async logout(): Promise<void> {
 		const accessToken = sessionManager.getAccessToken()
 
-		if (!accessToken) return ok(undefined)
+		if (!accessToken) return
 
-		const logoutResult = await request<null>({
+		await request<null>({
 			method: "POST",
 			url: "/auth/logout",
 			data: null,
@@ -74,26 +63,12 @@ class AuthService {
 			},
 			skipRefresh: true,
 		})
-
-		if (logoutResult.isErr()) {
-			return err(logoutResult.error)
-		}
-
-		return ok(undefined)
 	}
 
-	public async logoutOrThrow(): Promise<void> {
-		return unwrapResultOrThrow(await this.logout())
-	}
+	public async bootstrapSession(): Promise<void> {
+		if (authStore.isReady) return
 
-	public async bootstrapSession(): Promise<AppResult<void>> {
-		if (authStore.isReady) {
-			return ok(undefined)
-		}
-
-		if (this.#bootstrapPromise) {
-			return this.#bootstrapPromise
-		}
+		if (this.#bootstrapPromise) return this.#bootstrapPromise
 
 		this.#bootstrapPromise = (async () => {
 			authStore.isBootstrapping = true
@@ -101,24 +76,22 @@ class AuthService {
 			if (!authStore.refreshToken) {
 				authStore.isReady = true
 				authStore.isBootstrapping = false
-				return ok(undefined)
+				return
 			}
 
-			const refreshResult = await this.refresh()
-
-			if (refreshResult.isOk()) {
-				sessionManager.updateTokens(refreshResult.value)
+			try {
+				const tokens = await this.refresh()
+				sessionManager.updateTokens(tokens)
+			} catch {
+				// Sesión no existe — no es un error
 			}
 
 			authStore.isReady = true
 			authStore.isBootstrapping = false
-
-			return refreshResult.isErr() ? err(refreshResult.error) : ok(undefined)
 		})()
 
 		const result = await this.#bootstrapPromise
 		this.#bootstrapPromise = null
-
 		return result
 	}
 }

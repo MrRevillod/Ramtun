@@ -5,7 +5,10 @@
 	import { createMutation } from "@tanstack/svelte-query"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { joinCodeFormSchema, type JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+	import {
+		joinCodeFormSchema,
+		type JoinCodeFormData,
+	} from "$lib/attempts/attempts.dtos"
 	import { createForm, Field, Form } from "@formisch/svelte"
 
 	const form = createForm({
@@ -14,7 +17,7 @@
 	})
 
 	const joinMutation = createMutation(() => ({
-		mutationFn: (code: string) => quizzesService.joinByCodeOrThrow(code),
+		mutationFn: (code: string) => quizzesService.joinByCode(code),
 		onSuccess: async (_, code) => {
 			await goto(`/join/lobby?joinCode=${encodeURIComponent(code)}`)
 		},
@@ -62,7 +65,7 @@
 				</div>
 
 				<button
-					class="btn-primary flex h-11 shrink-0 items-center gap-1.5 px-3 text-xs sm:text-sm"
+					class="btn-primary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
 					type="submit"
 					disabled={joinMutation.isPending}
 				>
