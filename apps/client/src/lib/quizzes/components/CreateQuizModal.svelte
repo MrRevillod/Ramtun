@@ -54,6 +54,11 @@
 	})
 
 	let selectedBankIds = $state<string[]>([])
+	let certaintyConfig = $state({
+		low: { correct: 1, incorrect: 0 },
+		medium: { correct: 2, incorrect: -1 },
+		high: { correct: 3, incorrect: -2 },
+	})
 
 	const toggleBank = (bankId: string, selected: boolean) => {
 		selectedBankIds = selected
@@ -70,14 +75,6 @@
 
 			const isCertainty = output.kind === "certainty"
 
-			const certaintyConfig = isCertainty
-				? {
-						low: { correct: 1, incorrect: 0 },
-						medium: { correct: 2, incorrect: -1 },
-						high: { correct: 3, incorrect: -2 },
-					}
-				: null
-
 			const created = await mutation.mutateAsync({
 				courseId,
 				title: output.title,
@@ -86,7 +83,7 @@
 				attemptDurationMinutes: output.attemptDurationMinutes,
 				questionCount: output.questionCount,
 				bankIds: selectedBankIds,
-				certaintyConfig,
+				certaintyConfig: isCertainty ? certaintyConfig : null,
 			})
 
 			selectedBankIds = []
@@ -99,6 +96,11 @@
 					questionCount: "10",
 				},
 			})
+			certaintyConfig = {
+				low: { correct: 1, incorrect: 0 },
+				medium: { correct: 2, incorrect: -1 },
+				high: { correct: 3, incorrect: -2 },
+			}
 			onsuccess(created)
 		} catch (err) {
 			toast.error(getErrorMessage(err))
@@ -209,6 +211,147 @@
 					<span class="text-sm text-zinc-800">Bancos fuente</span>
 					<BankSelector {courseId} {selectedBankIds} onchange={toggleBank} />
 				</div>
+
+				{#if form.state?.input?.kind === "certainty"}
+					<div class="grid gap-3">
+						<div class="flex items-center justify-between">
+							<span class="text-sm text-zinc-800">Tabla de certeza</span>
+							<span class="text-xs text-zinc-500">
+								Puntaje por respuesta
+							</span>
+						</div>
+						<div class="overflow-x-auto">
+							<table class="w-full border-collapse text-xs">
+								<thead class="bg-zinc-100/90 text-zinc-700">
+									<tr>
+										<th class="border border-zinc-300 px-2 py-1.5 text-left">
+											Nivel
+										</th>
+										<th class="border border-zinc-300 px-2 py-1.5 text-left">
+											Correcta
+										</th>
+										<th class="border border-zinc-300 px-2 py-1.5 text-left">
+											Incorrecta
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											Baja
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.low.correct}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														low: {
+															...certaintyConfig.low,
+															correct: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.low.incorrect}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														low: {
+															...certaintyConfig.low,
+															incorrect: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+									</tr>
+									<tr>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											Media
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.medium.correct}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														medium: {
+															...certaintyConfig.medium,
+															correct: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.medium.incorrect}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														medium: {
+															...certaintyConfig.medium,
+															incorrect: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+									</tr>
+									<tr>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											Alta
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.high.correct}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														high: {
+															...certaintyConfig.high,
+															correct: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+										<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<input
+												type="number"
+												class="input-base h-8"
+												value={certaintyConfig.high.incorrect}
+												oninput={e => {
+													certaintyConfig = {
+														...certaintyConfig,
+														high: {
+															...certaintyConfig.high,
+															incorrect: Number((e.target as HTMLInputElement).value),
+														},
+													}
+												}}
+											/>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				{/if}
 
 				<div class="flex justify-end gap-2">
 					<button class="btn-tertiary" type="button" onclick={onclose}

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { createMutation } from "@tanstack/svelte-query"
-	import { browser } from "$app/environment"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
 	import {
@@ -32,12 +30,12 @@
 		mutationFn: () => authService.logoutOrThrow(),
 		onSuccess: async () => {
 			sessionManager.clearSession()
-			await goto(resolve("/login"))
+			await goto("/login")
 		},
 		onError: error => {
 			toast.error(getErrorMessage(error))
 			sessionManager.clearSession()
-			void goto(resolve("/login"))
+			void goto("/login")
 		},
 	}))
 
@@ -53,8 +51,6 @@
 	const isAuthenticated = $derived(authStore.isAuthenticated())
 
 	$effect(() => {
-		if (!browser) return
-
 		if (!isAuthenticated) {
 			disconnectAttemptsSocket()
 			return
@@ -85,11 +81,11 @@
 					class="inline-flex size-11 items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
 					type="button"
 					onclick={() => themeStore.toggle()}
-					title={themeStore.resolved === "dark"
+					title={themeStore.preference === "dark"
 						? "Cambiar a modo claro"
 						: "Cambiar a modo oscuro"}
 				>
-					{#if themeStore.resolved === "dark"}
+					{#if themeStore.preference === "dark"}
 						<Sun size={16} aria-hidden="true" />
 					{:else}
 						<Moon size={16} aria-hidden="true" />
@@ -97,7 +93,7 @@
 				</button>
 
 				<div
-					class="flex h-11 min-w-0 flex-1 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-[14rem] sm:flex-none sm:text-right"
+					class="flex h-11 min-w-0 flex-1 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-56 sm:flex-none sm:text-right"
 				>
 					<p class="truncate text-sm font-semibold text-zinc-800">
 						{authStore.session?.user.name}
@@ -120,7 +116,7 @@
 		<a
 			class="action-tab flex-1 justify-center"
 			data-active={isActive("/join")}
-			href={resolve("/join")}
+			href="/join"
 		>
 			<DoorOpen size={16} aria-hidden="true" />
 			Unirse
@@ -128,7 +124,7 @@
 		<a
 			class="action-tab flex-1 justify-center"
 			data-active={isActive("/results")}
-			href={resolve("/results")}
+			href="/results"
 		>
 			<ClipboardList size={16} aria-hidden="true" />
 			Resultados
@@ -137,7 +133,7 @@
 			<a
 				class="action-tab flex-1 justify-center"
 				data-active={isActive("/courses")}
-				href={resolve("/courses")}
+				href="/courses"
 			>
 				<Layers size={16} aria-hidden="true" />
 				Cursos
@@ -147,7 +143,7 @@
 			<a
 				class="action-tab flex-1 justify-center"
 				data-active={isActive("/admin/users")}
-				href={resolve("/admin/users")}
+				href="/admin/users"
 			>
 				<Users size={16} aria-hidden="true" />
 				Usuarios

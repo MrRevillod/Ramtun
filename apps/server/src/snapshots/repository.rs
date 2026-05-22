@@ -45,21 +45,17 @@ impl SnapshotRepository {
         quiz_id: &QuizId,
         question_id: &Uuid,
     ) -> AppResult<Option<Question>> {
-        let question = sqlx::query_scalar::<_, Question>(
-            "SELECT (q).id,
-                    (q).prompt,
-                    (q).options,
-                    (q).answer_index,
-                    (q).images
-             FROM quizzes qu
-             INNER JOIN question_bank_snapshots qbs ON qbs.id = qu.snapshot_id
-             CROSS JOIN LATERAL unnest(qbs.questions) AS q
-             WHERE qu.id = $1
-               AND qu.deleted_at IS NULL
-               AND qbs.deleted_at IS NULL
-               AND (q).id = $2
-             LIMIT 1",
-        )
+		let question = sqlx::query_scalar::<_, Question>(
+			"SELECT q
+			 FROM quizzes qu
+			 INNER JOIN question_bank_snapshots qbs ON qbs.id = qu.snapshot_id
+			 CROSS JOIN LATERAL unnest(qbs.questions) AS q
+			 WHERE qu.id = $1
+			   AND qu.deleted_at IS NULL
+			   AND qbs.deleted_at IS NULL
+			   AND (q).id = $2
+			 LIMIT 1",
+		)
         .bind(quiz_id)
         .bind(question_id)
         .fetch_optional(self.db.get_pool())

@@ -1,15 +1,13 @@
 import { browser } from "$app/environment"
 
-export type ThemePreference = "light" | "dark"
-
 const STORAGE_KEY = "ui-theme"
+
+export type ThemePreference = "light" | "dark"
 
 class ThemeStore {
 	public preference = $state<ThemePreference>("light")
 
 	public init() {
-		if (!browser) return
-
 		const saved = localStorage.getItem(STORAGE_KEY)
 
 		if (!saved || (saved !== "light" && saved !== "dark")) {

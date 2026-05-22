@@ -19,8 +19,10 @@
 	const byJoinCodeMutation = createMutation(() => ({
 		mutationFn: (joinCode: string) =>
 			attemptsService.getResultsByJoinCodeOrThrow(joinCode),
-		onSuccess: async (_, joinCode) => {
-			await goto(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`)
+		onSuccess: async (results, joinCode) => {
+			await goto(`/results/view?joinCode=${encodeURIComponent(joinCode)}`, {
+				state: { results },
+			})
 		},
 		onError: error => {
 			toast.error(getErrorMessage(error))

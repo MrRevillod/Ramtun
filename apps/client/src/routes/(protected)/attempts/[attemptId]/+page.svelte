@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { browser } from "$app/environment"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { onDestroy } from "svelte"
@@ -27,19 +26,20 @@
 	let showSubmitModal = $state(false)
 	let autoSubmitting = $state(false)
 	let timerId: ReturnType<typeof setInterval> | null = null
+	const debugSave = true
 
 	const loadSession = async () => {
 		if (!browser) return
 		const raw = localStorage.getItem("last-attempt-session")
 		if (!raw) {
-			await goto(resolve("/join"))
+			await goto("/join")
 			return
 		}
 
 		try {
 			const parsed = JSON.parse(raw) as AttemptSession
 			if (parsed.attempt.attemptId !== data.attemptId) {
-				await goto(resolve("/join"))
+				await goto("/join")
 				return
 			}
 
@@ -66,6 +66,39 @@
 				answers,
 			})
 		)
+	}
+
+	const applySessionUpdate = (next: {
+		answers?: Record<string, AnswerState>
+		currentIndex?: number
+	}) => {
+		if (next.answers) answers = next.answers
+		if (next.currentIndex !== undefined) currentIndex = next.currentIndex
+		persistSession()
+	}
+
+	const isCertaintyQuiz = () => session?.preview.kind === "certainty"
+	const isAnswered = (answer?: AnswerState | null) =>
+		answer?.answerIndex !== undefined
+	const isCertaintyComplete = (answer?: AnswerState | null) =>
+		!!answer && answer.certaintyLevel !== null
+	const isAnswerComplete = (answer?: AnswerState | null) => {
+		if (!isAnswered(answer)) return false
+		if (isCertaintyQuiz()) return isCertaintyComplete(answer)
+		return true
+	}
+	const firstUnansweredIndex = () => {
+		if (!session) return -1
+		return session.attempt.questions.findIndex(
+			q => answers[q.id]?.answerIndex === undefined
+		)
+	}
+	const firstCertaintyGapIndex = () => {
+		if (!session || !isCertaintyQuiz()) return -1
+		return session.attempt.questions.findIndex(q => {
+			const answer = answers[q.id]
+			return !!answer && answer.certaintyLevel === null
+		})
 	}
 
 	const clearTimer = () => {
@@ -130,10 +163,19 @@
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
 
-	const runSave = async (questionId: string) => {
+	const runSave = async (questionId: string, reason: string) => {
 		if (!session) return
 		const answer = answers[questionId]
-		if (!answer) return
+		if (saveAnswerMutation.isPending) return
+		if (!isAnswerComplete(answer)) return
+		if (debugSave) {
+			console.debug("[attempt] saveAnswer", {
+				reason,
+				questionId,
+				answerIndex: answer?.answerIndex,
+				certaintyLevel: answer?.certaintyLevel,
+			})
+		}
 
 		try {
 			await saveAnswerMutation.mutateAsync({
@@ -148,16 +190,18 @@
 		}
 	}
 
-	const selectOption = async (questionId: string, answerIndex: number) => {
+	const selectOption = (questionId: string, answerIndex: number) => {
+		if (!session) return
 		const prev = answers[questionId]
-		answers = {
-			...answers,
-			[questionId]: {
-				answerIndex,
-				certaintyLevel: prev?.certaintyLevel ?? null,
-			},
+		const nextAnswer = {
+			answerIndex,
+			certaintyLevel: prev?.certaintyLevel ?? null,
 		}
-		await runSave(questionId)
+		const nextAnswers = {
+			...answers,
+			[questionId]: nextAnswer,
+		}
+		applySessionUpdate({ answers: nextAnswers })
 	}
 
 	const selectCertainty = async (questionId: string, certainty: CertaintyLevel) => {
@@ -166,36 +210,11 @@
 			toast.info("Primero selecciona una alternativa.")
 			return
 		}
-		answers = {
+		const nextAnswers = {
 			...answers,
 			[questionId]: { answerIndex: prev.answerIndex, certaintyLevel: certainty },
 		}
-		await runSave(questionId)
-	}
-
-	const hasCertaintyGap = () => {
-		if (!session || session.preview.kind !== "certainty") return false
-		return session.attempt.questions.some(question => {
-			const answer = answers[question.id]
-			if (!answer) return false
-			return answer.certaintyLevel === null
-		})
-	}
-
-	const firstCertaintyGapIndex = () => {
-		if (!session || session.preview.kind !== "certainty") return -1
-		return session.attempt.questions.findIndex(question => {
-			const answer = answers[question.id]
-			if (!answer) return false
-			return answer.certaintyLevel === null
-		})
-	}
-
-	const firstUnansweredIndex = () => {
-		if (!session) return -1
-		return session.attempt.questions.findIndex(
-			q => answers[q.id]?.answerIndex === undefined
-		)
+		applySessionUpdate({ answers: nextAnswers })
 	}
 
 	const submitAttempt = async (force = false) => {
@@ -203,19 +222,21 @@
 		if (!force) {
 			const unansweredIdx = firstUnansweredIndex()
 			if (unansweredIdx >= 0) {
-				currentIndex = unansweredIdx
-				persistSession()
+				applySessionUpdate({ currentIndex: unansweredIdx })
 				toast.error("Debes responder todas las preguntas antes de enviar.")
 				return
 			}
-			if (hasCertaintyGap()) {
+			if (isCertaintyQuiz()) {
 				const gapIndex = firstCertaintyGapIndex()
 				if (gapIndex >= 0) {
-					currentIndex = gapIndex
-					persistSession()
+					applySessionUpdate({ currentIndex: gapIndex })
 				}
-				toast.error("Te falta seleccionar nivel de certeza en una o más preguntas.")
-				return
+				if (gapIndex >= 0) {
+					toast.error(
+						"Te falta seleccionar nivel de certeza en una o más preguntas."
+					)
+					return
+				}
 			}
 		}
 		await submitMutation.mutateAsync(session.attempt.attemptId)
@@ -273,24 +294,26 @@
 				isLast={currentIndex >= totalQuestions - 1}
 				isPending={submitMutation.isPending}
 				{autoSubmitting}
-				onnavigate={index => {
+				onnavigate={async index => {
 					const currentQuestionId = session!.attempt.questions[currentIndex].id
 					const currentAnswer = answers[currentQuestionId]
-					if (currentAnswer?.answerIndex === undefined) {
+					if (!isAnswered(currentAnswer)) {
 						toast.error("Debes seleccionar una alternativa antes de continuar.")
 						return
 					}
-					if (
-						session!.preview.kind === "certainty" &&
-						!currentAnswer.certaintyLevel
-					) {
+					if (!isAnswerComplete(currentAnswer)) {
 						toast.error("Debes seleccionar un nivel de certeza antes de continuar.")
 						return
 					}
-					currentIndex = index
-					persistSession()
+					await runSave(currentQuestionId, "next")
+					applySessionUpdate({ currentIndex: index })
 				}}
-				onsubmit={() => submitAttempt()}
+				onsubmit={async () => {
+					if (currentQuestion) {
+						await runSave(currentQuestion.id, "submit")
+					}
+					await submitAttempt()
+				}}
 			/>
 		</section>
 	</section>
@@ -300,6 +323,5 @@
 
 <SubmitSuccessModal
 	open={showSubmitModal}
-	joinCode={session?.joinCode ?? ""}
 	onautoclose={() => (showSubmitModal = false)}
 />

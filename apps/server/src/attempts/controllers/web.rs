@@ -54,7 +54,17 @@ impl AttemptsController {
         let input = req.body_validator::<SaveAttemptAnswerDto>()?;
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        self.attempts.save_answer(user.id, input).await?;
+        tracing::info!(
+            "Saving answer for attempt {}, question {}, user {}",
+            input.attempt_id,
+            input.question_id,
+            user.id
+        );
+
+        self.attempts
+            .save_answer(user.id, input)
+            .await
+            .inspect_err(|e| tracing::error!("Failed to save attempt answer: {:?}", e))?;
 
         Ok(JsonResponse::Ok())
     }

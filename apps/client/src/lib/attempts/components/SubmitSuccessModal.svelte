@@ -6,11 +6,10 @@
 
 	interface SubmitSuccessModalProps {
 		open: boolean
-		joinCode: string
 		onautoclose: () => void
 	}
 
-	let { open, joinCode, onautoclose }: SubmitSuccessModalProps = $props()
+	let { open, onautoclose }: SubmitSuccessModalProps = $props()
 </script>
 
 {#if open}
@@ -48,11 +47,10 @@
 				<button
 					class="btn-primary flex items-center justify-center gap-1.5"
 					type="button"
-					onclick={() =>
-						goto(resolve(`/results/lobby?joinCode=${encodeURIComponent(joinCode)}`))}
+					onclick={() => goto("/results")}
 				>
 					<ArrowUpRight size={16} aria-hidden="true" />
-					Ir a sala de espera de resultados
+					Ir a Resultados
 				</button>
 				<button
 					class="btn-secondary"
