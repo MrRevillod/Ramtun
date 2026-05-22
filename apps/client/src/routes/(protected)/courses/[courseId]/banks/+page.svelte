@@ -12,6 +12,7 @@
 	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
+	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
 
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
@@ -34,7 +35,7 @@
 	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
 	const uploadBankMutation = createMutation(() => ({
-		mutationFn: (input) => banksService.createOrThrow(input),
+		mutationFn: (input: CreateQuestionBankInput) => banksService.createOrThrow(input),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},

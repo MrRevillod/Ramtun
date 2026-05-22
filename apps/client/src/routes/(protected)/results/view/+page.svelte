@@ -5,7 +5,7 @@
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 	import { onMount } from "svelte"
 
-	let result = page.state?.results as AttemptResult
+	let result = (page.state as { results?: AttemptResult })?.results
 
 	onMount(async () => {
 		console.log("Loaded result from state:", result)
@@ -13,4 +13,6 @@
 	})
 </script>
 
-<AttemptResultReview {result} />
+{#if result}
+	<AttemptResultReview {result} />
+{/if}

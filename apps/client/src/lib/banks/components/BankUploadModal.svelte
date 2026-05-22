@@ -7,20 +7,15 @@
 	import CodeBlock from "$lib/shared/components/CodeBlock.svelte"
 	import { toast } from "svelte-sonner"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
+	import type { CreateMutationResult } from "@tanstack/svelte-query"
 
 	interface BankUploadModalProps {
 		open: boolean
 		courseId: string
 		onclose: () => void
 		onsuccess: () => void
-		mutation: {
-			isPending: boolean
-			mutateAsync: (payload: {
-				courseId: string
-				name: string
-				questions: QuestionInput[]
-			}) => Promise<unknown>
-		}
+		mutation: CreateMutationResult<void, Error, CreateQuestionBankInput, unknown>
 	}
 
 	let { open, courseId, onclose, onsuccess, mutation }: BankUploadModalProps =

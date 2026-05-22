@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { Users, Library, FileText, ArrowLeft } from "lucide-svelte"
 	import { page } from "$app/state"
-	import { resolve } from "$app/paths"
+	import { Users, Library, FileText, ArrowLeft } from "lucide-svelte"
 
 	let { children, data } = $props()
 
@@ -21,7 +20,7 @@
 		<a
 			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
 			data-active={isQuizzes}
-			href={resolve(quizzesHref)}
+			href={quizzesHref}
 		>
 			<FileText size={16} aria-hidden="true" />
 			Quizzes
@@ -29,7 +28,7 @@
 		<a
 			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
 			data-active={isBanks}
-			href={resolve(banksHref)}
+			href={banksHref}
 		>
 			<Library size={16} aria-hidden="true" />
 			Bancos de preguntas
@@ -37,14 +36,14 @@
 		<a
 			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
 			data-active={isMembers}
-			href={resolve(membersHref)}
+			href={membersHref}
 		>
 			<Users size={16} aria-hidden="true" />
 			Miembros del curso
 		</a>
 		<a
 			class="action-tab flex w-full items-center justify-center gap-1.5 py-2.5"
-			href={resolve("/courses")}
+			href="/courses"
 		>
 			<ArrowLeft size={16} aria-hidden="true" />
 			Volver al listado de cursos

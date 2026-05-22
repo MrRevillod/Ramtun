@@ -8,16 +8,23 @@
 		reset,
 	} from "@formisch/svelte"
 	import { Plus, RefreshCw, X } from "lucide-svelte"
-	import { createCourseSchema } from "$lib/courses/courses.dtos"
+	import { createCourseSchema, type CourseView } from "$lib/courses/courses.dtos"
+	import type { CreateMutationResult } from "@tanstack/svelte-query"
 
 	interface CreateCourseModalProps {
 		open: boolean
 		onclose: () => void
 		onsuccess: (created: { code: string }) => void
-		mutation: {
-			isPending: boolean
-			mutateAsync: (input: object) => Promise<{ code: string }>
-		}
+		mutation: CreateMutationResult<
+			CourseView,
+			Error,
+			{
+				name: string
+				code: string
+				year: number
+			},
+			unknown
+		>
 	}
 
 	let { open, onclose, onsuccess, mutation }: CreateCourseModalProps = $props()
