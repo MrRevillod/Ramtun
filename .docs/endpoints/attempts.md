@@ -9,15 +9,14 @@
   - `courseId: uuid`
   - `quizId: uuid`
 - Response `data`: `AttemptListItemView[]`
-  - `{ attemptId, studentId, quizId, startedAt, expiresAt, submittedAt, resultsViewedAt, score, grade }`
+  - `{ attemptId, studentId, userName, quizId, startedAt, expiresAt, submittedAt, resultsViewedAt, score, grade }`
 
-## POST `/attempts/course/{courseId}/quiz/{quizId}`
+## POST `/attempts/quiz/{quizId}`
 - Summary: Initialize an attempt for current user.
 - Auth: Bearer token required.
 - Roles (AuthzAction::AttemptInitialize): `admin`, `func`, `assistant`, `student`.
 - Policy: quiz must exist, started, not closed, and user must not have a previous attempt.
 - Path params:
-  - `courseId: uuid`
   - `quizId: uuid`
 - Body: none.
 - Response `data`: `AttemptView`
@@ -57,17 +56,26 @@
 - Response `data`: `AttemptSubmitView`
   - `{ attemptId, quizId, submittedAt }`
 
-## GET `/attempts/{attemptId}/results`
-- Summary: View evaluated attempt result.
+## GET `/attempts/join/{joinCode}/results/me`
+- Summary: View own attempt result by join code (student-facing).
 - Auth: Bearer token required.
-- Roles (AuthzAction::AttemptViewResults): `admin`, `func`, `assistant`, `student`.
-- Policy: attempt must belong to current user and must be submitted.
+- Roles (AuthzAction::QuizViewAttemptResultByCode): `admin`, `func`, `assistant`, `student`.
+- Policy: student can only view after quiz results are published.
+- Path params:
+  - `joinCode: string`
+- Response `data`: `AttemptResultView`
+  - `{ attemptId, studentId, userName, quizId, submittedAt, grade, score, maxScore, resultsViewedAt, questions }`
+  - `questions[]`: `{ questionId, question, options, images, answerIndex, correctAnswerIndex, certaintyLevel, isCorrect, awardedPoints }`
+
+## GET `/attempts/{attemptId}/results/managed`
+- Summary: View evaluated attempt result (management view).
+- Auth: Bearer token required.
+- Roles (AuthzAction::AttemptViewResultsManaged): `admin`, `func`, `assistant`.
+- Policy: requester must be course manager.
 - Path params:
   - `attemptId: uuid`
-- Preconditions:
-  - quiz results must be published.
 - Response `data`: `AttemptResultView`
-  - `{ attemptId, quizId, submittedAt, grade, score, maxScore, resultsViewedAt, questions }`
+  - `{ attemptId, studentId, userName, quizId, submittedAt, grade, score, maxScore, resultsViewedAt, questions }`
   - `questions[]`: `{ questionId, question, options, images, answerIndex, correctAnswerIndex, certaintyLevel, isCorrect, awardedPoints }`
 
 ## Common Domain Errors
