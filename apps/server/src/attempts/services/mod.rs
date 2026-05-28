@@ -279,6 +279,10 @@ impl AttemptsService {
             .await?
             .ok_or(AttemptError::NoActiveAttempts)?;
 
+        if attempt.results_viewed_at.is_some() {
+            return Err(AttemptError::ResultsAlreadyViewed)?;
+        }
+
         self.view_results(attempt.id, user).await
     }
 

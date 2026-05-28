@@ -73,4 +73,11 @@ pub enum AttemptError {
     #[http(code = 409, message = "No tienes intentos en este quiz")]
     #[error("No active attempts for quiz")]
     NoActiveAttempts,
+
+    #[http(
+        code = 403,
+        message = "Ya viste los resultados de este intento. Solo puedes ver los resultados una vez"
+    )]
+    #[error("Results have already been viewed for this attempt")]
+    ResultsAlreadyViewed,
 }

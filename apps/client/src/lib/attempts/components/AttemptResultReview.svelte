@@ -141,7 +141,7 @@
 									<span
 										class="inline-flex h-6 min-w-16 shrink-0 items-center justify-center rounded-sm border border-blue-500 bg-blue-50 px-2 text-xs font-semibold text-blue-800"
 									>
-										Tu selección
+										Alternativa seleccionada
 									</span>
 								{/if}
 							</div>

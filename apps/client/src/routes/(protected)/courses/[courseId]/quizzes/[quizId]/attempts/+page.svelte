@@ -1,16 +1,15 @@
 <script lang="ts">
+	import { goto } from "$app/navigation"
+	import { resolve } from "$app/paths"
 	import { createQuery } from "@tanstack/svelte-query"
-	import { toast } from "svelte-sonner"
-	import { Eye, X } from "lucide-svelte"
+	import { Eye } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import {
 		disconnectAttemptsSocket,
 		onAttemptsSubmit,
 	} from "$lib/shared/socket/attempts.socket"
-	import type { AttemptListItem, AttemptResult } from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
-	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 
 	let { data } = $props()
@@ -20,34 +19,12 @@
 		queryFn: () => attemptsService.listAttempts(data.courseId, data.quizId),
 	}))
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	let _selectedAttempt = $state<AttemptListItem | null>(null)
-	let showDetailModal = $state(false)
-	let detailResult = $state<AttemptResult | null>(null)
-	let detailLoading = $state(false)
-
-	const openDetail = async (attempt: AttemptListItem) => {
-		_selectedAttempt = attempt
-		showDetailModal = true
-		detailLoading = true
-		detailResult = null
-
-		try {
-			detailResult = await attemptsService.getAttemptResultsManaged(
-				attempt.attemptId
+	const viewAttempt = (attemptId: string) => {
+		void goto(
+			resolve(
+				`/courses/${data.courseId}/quizzes/${data.quizId}/attempts/${attemptId}`
 			)
-		} catch (error) {
-			toast.error(getErrorMessage(error))
-		} finally {
-			detailLoading = false
-		}
-	}
-
-	const closeDetail = () => {
-		showDetailModal = false
-		_selectedAttempt = null
-		detailResult = null
-		detailLoading = false
+		)
 	}
 
 	$effect(() => {
@@ -99,7 +76,7 @@
 								class={"table-row " +
 									(attempt.submittedAt ? "row-hover cursor-pointer" : "")}
 								onclick={() => {
-									if (attempt.submittedAt) void openDetail(attempt)
+									if (attempt.submittedAt) viewAttempt(attempt.attemptId)
 								}}
 							>
 								<td class="px-3 py-2 font-medium text-zinc-900"
@@ -125,7 +102,7 @@
 										disabled={!attempt.submittedAt}
 										onclick={e => {
 											e.stopPropagation()
-											if (attempt.submittedAt) void openDetail(attempt)
+											if (attempt.submittedAt) viewAttempt(attempt.attemptId)
 										}}
 									>
 										<Eye size={15} aria-hidden="true" />
@@ -140,39 +117,3 @@
 	</section>
 </section>
 
-{#if showDetailModal}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onclick={closeDetail}
-		onkeydown={e => {
-			if (e.key === "Escape") closeDetail()
-		}}
-	>
-		<div
-			class="panel-elevated max-h-[85vh] w-full max-w-3xl overflow-y-auto p-6"
-			role="presentation"
-			tabindex="-1"
-			onclick={e => {
-				e.stopPropagation()
-			}}
-		>
-			<div class="mb-4 flex items-center justify-between">
-				<h3 class="m-0 text-lg text-black">Detalle del intento</h3>
-				<button class="btn-tertiary p-1" type="button" onclick={closeDetail}>
-					<X size={18} aria-hidden="true" />
-				</button>
-			</div>
-
-			{#if detailLoading}
-				<p class="text-zinc-600">Cargando detalle...</p>
-			{:else if detailResult}
-				<AttemptResultReview result={detailResult} />
-			{:else}
-				<p class="text-red-700">No se pudo cargar el detalle del intento.</p>
-			{/if}
-		</div>
-	</div>
-{/if}

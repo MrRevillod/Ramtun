@@ -62,7 +62,6 @@ export type Quiz = {
 	certaintyTable: CertaintyTable | null
 	attemptDurationMinutes: number
 	startsAt: string
-	closedAt: string | null
 	resultsPublishedAt: string | null
 	createdAt: string
 	course: QuizCourseSummary

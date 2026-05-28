@@ -148,7 +148,7 @@
 									>{QuizKindValue.format(quiz.kind)}</td
 								>
 								<td class="px-3 py-2 text-zinc-700">
-									<QuizStatusBadge closedAt={quiz.closedAt} />
+									<QuizStatusBadge resultsPublishedAt={quiz.resultsPublishedAt} />
 								</td>
 								<td class="px-3 py-2 text-zinc-700">
 									<button
@@ -184,7 +184,7 @@
 													e.stopPropagation()
 													closeAndPublishMutation.mutate(quiz.id)
 												}}
-												disabled={isActionPending || !!quiz.closedAt}
+												disabled={isActionPending || !!quiz.resultsPublishedAt}
 											>
 												<CircleStop size={15} aria-hidden="true" /></button
 											>

@@ -2,13 +2,13 @@
 	import { CircleStop, AlertCircle } from "lucide-svelte"
 
 	interface QuizStatusBadgeProps {
-		closedAt: string | null
+		resultsPublishedAt: string | null
 	}
 
-	let { closedAt }: QuizStatusBadgeProps = $props()
+	let { resultsPublishedAt }: QuizStatusBadgeProps = $props()
 </script>
 
-{#if closedAt}
+{#if resultsPublishedAt}
 	<span
 		class="inline-flex items-center gap-1 rounded-[4px] bg-zinc-900 px-2 py-1 text-xs text-white"
 	>

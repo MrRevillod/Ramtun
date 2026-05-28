@@ -1,5 +1,6 @@
 @import url("https://fonts.cdnfonts.com/css/palatino");
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
 	--paper: #f8f8f6;
