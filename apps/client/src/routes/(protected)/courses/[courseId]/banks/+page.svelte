@@ -35,8 +35,7 @@
 	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
 	const uploadBankMutation = createMutation(() => ({
-		mutationFn: (input: CreateQuestionBankInput) =>
-			banksService.create(input),
+		mutationFn: (input: CreateQuestionBankInput) => banksService.create(input),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},

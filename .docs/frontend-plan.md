@@ -72,14 +72,14 @@ Regla: todas las vistas nuevas deben usar estos bloques antes de crear variantes
 
 ## 4.2 Roles esperados
 
-- `student`: join + attempt + results
-- `assistant`: student + courses/members/banks/quizzes/attempts
-- `func`: assistant + admin/users + delete course
-- `admin`: full access
+- `student`: join + attempt + results + courses if member
+- `func`: student + courses/members/banks/quizzes/attempts + admin/users (gestion roles globales)
+- `admin`: full access incl. admin dashboard con todos los cursos y usuarios
 
 Notas:
-- `CourseManageMembers`: `admin`, `func`, `assistant` (y policy de manager member)
-- Acciones visibles en UI deben seguir la matriz real de endpoints + policy
+- `assistant` ya no es un rol global; es un rol de miembro de curso (`CourseMemberRole::Assistant`).
+- Un student puede ser miembro de curso con rol `assistant` o `func`.
+- `CourseManageMembers`: `admin`, `func` (y policy de manager member en backend)
 
 ---
 
@@ -128,7 +128,7 @@ Notas:
 ## 5.7 Admin Users
 
 - List/search users
-- Promote/demote assistant global (`func/admin`)
+- Promote/demote roles globales (`func/admin`)
 
 ---
 
@@ -173,7 +173,7 @@ Implementacion:
 ## Fase 2: Courses/Members
 
 - Implementar paginas funcionales completas
-- Validar roles y policy (assistant manager member)
+- Validar roles y policy (course manager member)
 
 ## Fase 3: Banks
 
@@ -193,7 +193,7 @@ Implementacion:
 
 ## Fase 7: Admin Users
 
-- Gestion global de asistentes
+- Gestion global de roles
 
 ## Fase 8: Hardening
 
@@ -213,6 +213,4 @@ Implementacion:
 - resume attempt v1 funcionando
 - QA manual minimo por rol:
   - student
-  - assistant
   - func
-  - admin

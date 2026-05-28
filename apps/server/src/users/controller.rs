@@ -41,7 +41,7 @@ impl UsersController {
 
     #[get("/collaborator-candidates")]
     #[interceptor(AuthzGuard, config = AuthzAction::UserListCollaboratorCandidates)]
-    #[doc = "List users (teachers and assistants) who can be added as test collaborators"]
+    #[doc = "List users eligible to be added as course members"]
     pub async fn list_collaborator_candidates(&self, req: Request) -> WebResult {
         let query = req.query::<SearchUsersQuery>()?.unwrap_or_default();
         let users = self.service.list_collaborator_candidates(query).await?;
@@ -50,8 +50,8 @@ impl UsersController {
     }
 
     #[patch("/{userId}/role")]
-    #[interceptor(AuthzGuard, config = AuthzAction::UserManageAssistants)]
-    #[doc = "Update a student role to 'assistant' (admin executable only)"]
+    #[interceptor(AuthzGuard, config = AuthzAction::UserManageRole)]
+    #[doc = "Update a user's global role (func/admin executable only)"]
     pub async fn set_user_role(&self, req: Request) -> WebResult {
         let user_id = req.param::<UserId>("userId")?;
         let input = req.body_validator::<UpdateUserRoleRequest>()?;

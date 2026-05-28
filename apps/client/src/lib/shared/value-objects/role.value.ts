@@ -13,7 +13,7 @@ export class RoleValue {
 	}
 
 	toDisplay(): string {
-		const labels = {
+		const labels: Record<string, string> = {
 			student: "Estudiante",
 			assistant: "Ayudante",
 			func: "Profesor",

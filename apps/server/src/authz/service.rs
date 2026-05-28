@@ -14,7 +14,6 @@ impl AuthzService {
         let allowed = match role {
             UserRole::Admin => true,
             UserRole::Func => self.can_func(action),
-            UserRole::Assistant => self.can_assistant(action),
             UserRole::Student => self.can_student(action),
         };
 
@@ -37,16 +36,13 @@ impl AuthzService {
             || is_user_management_action(action)
     }
 
-    fn can_assistant(&self, action: AuthzAction) -> bool {
-        is_assistant_course_action(action)
+    fn can_student(&self, action: AuthzAction) -> bool {
+        is_course_action_for_members(action)
             || is_bank_action(action)
             || is_quiz_management_action(action)
+            || is_student_quiz_action(action)
             || is_attempt_action(action)
-            || is_assistant_user_action(action)
-    }
-
-    fn can_student(&self, action: AuthzAction) -> bool {
-        is_student_quiz_action(action) || is_attempt_action(action)
+            || is_member_user_action(action)
     }
 }
 
@@ -66,11 +62,11 @@ fn is_user_management_action(action: AuthzAction) -> bool {
         action,
         AuthzAction::UserListAdmin
             | AuthzAction::UserListCollaboratorCandidates
-            | AuthzAction::UserManageAssistants
+            | AuthzAction::UserManageRole
     )
 }
 
-fn is_assistant_user_action(action: AuthzAction) -> bool {
+fn is_member_user_action(action: AuthzAction) -> bool {
     matches!(action, AuthzAction::UserListCollaboratorCandidates)
 }
 
@@ -117,12 +113,9 @@ fn is_course_action(action: AuthzAction) -> bool {
     )
 }
 
-fn is_assistant_course_action(action: AuthzAction) -> bool {
+fn is_course_action_for_members(action: AuthzAction) -> bool {
     matches!(
         action,
-        AuthzAction::CourseList
-            | AuthzAction::CourseRead
-            | AuthzAction::CourseCreate
-            | AuthzAction::CourseManageMembers
+        AuthzAction::CourseList | AuthzAction::CourseRead | AuthzAction::CourseManageMembers
     )
 }

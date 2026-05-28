@@ -17,8 +17,7 @@
 	})
 
 	const byJoinCodeMutation = createMutation(() => ({
-		mutationFn: (joinCode: string) =>
-			attemptsService.getResultsByJoinCode(joinCode),
+		mutationFn: (joinCode: string) => attemptsService.getResultsByJoinCode(joinCode),
 		onSuccess: async (results, joinCode) => {
 			await goto(`/results/view?joinCode=${encodeURIComponent(joinCode)}`, {
 				state: { results },

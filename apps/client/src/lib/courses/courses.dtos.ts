@@ -34,7 +34,7 @@ export type Course = {
 	year: number
 }
 
-export type CourseMemberRole = "assistant" | "func" | "admin" | "student"
+export type CourseMemberRole = "assistant" | "func"
 
 export type CourseMember = {
 	userId: string

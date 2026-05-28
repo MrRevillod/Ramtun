@@ -1,3 +1,4 @@
+CREATE TYPE course_member_role AS ENUM ('assistant', 'func');
 
 CREATE TABLE courses (
 	id UUID PRIMARY KEY,
@@ -11,7 +12,7 @@ CREATE TABLE course_members (
 	id UUID PRIMARY KEY,
 	course_id UUID NOT NULL REFERENCES courses(id),
 	user_id UUID NOT NULL REFERENCES users(id),
-	role user_role NOT NULL,
+	role course_member_role NOT NULL,
 	UNIQUE (course_id, user_id)
 );
 

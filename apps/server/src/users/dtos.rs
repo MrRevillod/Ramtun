@@ -8,7 +8,7 @@ use validator::Validate;
 #[serde(rename_all = "lowercase")]
 pub enum ManageableUserRole {
     Student,
-    Assistant,
+    Func,
 }
 
 #[derive(Debug, Deserialize, Validate)]
@@ -27,7 +27,7 @@ impl From<ManageableUserRole> for UserRole {
     fn from(value: ManageableUserRole) -> Self {
         match value {
             ManageableUserRole::Student => Self::Student,
-            ManageableUserRole::Assistant => Self::Assistant,
+            ManageableUserRole::Func => Self::Func,
         }
     }
 }
@@ -39,7 +39,6 @@ impl FromStr for UserRole {
         match s.to_lowercase().as_str() {
             "student" => Ok(Self::Student),
             "func" => Ok(Self::Func),
-            "assistant" => Ok(Self::Assistant),
             "admin" => Ok(Self::Admin),
             _ => Err(UsersError::InvalidUserRole),
         }

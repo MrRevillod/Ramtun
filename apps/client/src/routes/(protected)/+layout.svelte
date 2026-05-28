@@ -3,18 +3,11 @@
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
-	import {
-		DoorOpen,
-		Layers,
-		Users,
-		ClipboardList,
-		LogOut,
-		Moon,
-		Sun,
-	} from "lucide-svelte"
+	import { DoorOpen, Layers, ClipboardList, LogOut, Moon, Sun } from "lucide-svelte"
 	import { authService } from "$lib/auth/auth.service"
 	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { canManageUsers, isTeachingRole } from "$lib/shared/auth/permissions"
+	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
+	import { coursesService } from "$lib/courses/courses.service"
 	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import {
@@ -45,8 +38,26 @@
 
 	const role = $derived(authStore.session?.user.role)
 	const displayRole = $derived(role ? RoleValue.format(role) : "")
-	const showTeachingNav = $derived(isTeachingRole(role))
-	const showUsersNav = $derived(canManageUsers(role))
+
+	let studentHasCourses = $state(false)
+
+	$effect(() => {
+		if (role !== "student") {
+			studentHasCourses = false
+			return
+		}
+
+		coursesService
+			.list()
+			.then(courses => {
+				studentHasCourses = courses.length > 0
+			})
+			.catch(() => {
+				studentHasCourses = false
+			})
+	})
+
+	const showCoursesNav = $derived(isFunc(role) || isAdmin(role) || studentHasCourses)
 	const isActive = (href: string) => page.url.pathname.startsWith(href)
 	const isAuthenticated = $derived(authStore.isAuthenticated())
 
@@ -129,7 +140,7 @@
 			<ClipboardList size={16} aria-hidden="true" />
 			Resultados
 		</a>
-		{#if showTeachingNav}
+		{#if showCoursesNav}
 			<a
 				class="action-tab flex-1 justify-center"
 				data-active={isActive("/courses")}
@@ -137,16 +148,6 @@
 			>
 				<Layers size={16} aria-hidden="true" />
 				Cursos
-			</a>
-		{/if}
-		{#if showUsersNav}
-			<a
-				class="action-tab flex-1 justify-center"
-				data-active={isActive("/admin/users")}
-				href="/admin/users"
-			>
-				<Users size={16} aria-hidden="true" />
-				Usuarios
 			</a>
 		{/if}
 	</nav>

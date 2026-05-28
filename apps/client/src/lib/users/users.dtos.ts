@@ -1,9 +1,9 @@
-export type ManagedUserRole = "student" | "assistant" | "func" | "admin"
+export type ManagedUserRole = "student" | "func"
 
 export type ManagedUser = {
 	id: string
 	username: string
 	name: string
 	email: string
-	role: ManagedUserRole
+	role: "student" | "func" | "admin"
 }

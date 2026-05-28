@@ -21,9 +21,7 @@
 		</h3>
 		<a
 			class="btn-tertiary inline-flex shrink-0 items-center gap-1"
-			href={resolve(
-				`/courses/${data.courseId}/quizzes/${data.quizId}/attempts`
-			)}
+			href={resolve(`/courses/${data.courseId}/quizzes/${data.quizId}/attempts`)}
 		>
 			<ArrowLeft size={14} />
 			Volver a intentos

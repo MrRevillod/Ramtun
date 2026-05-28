@@ -27,12 +27,8 @@ const handleUnauthorized = async (originalConfig: ApiRequestConfig) => {
 
 	if (!refreshedAccessToken) {
 		sessionManager.clearSession()
-		return Promise.reject({
-			kind: "auth",
-			code: "session_expired",
-			message: "La sesión expiró. Debes iniciar sesión nuevamente.",
-			details: null,
-		})
+		window.location.href = "/login"
+		return
 	}
 
 	const headers = AxiosHeaders.from(originalConfig.headers as AxiosHeaders)

@@ -1,6 +1,6 @@
 use crate::{
-    courses::{Course, CourseId},
-    users::{UserId, UserRole},
+    courses::{Course, CourseId, CourseMemberRole},
+    users::UserId,
 };
 
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ pub struct CourseMemberView {
     pub user_id: UserId,
     pub username: String,
     pub name: String,
-    pub role: UserRole,
+    pub role: CourseMemberRole,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

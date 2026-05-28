@@ -16,7 +16,7 @@ pub struct QuestionBankController {
 
 impl QuestionBankController {
     #[get("/course/{courseId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::BankList)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::BankList)]
     pub async fn list_banks(&self, req: Request) -> WebResult {
         let course_id = req.param::<CourseId>("courseId")?;
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
@@ -30,7 +30,7 @@ impl QuestionBankController {
     }
 
     #[get("/{bankId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::BankRead)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::BankRead)]
     pub async fn get_bank(&self, req: Request) -> WebResult {
         let bank_id = req.param::<QuestionBankId>("bankId")?;
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;

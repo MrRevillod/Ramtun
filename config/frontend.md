@@ -9,7 +9,7 @@ La plataforma cuenta con cursos, quizzes, question banks y otros, sin embargo, l
 
 ## Usuarios
 
-La plataforma tiene 4 tipos de usuarios, que se  traducen a roles, "student", "func", "assistant" y "admin".
+La plataforma tiene 3 tipos de usuarios globales, "student", "func" y "admin". Ademas, dentro de un curso los miembros tienen roles de curso: "assistant" (ayudante) y "func" (profesor).
 
 ### Student
 
@@ -18,31 +18,21 @@ Un student debe poder:
 - Unirse a un quiz (con un código de quiz)
 - Enviar un quiz (finalizar intento) 
 - Ver resultados de un quiz (con un código de quiz)
-
-
-### Assistant
-
-Un assistant, es un student que ha sido promovido a "ayudante" en un curso X. Un assistant debe poder:
-
-- Hacer todo lo que un student puede hacer
-- Crear quizzes para el curso X
-- Finalizar quizzes para el curso X
-- Ver resultados de los quizzes del curso X
-- Administrar members del curso, añadir o remover.
-- Crear un curso.
-- Crear bancos de preguntas para el curso X
-- Eliminar bancos de preguntas para el curso X
-- Eliminar quizzes para el curso X
+- Gestionar cursos, bancos de preguntas, quizzes y ver resultados de estudiantes si es miembro de un curso con rol "assistant" o "func".
 
 ### Func
-Un func es un profesor. Un func debe poder:
-- Hacer todo lo que un assistant puede hacer
-- Promover a un student a assistant (globalmente)
 
+Un func es un profesor global. Un func debe poder:
+- Hacer todo lo que un student puede hacer
+- Ver y gestionar todos los cursos donde es miembro (rol "func" o "assistant")
+- Crear cursos, bancos, quizzes
+- Gestionar miembros de cursos
+- Ver resultados de estudiantes
+- Promover a un student a func (gestion de roles globales)
 
 ### Admin
-Un admin es un super usuario, que tiene acceso a todo. Un admin debe poder:
-- Hacer todo lo que un func puede hacer
+
+Un admin es un super usuario, que tiene acceso a todo, incluyendo panel de administración con lista de todos los cursos y gestión de usuarios global.
 
 ## Diseño e interfaz de la página web
 
@@ -211,42 +201,45 @@ Referencia actual: `apps/client/src/routes/layout.css`
 ### Rutas objetivo (MVP reconstruido)
 
 - `/(protected)/join`
-  - acceso: `student`, `assistant`, `func`, `admin`
+  - acceso: `student`, `func`, `admin`
   - uso: unirse por codigo, iniciar intento, responder, enviar
 - `/(protected)/results`
-  - acceso: `student`, `assistant`, `func`, `admin`
+  - acceso: `student`, `func`, `admin`
   - uso: ver resultado por join code o por attempt
 - `/(protected)/courses`
-  - acceso: `assistant`, `func`, `admin`
-  - uso: listar/crear cursos
+  - acceso: `func`, `admin`
+  - uso: listar/crear cursos (student tambien accede si es member de curso)
 - `/(protected)/courses/[courseId]/members`
-  - acceso: `assistant`, `func`, `admin`
-  - policy backend: solo course manager (`assistant|func`) o `admin`
+  - acceso: `func`, `admin`
+  - policy backend: solo course manager (`assistant` o `func` como rol de curso) o `admin`
 - `/(protected)/courses/[courseId]/banks`
-  - acceso: `assistant`, `func`, `admin`
+  - acceso: `func`, `admin`
   - uso: CRUD de bancos segun policy de curso
 - `/(protected)/courses/[courseId]/quizzes`
-  - acceso: `assistant`, `func`, `admin`
+  - acceso: `func`, `admin`
   - uso: crear/listar/eliminar quizzes
 - `/(protected)/courses/[courseId]/quizzes/[quizId]/attempts`
-  - acceso: `assistant`, `func`, `admin`
-  - policy backend: list de intentos requiere manager member o admin
-- `/(protected)/admin/users`
   - acceso: `func`, `admin`
-  - uso: gestionar roles assistant globales
+  - policy backend: list de intentos requiere manager member o admin
+- `/(protected)/admin`
+  - acceso: `admin`
+  - uso: dashboard con todos los cursos
+- `/(protected)/admin/users`
+  - acceso: `admin`
+  - uso: gestionar roles globales
 
 ### Reglas de render condicional dentro de pagina
 
-- `assistant`:
+- `student` (miembro de curso con rol assistant):
   - puede gestionar members en cursos donde sea manager member.
-  - no puede eliminar curso.
-- `func`:
-  - todo lo de assistant.
+  - puede crear/banks/quizzes en cursos donde sea miembro.
+- `func` (global o miembro de curso):
+  - todo lo de assistant (rol de curso).
   - puede eliminar curso.
-  - puede promover student -> assistant global.
+  - puede promover student -> func (gestion de roles globales).
 - `admin`:
-  - acceso total.
-- `student`:
+  - acceso total incl. dashboard admin.
+- `student` (no miembro de curso):
   - solo flujos join/attempt/results.
 
 ### Matriz endpoint -> pagina (fuente de verdad frontend)

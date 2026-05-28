@@ -1,13 +1,21 @@
 use crate::{
     shared::{Entity, Id},
-    users::{UserId, UserRole},
+    users::UserId,
 };
 
 use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
+use sqlx::{FromRow, Type};
 use uuid::Uuid;
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Type)]
+#[sqlx(type_name = "course_member_role", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
+pub enum CourseMemberRole {
+    Assistant,
+    Func,
+}
 
 pub type CourseId = Id<Course>;
 
@@ -34,5 +42,5 @@ pub struct CourseMember {
     pub id: Uuid,
     pub course_id: CourseId,
     pub user_id: UserId,
-    pub role: UserRole,
+    pub role: CourseMemberRole,
 }

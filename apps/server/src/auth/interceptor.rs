@@ -83,6 +83,8 @@ impl OnConnect for SessionCheck {
             return Err("Missing Authorization header".into());
         };
 
+        tracing::debug!(socket_id = %ctx.id(), auth_header = %auth_header, "SessionCheck on_connect: received Authorization header");
+
         let Some(token) = auth_header.strip_prefix("Bearer ") else {
             tracing::warn!(socket_id = %ctx.id(), "SessionCheck rejected: invalid Authorization scheme");
             return Err("Invalid Authorization scheme".into());

@@ -3,7 +3,7 @@
 ## GET `/banks/course/{courseId}`
 - Summary: List question banks in a course.
 - Auth: Bearer token required.
-- Roles (AuthzAction::BankList): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::BankList): `admin`, `func`, `student`.
 - Policy: user must have access to the course.
 - Path params:
   - `courseId: uuid`
@@ -12,7 +12,7 @@
 ## GET `/banks/{bankId}`
 - Summary: Get one question bank.
 - Auth: Bearer token required.
-- Roles (AuthzAction::BankRead): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::BankRead): `admin`, `func`, `student`.
 - Policy: user must have access to the bank/course.
 - Path params:
   - `bankId: uuid`
@@ -21,7 +21,7 @@
 ## POST `/banks`
 - Summary: Create question bank.
 - Auth: Bearer token required.
-- Roles (AuthzAction::BankCreate): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::BankCreate): `admin`, `func`, `student`.
 - Policy: service enforces course accessibility.
 - Body:
 
@@ -45,7 +45,7 @@
 ## PATCH `/banks/{bankId}`
 - Summary: Update bank name and/or questions.
 - Auth: Bearer token required.
-- Roles (AuthzAction::BankUpdate): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::BankUpdate): `admin`, `func`, `student`.
 - Path params:
   - `bankId: uuid`
 - Body (at least one field):
@@ -62,7 +62,7 @@
 ## DELETE `/banks/{bankId}`
 - Summary: Soft-delete bank.
 - Auth: Bearer token required.
-- Roles (AuthzAction::BankDelete): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::BankDelete): `admin`, `func`, `student`.
 - Path params:
   - `bankId: uuid`
 - Response `data`: none.

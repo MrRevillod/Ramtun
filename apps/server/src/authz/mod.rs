@@ -41,7 +41,7 @@ pub enum AuthzAction {
 
     UserListAdmin,
     UserListCollaboratorCandidates,
-    UserManageAssistants,
+    UserManageRole,
 }
 
 pub struct AuthzModule;

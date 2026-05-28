@@ -15,7 +15,7 @@ pub struct QuizController {
 
 impl QuizController {
     #[get("/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizReadManaged)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::QuizReadManaged)]
     pub async fn get_one(&self, req: Request) -> WebResult {
         let quiz_id = req.param::<QuizId>("quizId")?;
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
@@ -26,7 +26,7 @@ impl QuizController {
     }
 
     #[get("/me")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizListManaged)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::QuizListManaged)]
     pub async fn list_managed(&self, req: Request) -> WebResult {
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
         let quizzes = self.service.list_managed_by_user(current_user).await?;
@@ -35,7 +35,7 @@ impl QuizController {
     }
 
     #[post("/")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizCreate)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::QuizCreate)]
     pub async fn create(&self, req: Request) -> WebResult {
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
         let input = req.body_validator::<CreateQuizDto>()?;
@@ -46,7 +46,7 @@ impl QuizController {
     }
 
     #[delete("/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizDeleteManaged)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::QuizDeleteManaged)]
     pub async fn delete(&self, req: Request) -> WebResult {
         let quiz_id = req.param::<QuizId>("quizId")?;
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
@@ -70,7 +70,7 @@ impl QuizController {
     }
 
     #[post("/join/{joinCode}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizJoinByCode)] // (func | assistant)
+    #[interceptor(AuthzGuard, config = AuthzAction::QuizJoinByCode)]
     pub async fn join_by_code(&self, req: Request) -> WebResult {
         let code = req.param::<String>("joinCode")?;
         let preview = self.service.get_join_preview(&code).await?;

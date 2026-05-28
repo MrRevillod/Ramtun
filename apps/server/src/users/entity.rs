@@ -9,7 +9,6 @@ use sqlx::{FromRow, Type};
 pub enum UserRole {
     Student,
     Func,
-    Assistant,
     Admin,
 }
 

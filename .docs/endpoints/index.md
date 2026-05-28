@@ -24,10 +24,10 @@
 - Public endpoints: `POST /auth/login`, `POST /auth/refresh`.
 
 ## Roles
-- Roles in backend: `student`, `func`, `assistant`, `admin`.
+- Roles in backend: `student`, `func`, `admin`.
 - `AuthzGuard` validates role access by action.
 - Service policies can further restrict access based on resource ownership/membership.
-- Course manager policy means member role `func` or `assistant` within a course context.
+- Course manager policy means member role `func` or `assistant` (course-level role) within a course context.
 
 ## Serialization
 - JSON fields are camelCase.

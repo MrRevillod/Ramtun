@@ -1,6 +1,6 @@
-use crate::courses::{Course, CourseId, CourseMember, CourseMemberView};
+use crate::courses::{Course, CourseId, CourseMember, CourseMemberRole, CourseMemberView};
 use crate::shared::{AppResult, Database, Tx};
-use crate::users::{UserId, UserRole};
+use crate::users::UserId;
 
 use chrono::Utc;
 use std::sync::Arc;
@@ -43,6 +43,16 @@ impl CourseRepository {
             "SELECT * FROM courses WHERE id = ANY($1) AND deleted_at IS NULL",
         )
         .bind(course_ids)
+        .fetch_all(self.db.get_pool())
+        .await?;
+
+        Ok(courses)
+    }
+
+    pub async fn list_all(&self) -> AppResult<Vec<Course>> {
+        let courses = sqlx::query_as::<_, Course>(
+            "SELECT * FROM courses WHERE deleted_at IS NULL ORDER BY year DESC, name ASC",
+        )
         .fetch_all(self.db.get_pool())
         .await?;
 
@@ -181,7 +191,7 @@ impl CourseRepository {
     pub async fn count_members_by_role(
         &self,
         course_id: &CourseId,
-        role: UserRole,
+        role: CourseMemberRole,
     ) -> AppResult<i64> {
         let count = sqlx::query_scalar::<_, i64>(
             "SELECT COUNT(*) FROM course_members WHERE course_id = $1 AND role = $2",

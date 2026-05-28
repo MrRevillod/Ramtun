@@ -3,7 +3,7 @@
 ## GET `/quizzes/{quizId}`
 - Summary: Get one managed quiz.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizReadManaged): `admin`, `func`, `assistant`.
+- Roles (AuthzAction::QuizReadManaged): `admin`, `func`, `student`.
 - Policy: user must have access to the quiz context.
 - Path params:
   - `quizId: uuid`
@@ -12,13 +12,13 @@
 ## GET `/quizzes/me`
 - Summary: List quizzes managed by current user.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizListManaged): `admin`, `func`, `assistant`.
+- Roles (AuthzAction::QuizListManaged): `admin`, `func`, `student`.
 - Response `data`: `QuizView[]`
 
 ## POST `/quizzes`
 - Summary: Create quiz from course + selected banks.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizCreate): `admin`, `func`, `assistant`.
+- Roles (AuthzAction::QuizCreate): `admin`, `func`, `student`.
 - Policy: user must be allowed in course and bank context.
 - Body:
 
@@ -43,7 +43,7 @@
 ## DELETE `/quizzes/{quizId}`
 - Summary: Soft-delete quiz.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizDeleteManaged): `admin`, `func`, `assistant`.
+- Roles (AuthzAction::QuizDeleteManaged): `admin`, `func`, `student`.
 - Path params:
   - `quizId: uuid`
 - Response `data`: none (success envelope only).
@@ -51,7 +51,7 @@
 ## POST `/quizzes/{quizId}/close-and-publish`
 - Summary: Close quiz and publish results in one step.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizCloseAndPublishManaged): `admin`, `func`, `assistant`.
+- Roles (AuthzAction::QuizCloseAndPublishManaged): `admin`, `func`, `student`.
 - Path params:
   - `quizId: uuid`
 - Response `data`: none (success envelope only).
@@ -59,7 +59,7 @@
 ## POST `/quizzes/join/{joinCode}`
 - Summary: Resolve join code and return join preview.
 - Auth: Bearer token required.
-- Roles (AuthzAction::QuizJoinByCode): `admin`, `func`, `assistant`, `student`.
+- Roles (AuthzAction::QuizJoinByCode): `admin`, `func`, `student`.
 - Path params:
   - `joinCode: string`
 - Body: none.

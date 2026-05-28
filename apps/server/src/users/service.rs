@@ -24,7 +24,10 @@ impl UsersService {
             return Err(UsersError::InvalidUserRole)?;
         }
 
-        self.users.list_users(filter).await
+        let mut candidates = self.users.list_users(filter).await?;
+        candidates.retain(|u| u.role != UserRole::Admin);
+
+        Ok(candidates)
     }
 
     pub async fn update_role(
@@ -37,8 +40,6 @@ impl UsersService {
             .find_by_id(user_id)
             .await?
             .ok_or_else(|| UsersError::NotFound(user_id.to_string()))?;
-
-        self.policy.can_assign_assistant_role(&target)?;
 
         target.role = UserRole::from(input.role);
 

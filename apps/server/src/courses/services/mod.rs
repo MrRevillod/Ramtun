@@ -20,7 +20,12 @@ pub struct CoursesService {
 
 impl CoursesService {
     pub async fn list_for_user(&self, current_user: &User) -> AppResult<Vec<CourseView>> {
-        let courses = self.repository.list_for_user(&current_user.id).await?;
+        let courses = if current_user.role == UserRole::Admin {
+            self.repository.list_all().await?
+        } else {
+            self.repository.list_for_user(&current_user.id).await?
+        };
+
         let mut course_map: HashMap<CourseId, CourseView> = HashMap::new();
 
         for course in &courses {
@@ -61,13 +66,15 @@ impl CoursesService {
 
         self.repository.save(&mut tx, &course).await?;
 
-        let creator = CourseMember::builder()
-            .course_id(course.id)
-            .user_id(current_user.id)
-            .role(current_user.role.clone())
-            .build();
+        if current_user.role != UserRole::Admin {
+            let creator = CourseMember::builder()
+                .course_id(course.id)
+                .user_id(current_user.id)
+                .role(CourseMemberRole::Func)
+                .build();
 
-        self.repository.add_member(&mut tx, &creator).await?;
+            self.repository.add_member(&mut tx, &creator).await?;
+        }
 
         tx.commit().await?;
 
@@ -114,7 +121,7 @@ impl CoursesService {
             .await?
             .ok_or(CoursesError::MemberNotFound)?;
 
-        if !matches!(target.role, UserRole::Func | UserRole::Assistant) {
+        if !matches!(target.role, UserRole::Func | UserRole::Student) {
             return Err(CoursesError::InvalidMemberRole)?;
         }
 
@@ -122,10 +129,16 @@ impl CoursesService {
             return Err(CoursesError::MemberAlreadyExists)?;
         }
 
+        let course_role = match target.role {
+            UserRole::Func => CourseMemberRole::Func,
+            UserRole::Student => CourseMemberRole::Assistant,
+            _ => return Err(CoursesError::InvalidMemberRole)?,
+        };
+
         let course_member = CourseMember::builder()
             .course_id(*course_id)
             .user_id(target.id)
-            .role(target.role.clone())
+            .role(course_role)
             .build();
 
         let mut tx = self.tx.begin().await?;
@@ -164,7 +177,7 @@ impl CoursesService {
             .count_members_by_role(course_id, member.role.clone())
             .await?;
 
-        if member.role == UserRole::Func && role_member_count <= 1 {
+        if member.role == CourseMemberRole::Func && role_member_count <= 1 {
             return Err(CoursesError::CannotRemoveLastFuncMember)?;
         }
 
