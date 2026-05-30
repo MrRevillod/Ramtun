@@ -28,11 +28,8 @@
 	}))
 
 	const quizzesQuery = createQuery(() => ({
-		queryKey: ["quizzes", "managed", data.courseId],
-		queryFn: async () => {
-			const all = await quizzesService.listManaged()
-			return all.filter(quiz => quiz.course.id === data.courseId)
-		},
+		queryKey: ["quizzes", "course", data.courseId],
+		queryFn: () => quizzesService.listByCourse(data.courseId),
 	}))
 
 	const createQuizMutation = createMutation(() => ({
@@ -40,7 +37,7 @@
 		onSuccess: async created => {
 			toast.success(`Quiz ${created.title} creado.`)
 			await queryClient.invalidateQueries({
-				queryKey: ["quizzes", "managed", data.courseId],
+				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
 		onError: error => toast.error(getErrorMessage(error)),
@@ -51,7 +48,7 @@
 		onSuccess: async () => {
 			toast.success("Quiz eliminado correctamente.")
 			await queryClient.invalidateQueries({
-				queryKey: ["quizzes", "managed", data.courseId],
+				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
 		onError: error => toast.error(getErrorMessage(error)),
@@ -62,7 +59,7 @@
 		onSuccess: async () => {
 			toast.success("Quiz finalizado y resultados publicados.")
 			await queryClient.invalidateQueries({
-				queryKey: ["quizzes", "managed", data.courseId],
+				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
 		onError: error => toast.error(getErrorMessage(error)),

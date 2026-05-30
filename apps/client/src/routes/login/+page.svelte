@@ -17,6 +17,7 @@
 		mutationFn: (payload: LoginInput) => authService.login(payload),
 		onSuccess: async session => {
 			sessionManager.setSession(session)
+			password = ""
 			await goto(resolve("/"))
 		},
 		onError: error => {

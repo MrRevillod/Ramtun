@@ -80,13 +80,17 @@
 				throw new Error("El nombre del banco es obligatorio.")
 			}
 
-			await mutation.mutateAsync({
-				courseId,
-				name: nameResult.output,
-				questions: questionsResult.output as QuestionInput[],
-			})
+		await mutation.mutateAsync({
+			courseId,
+			name: nameResult.output,
+			questions: questionsResult.output as QuestionInput[],
+		})
 
-			onsuccess()
+		bankName = ""
+		selectedFile = null
+		if (fileInput) fileInput.value = ""
+
+		onsuccess()
 		} catch (err) {
 			toast.error(getErrorMessage(err))
 		}
@@ -130,19 +134,22 @@
 							/>
 						</label>
 
-						<label class="grid gap-1.5">
+						<div class="grid gap-1.5">
 							<span class="text-sm text-zinc-800">Archivo JSON</span>
-							<input
-								class="input-base file:cursor-pointer"
-								type="file"
-								accept=".json,application/json"
-								onchange={handleFileChange}
-								bind:this={fileInput}
-							/>
-							{#if selectedFile}
-								<span class="text-xs text-zinc-600">{selectedFile.name}</span>
-							{/if}
-						</label>
+							<label
+								class="btn-secondary file-label flex cursor-pointer items-center justify-start gap-1.5 text-left"
+							>
+								<Upload size={16} aria-hidden="true" />
+								{selectedFile ? selectedFile.name : "Seleccionar archivo JSON"}
+								<input
+									type="file"
+									accept=".json,application/json"
+									class="sr-only"
+									onchange={handleFileChange}
+									bind:this={fileInput}
+								/>
+							</label>
+						</div>
 
 						<div class="sticky-actions mt-">
 							<button

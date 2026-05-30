@@ -34,21 +34,6 @@ impl CourseRepository {
         Ok(course)
     }
 
-    pub async fn find_by_ids(&self, course_ids: &Vec<CourseId>) -> AppResult<Vec<Course>> {
-        if course_ids.is_empty() {
-            return Ok(vec![]);
-        }
-
-        let courses = sqlx::query_as::<_, Course>(
-            "SELECT * FROM courses WHERE id = ANY($1) AND deleted_at IS NULL",
-        )
-        .bind(course_ids)
-        .fetch_all(self.db.get_pool())
-        .await?;
-
-        Ok(courses)
-    }
-
     pub async fn list_all(&self) -> AppResult<Vec<Course>> {
         let courses = sqlx::query_as::<_, Course>(
             "SELECT * FROM courses WHERE deleted_at IS NULL ORDER BY year DESC, name ASC",

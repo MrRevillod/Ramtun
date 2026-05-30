@@ -15,7 +15,7 @@ max-buffer-size = 128
 max-payload = "100KB"
 ping-interval = "25s"
 ping-timeout = "20s"
-transports = ["polling", "websocket"]
+transports = ["websocket"]
 parser = "common"
 ws-read-buffer-size = 4096
 

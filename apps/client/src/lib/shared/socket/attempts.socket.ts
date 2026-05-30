@@ -14,9 +14,9 @@ const getSocket = () => {
 		socket = io(NAMESPACE, {
 			autoConnect: false,
 			path: SOCKET_PATH,
-			transports: ["polling", "websocket"],
-			extraHeaders: {
-				Authorization: `Bearer ${sessionManager.getAccessToken() ?? "<empty>"}`,
+			transports: ["websocket"],
+			query: {
+				token: sessionManager.getAccessToken() ?? "",
 			},
 		})
 	}
@@ -28,6 +28,12 @@ export const connectAttemptsSocket = () => {
 	const currentSocket = getSocket()
 
 	if (!currentSocket) return null
+
+	const accessToken = sessionManager.getAccessToken()
+	if (accessToken) {
+		currentSocket.io.opts.query = { token: accessToken }
+	}
+
 	if (!currentSocket.connected) {
 		currentSocket.connect()
 	}

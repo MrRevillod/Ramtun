@@ -1,5 +1,6 @@
 use crate::auth::SessionCheck;
 use crate::authz::{AuthzAction, AuthzGuard};
+use crate::courses::CourseId;
 use crate::quizzes::*;
 use crate::shared::RequestExt;
 
@@ -25,11 +26,16 @@ impl QuizController {
         Ok(JsonResponse::Ok().data(quiz))
     }
 
-    #[get("/me")]
+    #[get("/course/{courseId}")]
     #[interceptor(AuthzGuard, config = AuthzAction::QuizListManaged)]
-    pub async fn list_managed(&self, req: Request) -> WebResult {
+    pub async fn list_by_course(&self, req: Request) -> WebResult {
+        let course_id = req.param::<CourseId>("courseId")?;
         let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-        let quizzes = self.service.list_managed_by_user(current_user).await?;
+
+        let quizzes = self
+            .service
+            .list_by_course(current_user, &course_id)
+            .await?;
 
         Ok(JsonResponse::Ok().data(quizzes))
     }

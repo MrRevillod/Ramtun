@@ -9,7 +9,7 @@
 		joinCodeFormSchema,
 		type JoinCodeFormData,
 	} from "$lib/attempts/attempts.dtos"
-	import { createForm, Field, Form } from "@formisch/svelte"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	const form = createForm({
 		schema: joinCodeFormSchema,
@@ -19,6 +19,7 @@
 	const joinMutation = createMutation(() => ({
 		mutationFn: (code: string) => quizzesService.joinByCode(code),
 		onSuccess: async (_, code) => {
+			reset(form)
 			await goto(`/join/lobby?joinCode=${encodeURIComponent(code)}`)
 		},
 		onError: error => toast.error(getErrorMessage(error)),

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use crate::banks::QuestionBankId;
+use crate::courses::CourseId;
 use crate::quizzes::{Quiz, QuizId};
 use crate::shared::{AppResult, Database, Tx};
-use crate::users::UserId;
 
 use chrono::Utc;
 use sword::prelude::*;
@@ -37,14 +37,13 @@ impl QuizRepository {
         Ok(quiz)
     }
 
-    pub async fn list_managed_by_user(&self, user_id: &UserId) -> AppResult<Vec<Quiz>> {
+    pub async fn list_by_course(&self, course_id: &CourseId) -> AppResult<Vec<Quiz>> {
         let quizzes = sqlx::query_as::<_, Quiz>(
-            "SELECT q.* FROM quizzes q
-             INNER JOIN course_members cm ON cm.course_id = q.course_id
-             WHERE cm.user_id = $1 AND q.deleted_at IS NULL
-             ORDER BY q.created_at DESC",
+            "SELECT * FROM quizzes
+             WHERE course_id = $1 AND deleted_at IS NULL
+             ORDER BY created_at DESC",
         )
-        .bind(user_id)
+        .bind(course_id)
         .fetch_all(self.db.get_pool())
         .await?;
 

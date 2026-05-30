@@ -6,10 +6,10 @@ import type {
 } from "$lib/quizzes/quizzes.dtos"
 
 class QuizzesService {
-	public listManaged(): Promise<Quiz[]> {
+	public listByCourse(courseId: string): Promise<Quiz[]> {
 		return request<Quiz[]>({
 			method: "GET",
-			url: "/quizzes/me",
+			url: `/quizzes/course/${courseId}`,
 		})
 	}
 

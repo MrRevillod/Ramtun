@@ -4,15 +4,14 @@ mod policy;
 pub use codegen::*;
 pub use policy::*;
 
-use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use crate::banks::QuestionBankRepository;
-use crate::courses::{CourseRepository, CoursesError};
+use crate::courses::{CourseId, CourseRepository, CoursesError};
 use crate::quizzes::*;
 use crate::shared::{AppResult, TransactionManager};
 use crate::snapshots::SnapshotService;
-use crate::users::User;
+use crate::users::{User, UserRole};
 
 use chrono::{DateTime, Utc};
 use sword::prelude::*;
@@ -45,33 +44,28 @@ impl QuizService {
         Ok(QuizView::from((quiz, course)))
     }
 
-    pub async fn list_managed_by_user(&self, current_user: &User) -> AppResult<Vec<QuizView>> {
-        let quizzes = self
-            .repository
-            .list_managed_by_user(&current_user.id)
-            .await?;
+    pub async fn list_by_course(
+        &self,
+        current_user: &User,
+        course_id: &CourseId,
+    ) -> AppResult<Vec<QuizView>> {
+        if current_user.role != UserRole::Admin
+            && !self.courses.is_member(course_id, &current_user.id).await?
+        {
+            return Err(QuizError::Forbidden)?;
+        }
 
-        let course_ids = quizzes
-            .iter()
-            .map(|quiz| quiz.course_id)
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
+        let quizzes = self.repository.list_by_course(course_id).await?;
 
-        let courses_by_id = self
+        let course = self
             .courses
-            .find_by_ids(&course_ids)
+            .find_by_id(course_id)
             .await?
-            .into_iter()
-            .map(|course| (course.id, course))
-            .collect::<HashMap<_, _>>();
+            .ok_or_else(|| CoursesError::NotFound(course_id.to_string()))?;
 
         let views = quizzes
             .into_iter()
-            .filter_map(|quiz| {
-                let course = courses_by_id.get(&quiz.course_id)?.clone();
-                Some(QuizView::from((quiz, course)))
-            })
+            .map(|quiz| QuizView::from((quiz, course.clone())))
             .collect::<Vec<_>>();
 
         Ok(views)

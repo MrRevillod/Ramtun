@@ -9,7 +9,7 @@
 		type JoinCodeFormData,
 	} from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
-	import { createForm, Field, Form } from "@formisch/svelte"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	const form = createForm({
 		schema: joinCodeFormSchema,
@@ -19,6 +19,7 @@
 	const byJoinCodeMutation = createMutation(() => ({
 		mutationFn: (joinCode: string) => attemptsService.getResultsByJoinCode(joinCode),
 		onSuccess: async (results, joinCode) => {
+			reset(form)
 			await goto(`/results/view?joinCode=${encodeURIComponent(joinCode)}`, {
 				state: { results },
 			})

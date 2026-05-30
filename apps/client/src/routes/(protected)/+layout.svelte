@@ -16,6 +16,7 @@
 	} from "$lib/shared/socket/attempts.socket"
 	import { themeStore } from "$lib/shared/theme.store.svelte"
 	import { RoleValue } from "$lib/shared/value-objects/role.value"
+	import { onMount } from "svelte"
 
 	let { children } = $props()
 
@@ -61,13 +62,11 @@
 	const isActive = (href: string) => page.url.pathname.startsWith(href)
 	const isAuthenticated = $derived(authStore.isAuthenticated())
 
-	$effect(() => {
-		if (!isAuthenticated) {
-			disconnectAttemptsSocket()
-			return
+	onMount(() => {
+		if (isAuthenticated) {
+			connectAttemptsSocket()
 		}
 
-		connectAttemptsSocket()
 		return () => disconnectAttemptsSocket()
 	})
 </script>
