@@ -22,6 +22,8 @@ pub use repository::AttemptRepository;
 pub use services::*;
 pub use views::*;
 
+pub use self::services::warnings::WarningService;
+
 pub struct AttemptsModule;
 
 impl Module for AttemptsModule {
@@ -31,6 +33,7 @@ impl Module for AttemptsModule {
         components.register::<QuestionService>();
         components.register::<GradingService>();
         components.register::<AnswerService>();
+        components.register::<WarningService>();
     }
 
     fn register_controllers(controllers: &ControllerRegistry) {

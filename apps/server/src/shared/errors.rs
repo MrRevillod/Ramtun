@@ -58,10 +58,12 @@ pub enum AppError {
     InvalidToken,
 
     #[http(code = 500)]
+    #[tracing(error)]
     #[error("Database error: {0}")]
     Database(#[from] SqlxError),
 
     #[http(code = 500)]
+    #[tracing(error)]
     #[error("IO error: {0}")]
     Io(#[from] IoError),
 

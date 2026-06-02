@@ -57,8 +57,8 @@
 	let selectedKind = $state("traditional")
 	let certaintyConfig = $state({
 		low: { correct: 1, incorrect: 0 },
-		medium: { correct: 2, incorrect: -1 },
-		high: { correct: 3, incorrect: -2 },
+		medium: { correct: 2, incorrect: -2 },
+		high: { correct: 3, incorrect: -4 },
 	})
 
 	const toggleBank = (bankId: string, selected: boolean) => {
@@ -100,8 +100,8 @@
 			selectedKind = "traditional"
 			certaintyConfig = {
 				low: { correct: 1, incorrect: 0 },
-				medium: { correct: 2, incorrect: -1 },
-				high: { correct: 3, incorrect: -2 },
+				medium: { correct: 2, incorrect: -2 },
+				high: { correct: 3, incorrect: -4 },
 			}
 			onsuccess(created)
 		} catch (err) {

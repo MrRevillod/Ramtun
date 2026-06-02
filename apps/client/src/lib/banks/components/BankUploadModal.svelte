@@ -80,17 +80,17 @@
 				throw new Error("El nombre del banco es obligatorio.")
 			}
 
-		await mutation.mutateAsync({
-			courseId,
-			name: nameResult.output,
-			questions: questionsResult.output as QuestionInput[],
-		})
+			await mutation.mutateAsync({
+				courseId,
+				name: nameResult.output,
+				questions: questionsResult.output as QuestionInput[],
+			})
 
-		bankName = ""
-		selectedFile = null
-		if (fileInput) fileInput.value = ""
+			bankName = ""
+			selectedFile = null
+			if (fileInput) fileInput.value = ""
 
-		onsuccess()
+			onsuccess()
 		} catch (err) {
 			toast.error(getErrorMessage(err))
 		}

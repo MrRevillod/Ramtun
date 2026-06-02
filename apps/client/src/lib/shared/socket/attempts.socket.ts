@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client"
 import { sessionManager } from "$lib/shared/auth/session.manager"
-import type { AttemptSubmitView } from "$lib/attempts/attempts.dtos"
+import type { AttemptSubmitView, AttemptWarning } from "$lib/attempts/attempts.dtos"
 
 type AttemptsSocket = Socket
 
@@ -56,5 +56,16 @@ export const onAttemptsSubmit = (handler: (payload: AttemptSubmitView) => void) 
 
 	return () => {
 		currentSocket.off("attempts:new-submit", handler)
+	}
+}
+
+export const onAttemptWarning = (handler: (payload: AttemptWarning) => void) => {
+	const currentSocket = connectAttemptsSocket()
+	if (!currentSocket) return () => {}
+
+	currentSocket.on("attempts:warning", handler)
+
+	return () => {
+		currentSocket.off("attempts:warning", handler)
 	}
 }

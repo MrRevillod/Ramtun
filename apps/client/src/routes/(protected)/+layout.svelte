@@ -77,7 +77,7 @@
 	<header class="panel-elevated mx-auto w-full gap-4 p-4 sm:p-5">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div>
-				<p class="section-kicker m-0">INF-UCT: RAMTUN</p>
+				<p class="section-kicker m-0 dark:text-zinc-400">INF-UCT: RAMTUN</p>
 				<h1 class="mt-2 text-2xl leading-tight text-black sm:text-3xl">
 					Cuestionarios y Tests de Certeza
 				</h1>

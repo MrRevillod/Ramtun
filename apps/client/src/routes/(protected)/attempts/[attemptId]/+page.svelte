@@ -8,8 +8,10 @@
 		AnswerState,
 		AttemptSession,
 		CertaintyLevel,
+		WarningType,
 	} from "$lib/attempts/attempts.dtos"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { createAntiCheat } from "$lib/attempts/services/anti-cheat.service.svelte"
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
 	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
 	import QuizOption from "$lib/attempts/components/QuizOption.svelte"
@@ -53,6 +55,24 @@
 	}
 
 	void loadSession()
+
+	const onWarning = (_type: WarningType, details: string) => {
+		toast.warning(details, { duration: 4000 })
+	}
+
+	let antiCheat: ReturnType<typeof createAntiCheat> | null = null
+
+	$effect(() => {
+		if (!session) return
+
+		antiCheat = createAntiCheat(session.attempt.attemptId, onWarning)
+		antiCheat.start()
+
+		return () => {
+			antiCheat?.stop()
+			antiCheat = null
+		}
+	})
 
 	const persistSession = () => {
 		if (!session) return

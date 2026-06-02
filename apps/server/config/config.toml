@@ -43,7 +43,7 @@ session_exp_days = 30
 [tracing]
 enabled = true
 display = false
-filter = "debug,sword=info,sqlx=off"
+filter = "info,sword=info,sqlx=error"
 format = "dev"
 time-style = "none"
 time-pattern = "%H:%M:%S"

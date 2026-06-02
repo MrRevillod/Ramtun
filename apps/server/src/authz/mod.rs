@@ -38,6 +38,8 @@ pub enum AuthzAction {
     AttemptInitialize,
     AttemptSubmit,
     AttemptViewResultsManaged,
+    AttemptViewWarnings,
+    AttemptRecordWarning,
 
     UserListAdmin,
     UserListCollaboratorCandidates,

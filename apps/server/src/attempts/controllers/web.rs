@@ -15,6 +15,7 @@ use crate::shared::RequestExt;
 pub struct AttemptsController {
     socket_io: SocketIo,
     attempts: Arc<AttemptsService>,
+    warnings: Arc<WarningService>,
 }
 
 impl AttemptsController {
@@ -114,5 +115,47 @@ impl AttemptsController {
             .await?;
 
         Ok(JsonResponse::Ok().data(results))
+    }
+
+    #[post("/{attemptId}/warnings")]
+    #[interceptor(AuthzGuard, config = AuthzAction::AttemptRecordWarning)]
+    async fn record_warning(&self, req: Request) -> WebResult {
+        let attempt_id = req.param::<AttemptId>("attemptId")?;
+        let input = req.body_validator::<CreateWarningDto>()?;
+
+        let warning = self
+            .warnings
+            .record_warning(attempt_id, input.warning_type, &input.details)
+            .await?;
+
+        if let Some(namespace) = self.socket_io.of("/attempts") {
+            namespace
+                .broadcast()
+                .emit("attempts:warning", &warning)
+                .await
+                .ok();
+        }
+
+        Ok(JsonResponse::Created().data(warning))
+    }
+
+    #[get("/{attemptId}/warnings")]
+    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
+    async fn get_attempt_warnings(&self, req: Request) -> WebResult {
+        let attempt_id = req.param::<AttemptId>("attemptId")?;
+
+        let warnings = self.warnings.get_warnings_for_attempt(attempt_id).await?;
+
+        Ok(JsonResponse::Ok().data(warnings))
+    }
+
+    #[get("/quiz/{quizId}/warnings")]
+    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
+    async fn get_quiz_warnings(&self, req: Request) -> WebResult {
+        let quiz_id = req.param::<QuizId>("quizId")?;
+
+        let warnings = self.warnings.get_warnings_for_quiz(quiz_id).await?;
+
+        Ok(JsonResponse::Ok().data(warnings))
     }
 }

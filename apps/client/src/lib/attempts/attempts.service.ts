@@ -4,7 +4,9 @@ import type {
 	AttemptResult,
 	AttemptSubmitView,
 	AttemptView,
+	AttemptWarning,
 	SaveAnswerInput,
+	WarningType,
 } from "$lib/attempts/attempts.dtos"
 
 class AttemptsService {
@@ -56,6 +58,32 @@ class AttemptsService {
 		return request<AttemptResult>({
 			method: "GET",
 			url: `/attempts/${attemptId}/results/managed`,
+		})
+	}
+
+	public getAttemptWarnings(attemptId: string): Promise<AttemptWarning[]> {
+		return request<AttemptWarning[]>({
+			method: "GET",
+			url: `/attempts/${attemptId}/warnings`,
+		})
+	}
+
+	public recordWarning(
+		attemptId: string,
+		warningType: WarningType,
+		details: string
+	): Promise<AttemptWarning> {
+		return request<AttemptWarning>({
+			method: "POST",
+			url: `/attempts/${attemptId}/warnings`,
+			data: { warningType, details },
+		})
+	}
+
+	public getQuizWarnings(quizId: string): Promise<AttemptWarning[]> {
+		return request<AttemptWarning[]>({
+			method: "GET",
+			url: `/attempts/quiz/${quizId}/warnings`,
 		})
 	}
 }

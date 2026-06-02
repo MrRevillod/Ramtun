@@ -20,8 +20,8 @@
 
 	const filteredBanks = $derived(
 		(banksQuery.data ?? []).filter(b =>
-			b.name.toLowerCase().includes(search.toLowerCase()),
-		),
+			b.name.toLowerCase().includes(search.toLowerCase())
+		)
 	)
 
 	const selectedCount = $derived(selectedBankIds.length)
@@ -49,18 +49,18 @@
 					? `${selectedCount} banco${selectedCount !== 1 ? "s" : ""} seleccionado${selectedCount !== 1 ? "s" : ""}`
 					: "Seleccionar bancos"}
 			</span>
-			<ChevronDown size={16} class="text-zinc-400 shrink-0" />
+			<ChevronDown size={16} class="shrink-0 text-zinc-400" />
 		</button>
 
 		{#if open}
 			<div
-				class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-auto rounded-md border border-zinc-300 bg-white shadow-lg"
+				class="absolute top-full right-0 left-0 z-50 mt-1 max-h-64 overflow-auto rounded-md border border-zinc-300 bg-white shadow-lg"
 			>
 				<div class="sticky top-0 border-b border-zinc-200 bg-white p-2">
 					<div class="relative">
 						<Search
 							size={14}
-							class="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400"
+							class="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-zinc-400"
 						/>
 						<input
 							class="input-base w-full pl-7 text-sm"

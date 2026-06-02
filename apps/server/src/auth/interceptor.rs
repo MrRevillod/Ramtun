@@ -77,38 +77,32 @@ impl OnRequest for SessionCheck {
 impl OnConnect for SessionCheck {
     type Error = String;
 
-    async fn on_connect(&self, ctx: SocketContext) -> Result<(), Self::Error> {
-        let token = ctx
-            .authorization()
-            .and_then(|h| h.strip_prefix("Bearer "))
-            .map(|t| t.to_string())
-            .or_else(|| {
-                ctx.socket.req_parts().uri.query().and_then(|q| {
-                    q.split('&')
-                        .find_map(|pair| pair.split_once('='))
-                        .filter(|(key, _)| *key == "token")
-                        .map(|(_, value)| value.to_string())
-                })
-            });
+    async fn on_connect(&self, socket: SocketContext) -> Result<(), Self::Error> {
+        let token = socket.req_parts().uri.query().and_then(|q| {
+            q.split('&')
+                .find_map(|pair| pair.split_once('='))
+                .filter(|(key, _)| *key == "token")
+                .map(|(_, value)| value.to_string())
+        });
 
         let Some(ref token) = token else {
-            tracing::warn!(socket_id = %ctx.id(), "SessionCheck rejected: missing token");
+            tracing::warn!(socket_id = %socket.id(), "SessionCheck rejected: missing token");
             return Err("Missing token".into());
         };
 
-        tracing::debug!(socket_id = %ctx.id(), "SessionCheck on_connect: received token");
+        tracing::debug!(socket_id = %socket.id(), "SessionCheck on_connect: received token");
 
         let claims: SessionClaims = self
             .jwt_service
             .decode(token, self.config.jwt_secret.as_ref())
             .inspect_err(|error| {
-                tracing::warn!(socket_id = %ctx.id(), error = %error, "SessionCheck rejected: token decode failed");
+                tracing::warn!(socket_id = %socket.id(), error = %error, "SessionCheck rejected: token decode failed");
             })
             .map_err(|_| "Token decode failed".to_string())?;
 
         if claims.typ != "access" {
             tracing::warn!(
-                socket_id = %ctx.id(),
+                socket_id = %socket.id(),
                 session_id = %claims.session_id,
                 user_id = %claims.user_id,
                 token_type = %claims.typ,
@@ -119,7 +113,7 @@ impl OnConnect for SessionCheck {
 
         let Ok(is_session_active) = self.sessions.is_active(&claims.session_id).await else {
             tracing::warn!(
-                socket_id = %ctx.id(),
+                socket_id = %socket.id(),
                 session_id = %claims.session_id,
                 user_id = %claims.user_id,
                 "SessionCheck rejected: failed to check session activity"
@@ -130,7 +124,7 @@ impl OnConnect for SessionCheck {
 
         if !is_session_active {
             tracing::warn!(
-                socket_id = %ctx.id(),
+                socket_id = %socket.id(),
                 session_id = %claims.session_id,
                 user_id = %claims.user_id,
                 "SessionCheck rejected: session is not active"
@@ -140,7 +134,7 @@ impl OnConnect for SessionCheck {
         }
 
         tracing::debug!(
-            socket_id = %ctx.id(),
+            socket_id = %socket.id(),
             session_id = %claims.session_id,
             user_id = %claims.user_id,
             "SessionCheck accepted"

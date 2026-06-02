@@ -98,3 +98,27 @@ export type AttemptSession = {
 	answers: Record<string, AnswerState>
 	index: number
 }
+
+export type WarningType =
+	| "focus_loss"
+	| "clipboard"
+	| "screenshot"
+	| "navigation"
+	| "devtools"
+
+export type AttemptWarning = {
+	id: string
+	attemptId: string
+	warningType: WarningType
+	details: string
+	sequenceNumber: number
+	createdAt: string
+}
+
+export const WARNING_LABELS: Record<WarningType, string> = {
+	focus_loss: "Pérdida de foco",
+	clipboard: "Copia de texto",
+	screenshot: "Captura de pantalla",
+	navigation: "Navegación del sistema",
+	devtools: "Herramientas de desarrollador",
+}

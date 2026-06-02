@@ -1,6 +1,7 @@
 use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
 use sqlx::prelude::FromRow;
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
 };
 
 pub type AttemptId = Id<Attempt>;
+pub type AttemptWarningId = Id<AttemptWarning>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, FromRow)]
 pub struct Attempt {
@@ -43,6 +45,34 @@ impl Entity for Attempt {
     fn key_name() -> &'static str {
         "attempt"
     }
+}
+
+impl Entity for AttemptWarning {
+    fn key_name() -> &'static str {
+        "attempt_warning"
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Copy)]
+#[sqlx(type_name = "warning_type", rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
+pub enum WarningType {
+    FocusLoss,
+    Clipboard,
+    Screenshot,
+    Navigation,
+    Devtools,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct AttemptWarning {
+    pub id: AttemptWarningId,
+    pub attempt_id: AttemptId,
+    pub warning_type: WarningType,
+    pub details: String,
+    pub sequence_number: i16,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Default)]

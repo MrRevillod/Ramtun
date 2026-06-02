@@ -4,7 +4,9 @@ use sqlx::{Postgres, QueryBuilder};
 use sword::prelude::*;
 
 use crate::{
-    attempts::{Attempt, AttemptAnswer, AttemptFilter, AttemptId, AttemptListItemView},
+    attempts::{
+        Attempt, AttemptAnswer, AttemptFilter, AttemptId, AttemptListItemView, AttemptWarning,
+    },
     quizzes::QuizId,
     shared::{AppResult, Database},
     users::UserId,
@@ -182,5 +184,63 @@ impl AttemptRepository {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn insert_warning(&self, warning: &AttemptWarning) -> AppResult<()> {
+        sqlx::query(
+            "INSERT INTO attempt_warnings (id, attempt_id, warning_type, details, sequence_number, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)",
+        )
+        .bind(warning.id)
+        .bind(warning.attempt_id)
+        .bind(warning.warning_type)
+        .bind(&warning.details)
+        .bind(warning.sequence_number)
+        .bind(warning.created_at)
+        .execute(self.db.get_pool())
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn get_next_warning_sequence(&self, attempt_id: &AttemptId) -> AppResult<i16> {
+        let row: Option<(i16,)> = sqlx::query_as(
+            "SELECT (COALESCE(MAX(sequence_number), 0::SMALLINT) + 1)::SMALLINT
+             FROM attempt_warnings
+             WHERE attempt_id = $1",
+        )
+        .bind(attempt_id)
+        .fetch_optional(self.db.get_pool())
+        .await?;
+
+        Ok(row.map(|r| r.0).unwrap_or(1))
+    }
+
+    pub async fn get_warnings_by_attempt(
+        &self,
+        attempt_id: &AttemptId,
+    ) -> AppResult<Vec<AttemptWarning>> {
+        let warnings = sqlx::query_as::<_, AttemptWarning>(
+            "SELECT * FROM attempt_warnings WHERE attempt_id = $1 ORDER BY sequence_number ASC",
+        )
+        .bind(attempt_id)
+        .fetch_all(self.db.get_pool())
+        .await?;
+
+        Ok(warnings)
+    }
+
+    pub async fn get_warnings_by_quiz(&self, quiz_id: &QuizId) -> AppResult<Vec<AttemptWarning>> {
+        let warnings = sqlx::query_as::<_, AttemptWarning>(
+            "SELECT aw.* FROM attempt_warnings aw
+             JOIN attempts a ON a.id = aw.attempt_id
+             WHERE a.quiz_id = $1 AND a.deleted_at IS NULL
+             ORDER BY aw.created_at DESC",
+        )
+        .bind(quiz_id)
+        .fetch_all(self.db.get_pool())
+        .await?;
+
+        Ok(warnings)
     }
 }

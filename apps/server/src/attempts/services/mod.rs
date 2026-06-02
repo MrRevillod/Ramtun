@@ -1,6 +1,7 @@
 mod answers;
 mod grading;
 mod questions;
+pub mod warnings;
 
 use crate::{
     attempts::*,

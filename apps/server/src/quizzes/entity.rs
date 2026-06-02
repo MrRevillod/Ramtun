@@ -80,11 +80,11 @@ impl Default for CertaintyTable {
             },
             medium: CertaintyScore {
                 correct: 2,
-                incorrect: -4,
+                incorrect: -2,
             },
             high: CertaintyScore {
                 correct: 3,
-                incorrect: -6,
+                incorrect: -4,
             },
         }
     }

@@ -73,11 +73,8 @@
 					<tbody>
 						{#each attemptsQuery.data as attempt (attempt.attemptId)}
 							<tr
-								class={"table-row " +
-									(attempt.submittedAt ? "row-hover cursor-pointer" : "")}
-								onclick={() => {
-									if (attempt.submittedAt) viewAttempt(attempt.attemptId)
-								}}
+								class="row-hover table-row cursor-pointer"
+								onclick={() => viewAttempt(attempt.attemptId)}
 							>
 								<td class="px-3 py-2 font-medium text-zinc-900"
 									>{attempt.userName}</td
@@ -96,13 +93,12 @@
 								</td>
 								<td class="px-3 py-2">
 									<button
-										class="icon-btn disabled:cursor-not-allowed disabled:opacity-40"
+										class="icon-btn"
 										type="button"
-										title={attempt.submittedAt ? "Ver resultados" : "Aún no enviado"}
-										disabled={!attempt.submittedAt}
+										title="Ver intento"
 										onclick={e => {
 											e.stopPropagation()
-											if (attempt.submittedAt) viewAttempt(attempt.attemptId)
+											viewAttempt(attempt.attemptId)
 										}}
 									>
 										<Eye size={15} aria-hidden="true" />

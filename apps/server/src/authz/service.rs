@@ -99,6 +99,8 @@ fn is_attempt_action(action: AuthzAction) -> bool {
             | AuthzAction::AttemptInitialize
             | AuthzAction::AttemptSubmit
             | AuthzAction::AttemptViewResultsManaged
+            | AuthzAction::AttemptViewWarnings
+            | AuthzAction::AttemptRecordWarning
     )
 }
 
