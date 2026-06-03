@@ -84,6 +84,26 @@
 			return
 		}
 
+		const raw = localStorage.getItem("last-attempt-session")
+		if (raw) {
+			try {
+				const session = JSON.parse(raw) as AttemptSession
+				const now = Date.now()
+				const expiresAt = new Date(session.attempt.expiresAt).getTime()
+
+				if (
+					!session.attempt.submittedAt &&
+					expiresAt >= now - 60000 &&
+					session.preview.quizId === previewQuery.data.quizId
+				) {
+					void goto(`/attempts/${session.attempt.attemptId}`)
+					return
+				}
+			} catch {
+				// ignore corrupt data
+			}
+		}
+
 		startPreAttemptCountdown(previewQuery.data.startsAt)
 
 		return () => {

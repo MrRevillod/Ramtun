@@ -17,6 +17,7 @@
 	import { themeStore } from "$lib/shared/theme.store.svelte"
 	import { RoleValue } from "$lib/shared/value-objects/role.value"
 	import { onMount } from "svelte"
+	import type { AttemptSession } from "$lib/attempts/attempts.dtos"
 
 	let { children } = $props()
 
@@ -63,6 +64,27 @@
 	const isAuthenticated = $derived(authStore.isAuthenticated())
 
 	onMount(() => {
+		const raw = localStorage.getItem("last-attempt-session")
+		if (raw) {
+			try {
+				const session = JSON.parse(raw) as AttemptSession
+				const expiresAt = new Date(session.attempt.expiresAt).getTime()
+				const now = Date.now()
+
+				if (session.attempt.submittedAt || expiresAt < now - 60000) {
+					localStorage.removeItem("last-attempt-session")
+				} else {
+					const attemptPath = `/attempts/${session.attempt.attemptId}`
+					if (!page.url.pathname.startsWith(attemptPath)) {
+						void goto(attemptPath)
+						return
+					}
+				}
+			} catch {
+				localStorage.removeItem("last-attempt-session")
+			}
+		}
+
 		if (isAuthenticated) {
 			connectAttemptsSocket()
 		}
