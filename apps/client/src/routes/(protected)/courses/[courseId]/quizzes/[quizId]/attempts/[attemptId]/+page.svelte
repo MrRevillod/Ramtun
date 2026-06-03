@@ -10,14 +10,13 @@
 		onAttemptsSubmit,
 	} from "$lib/shared/socket/attempts.socket"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
-	import type { AttemptWarning, WarningType } from "$lib/attempts/attempts.dtos"
+	import type { WarningType } from "$lib/attempts/attempts.dtos"
 	import { WARNING_LABELS } from "$lib/attempts/attempts.dtos"
 
 	let { data } = $props()
 
 	type Tab = "results" | "supervision"
 	let activeTab = $state<Tab>("results")
-	let liveWarnings = $state<AttemptWarning[]>([])
 
 	const resultsQuery = createQuery(() => ({
 		queryKey: ["attempt-result", "managed", data.attemptId],
@@ -29,10 +28,8 @@
 		queryFn: () => attemptsService.getAttemptWarnings(data.attemptId),
 	}))
 
-	const unsubWarning = onAttemptWarning((warning: AttemptWarning) => {
-		if (warning.attemptId === data.attemptId) {
-			liveWarnings = [warning, ...liveWarnings]
-		}
+	const unsubWarning = onAttemptWarning(() => {
+		void warningsQuery.refetch()
 	})
 
 	const unsubSubmit = onAttemptsSubmit(payload => {
@@ -46,18 +43,7 @@
 		unsubSubmit()
 	})
 
-	const warningBadge = $derived(
-		warningsQuery.data
-			? warningsQuery.data.length + liveWarnings.length
-			: liveWarnings.length
-	)
-
-	const allWarnings = $derived.by(() => {
-		const ids: Record<string, boolean> = {}
-		for (const w of liveWarnings) ids[w.id] = true
-		const rest = (warningsQuery.data ?? []).filter(w => !ids[w.id])
-		return [...liveWarnings, ...rest]
-	})
+	const warningBadge = $derived(warningsQuery.data?.length ?? 0)
 
 	const formatDate = (value: string) =>
 		new Intl.DateTimeFormat("es-CL", {
@@ -142,15 +128,15 @@
 				<h3 class="m-0 text-xl text-black">Advertencias del intento</h3>
 			</div>
 
-			{#if warningsQuery.isLoading && allWarnings.length === 0}
+			{#if warningsQuery.isLoading}
 				<p class="mt-4 mb-0 text-zinc-600">Cargando advertencias...</p>
-			{:else if allWarnings.length === 0}
+			{:else if !warningsQuery.data?.length}
 				<p class="mt-4 mb-0 text-zinc-600">
 					No se registraron advertencias en este intento.
 				</p>
 			{:else}
 				<div class="mt-4 space-y-2">
-					{#each allWarnings as warning (warning.id)}
+					{#each warningsQuery.data as warning (warning.id)}
 						<div class="rounded-sm border border-zinc-200 bg-white p-3">
 							<div class="flex items-center justify-between gap-3">
 								<div class="flex items-center gap-2">

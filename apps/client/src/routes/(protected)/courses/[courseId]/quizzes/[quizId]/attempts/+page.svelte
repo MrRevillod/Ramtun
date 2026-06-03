@@ -4,10 +4,7 @@
 	import { createQuery } from "@tanstack/svelte-query"
 	import { Eye } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import {
-		disconnectAttemptsSocket,
-		onAttemptsSubmit,
-	} from "$lib/shared/socket/attempts.socket"
+	import { onAttemptNew, onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
@@ -28,14 +25,18 @@
 	}
 
 	$effect(() => {
-		const unsubscribe = onAttemptsSubmit(payload => {
+		const unsubSubmit = onAttemptsSubmit(payload => {
 			if (payload.quizId !== data.quizId) return
 			void attemptsQuery.refetch()
 		})
 
+		const unsubNew = onAttemptNew(() => {
+			void attemptsQuery.refetch()
+		})
+
 		return () => {
-			unsubscribe()
-			disconnectAttemptsSocket()
+			unsubSubmit()
+			unsubNew()
 		}
 	})
 </script>

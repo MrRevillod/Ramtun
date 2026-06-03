@@ -59,6 +59,17 @@ export const onAttemptsSubmit = (handler: (payload: AttemptSubmitView) => void) 
 	}
 }
 
+export const onAttemptNew = (handler: () => void) => {
+	const currentSocket = connectAttemptsSocket()
+	if (!currentSocket) return () => {}
+
+	currentSocket.on("attempts:new-attempt", handler)
+
+	return () => {
+		currentSocket.off("attempts:new-attempt", handler)
+	}
+}
+
 export const onAttemptWarning = (handler: (payload: AttemptWarning) => void) => {
 	const currentSocket = connectAttemptsSocket()
 	if (!currentSocket) return () => {}

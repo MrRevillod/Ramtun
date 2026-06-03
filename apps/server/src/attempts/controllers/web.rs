@@ -46,6 +46,14 @@ impl AttemptsController {
 
         let attempt = self.attempts.initialize_attempt(quiz_id, user.id).await?;
 
+        if let Some(namespace) = self.socket_io.of("/attempts") {
+            namespace
+                .broadcast()
+                .emit("attempts:new-attempt", "")
+                .await
+                .ok();
+        }
+
         Ok(JsonResponse::Created().data(attempt))
     }
 
