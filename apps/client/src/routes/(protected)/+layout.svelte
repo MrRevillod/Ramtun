@@ -93,87 +93,85 @@
 	})
 </script>
 
-<main
-	class="mx-auto flex max-h-dvh min-h-dvh max-w-312 flex-col gap-3 p-4 sm:p-4 lg:p-6"
->
-	<header class="panel-elevated mx-auto w-full gap-4 p-4 sm:p-5">
-		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<main class="mx-auto flex min-h-dvh max-w-312 flex-col gap-2 p-3 sm:p-4 lg:p-6">
+	<header class="panel-elevated mx-auto w-full p-3 sm:p-4">
+		<div class="flex items-center justify-between gap-4 px-8">
 			<div>
-				<p class="section-kicker m-0 dark:text-zinc-400">INF-UCT: RAMTUN</p>
-				<h1 class="mt-2 text-2xl leading-tight text-black sm:text-3xl">
+				<p class="m-0 text-[10px] font-semibold tracking-widest text-zinc-500">
+					INF-UCT: RAMTUN
+				</p>
+				<h1 class="mt-0.5 mb-0 text-xl leading-tight text-black sm:text-2xl">
 					Cuestionarios y Tests de Certeza
 				</h1>
-				<p class="mt-1 mb-0 text-sm text-zinc-600">
-					Desarrollado por y para miembros de la comunidad UCT.
-				</p>
 			</div>
 
-			<div class="flex w-full items-stretch gap-2 sm:w-auto">
-				<button
-					class="inline-flex size-11 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
-					type="button"
-					onclick={() => themeStore.toggle()}
-					title={themeStore.preference === "dark"
-						? "Cambiar a modo claro"
-						: "Cambiar a modo oscuro"}
+			<div class="mt-2.5 flex items-center gap-1">
+				<a
+					class="action-tab justify-center"
+					data-active={isActive("/join")}
+					href="/join"
 				>
-					{#if themeStore.preference === "dark"}
-						<Sun size={16} aria-hidden="true" />
-					{:else}
-						<Moon size={16} aria-hidden="true" />
-					{/if}
-				</button>
+					<DoorOpen size={16} aria-hidden="true" />
+					Unirse
+				</a>
+				<a
+					class="action-tab justify-center"
+					data-active={isActive("/results")}
+					href="/results"
+				>
+					<ClipboardList size={16} aria-hidden="true" />
+					Resultados
+				</a>
+				{#if showCoursesNav}
+					<a
+						class="action-tab justify-center"
+						data-active={isActive("/courses")}
+						href="/courses"
+					>
+						<Layers size={16} aria-hidden="true" />
+						Cursos
+					</a>
+				{/if}
 
-				<div
-					class="flex h-11 min-w-0 flex-1 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-left sm:min-w-56 sm:flex-none sm:text-right"
-				>
-					<p class="truncate text-sm font-semibold text-zinc-800">
-						{authStore.session?.user.name}
-					</p>
-					<p class="text-xs text-zinc-600">{displayRole}</p>
+				<span class="mx-1 h-6 w-px bg-zinc-300" aria-hidden="true"></span>
+
+				<div class="flex shrink-0 items-stretch gap-1.5 sm:gap-2">
+					<div
+						class="flex h-9 min-w-0 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-2.5 text-left sm:h-10 sm:min-w-44 sm:px-3 sm:text-right"
+					>
+						<p class="truncate text-sm font-semibold text-zinc-800">
+							{authStore.session?.user.name}
+						</p>
+						<p class="text-xs text-zinc-600">{displayRole}</p>
+					</div>
+					<button
+						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
+						type="button"
+						onclick={() => themeStore.toggle()}
+						title={themeStore.preference === "dark"
+							? "Cambiar a modo claro"
+							: "Cambiar a modo oscuro"}
+					>
+						{#if themeStore.preference === "dark"}
+							<Sun size={16} aria-hidden="true" />
+						{:else}
+							<Moon size={16} aria-hidden="true" />
+						{/if}
+					</button>
+					<button
+						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
+						type="button"
+						onclick={handleLogout}
+						title="Cerrar sesión"
+					>
+						<LogOut size={14} aria-hidden="true" />
+					</button>
 				</div>
-				<button
-					class="inline-flex size-11 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
-					type="button"
-					onclick={handleLogout}
-					title="Cerrar sesión"
-				>
-					<LogOut size={16} aria-hidden="true" />
-				</button>
 			</div>
 		</div>
 	</header>
 
-	<nav class="panel-elevated flex w-full gap-1.5 px-4 py-2">
-		<a
-			class="action-tab flex-1 justify-center"
-			data-active={isActive("/join")}
-			href="/join"
-		>
-			<DoorOpen size={16} aria-hidden="true" />
-			Unirse
-		</a>
-		<a
-			class="action-tab flex-1 justify-center"
-			data-active={isActive("/results")}
-			href="/results"
-		>
-			<ClipboardList size={16} aria-hidden="true" />
-			Resultados
-		</a>
-		{#if showCoursesNav}
-			<a
-				class="action-tab flex-1 justify-center"
-				data-active={isActive("/courses")}
-				href="/courses"
-			>
-				<Layers size={16} aria-hidden="true" />
-				Cursos
-			</a>
-		{/if}
-	</nav>
-
-	<section class="panel-elevated mx-auto w-full min-w-0 p-4">
+	<section class="panel-elevated mx-auto w-full min-w-0 px-12 py-4">
 		{@render children()}
 	</section>
 </main>

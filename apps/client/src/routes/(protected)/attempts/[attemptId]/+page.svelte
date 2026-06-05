@@ -174,6 +174,8 @@
 			if (session) localStorage.setItem("last-submitted-join-code", session.joinCode)
 			clearTimer()
 			showSubmitModal = true
+			toast.success("Intento enviado. Redirigiendo a resultados...")
+			setTimeout(() => goto("/results"), 2500)
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
@@ -269,10 +271,12 @@
 
 {#if session && currentQuestion}
 	<section class="grid gap-5">
-		<section class="panel-elevated p-4 sm:p-6">
+		<section class="py-6">
 			<header class="mb-5 flex flex-wrap items-start justify-between gap-3">
 				<div>
-					<h3 class="m-0 text-xl text-black">{session.preview.title}</h3>
+					<h3 class="m-0 text-xl text-black">
+						{data.quizTitle || session.preview.title}
+					</h3>
 					<p class="mt-1 mb-0 text-sm text-zinc-600">Pregunta {progress}</p>
 					<div class="mt-2">
 						<ProgressBar current={currentIndex + 1} total={totalQuestions} />
@@ -281,7 +285,7 @@
 				<QuizTimer {remainingSeconds} />
 			</header>
 
-			<div class="keyline"></div>
+			<div class="h-px bg-zinc-300/70"></div>
 			<h4 class="mt-5 mb-0 text-lg leading-relaxed text-black">
 				{currentQuestion.prompt}
 			</h4>
@@ -333,10 +337,14 @@
 		</section>
 	</section>
 {:else}
-	<p class="text-zinc-600">Cargando intento...</p>
+	<section class="grid gap-5">
+		<section>
+			<h3 class="m-0 text-xl text-black">
+				{data.quizTitle || "Cargando intento..."}
+			</h3>
+			<p class="mt-2 text-zinc-600">Preparando pregunta...</p>
+		</section>
+	</section>
 {/if}
 
-<SubmitSuccessModal
-	open={showSubmitModal}
-	onautoclose={() => (showSubmitModal = false)}
-/>
+<SubmitSuccessModal open={showSubmitModal} />

@@ -120,66 +120,61 @@
 	})
 </script>
 
-<section class="grid gap-5">
-	<header>
-		<h2 class="mt-2 mb-0 text-2xl text-black">Lobby del quiz</h2>
-		<p class="mt-2 max-w-3xl text-zinc-700">
-			Revisa los detalles y confirma que estás listo antes de iniciar.
+<section class="flex flex-col gap-4 py-4">
+	<div>
+		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
+			Unirse a un quiz
 		</p>
-	</header>
+		{#if previewQuery.data}
+			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
+				{previewQuery.data.title}
+			</h2>
+		{:else}
+			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">Lobby del quiz</h2>
+		{/if}
+	</div>
 
 	{#if previewQuery.isLoading}
 		<p class="m-0 text-zinc-600">Cargando información del quiz...</p>
 	{:else if previewQuery.isError}
 		<p class="m-0 text-red-700">{getErrorMessage(previewQuery.error)}</p>
 	{:else if previewQuery.data}
-		<section class="panel-elevated flex flex-col gap-4 p-5 sm:p-6 lg:min-h-[60dvh]">
-			<div class="space-y-2">
-				<h3 class="m-0 text-2xl text-black">{previewQuery.data.title}</h3>
-				<p class="max-w-3xl text-sm leading-relaxed text-zinc-700 sm:text-base">
-					Cuando inicies, responde cada pregunta y finaliza tu intento antes que
-					termine el tiempo.
-				</p>
-			</div>
-
-			<div class="grid gap-3 sm:grid-cols-3">
-				<div class="stat-card">
-					<p class="m-0 text-xs tracking-[0.16em] text-zinc-600 uppercase">Tipo</p>
-					<p class="mt-2 text-lg text-black">
+		<section class="flex flex-col gap-3">
+			<div class="grid gap-2 sm:grid-cols-3">
+				<div class="panel-muted p-3">
+					<p class="m-0 text-xs text-zinc-600">Tipo</p>
+					<p class="mt-1 mb-0 text-lg font-semibold text-black">
 						{QuizKindValue.format(previewQuery.data.kind)}
 					</p>
 				</div>
-				<div class="stat-card">
-					<p class="m-0 text-xs tracking-[0.16em] text-zinc-600 uppercase">
-						Preguntas
+				<div class="panel-muted p-3">
+					<p class="m-0 text-xs text-zinc-600">Preguntas</p>
+					<p class="mt-1 mb-0 text-lg font-semibold text-black">
+						{previewQuery.data.questionCount}
 					</p>
-					<p class="mt-2 text-lg text-black">{previewQuery.data.questionCount}</p>
 				</div>
-				<div class="stat-card">
-					<p class="m-0 text-xs tracking-[0.16em] text-zinc-600 uppercase">
-						Duracion
-					</p>
-					<p class="mt-2 text-lg text-black">
+				<div class="panel-muted p-3">
+					<p class="m-0 text-xs text-zinc-600">Duración</p>
+					<p class="mt-1 mb-0 text-lg font-semibold text-black">
 						{previewQuery.data.attemptDurationMinutes} min
 					</p>
 				</div>
 			</div>
 
 			<div class={hasCertaintyTable ? "grid gap-3 lg:grid-cols-2" : "grid"}>
-				<div class="panel-muted space-y-3 p-4">
+				<div class="panel-muted space-y-1 p-3 text-sm leading-relaxed text-zinc-700">
 					<p class="m-0 text-sm font-medium text-black">Antes de comenzar</p>
-					<ul class="space-y-1.5 pl-5 text-sm leading-relaxed text-zinc-700">
-						<li>
-							Inicio programado: {DateValue.format(previewQuery.data.startsAt)}
-						</li>
-						<li>Solo tienes un intento para este quiz.</li>
-						<li>El intento se entrega automáticamente al agotarse el tiempo.</li>
-					</ul>
+					<p class="m-0">
+						Inicio programado: {DateValue.format(previewQuery.data.startsAt)}
+					</p>
+					<p class="m-0">
+						Solo tienes un intento. Se entrega automáticamente al agotarse el tiempo.
+					</p>
 				</div>
 
 				{#if hasCertaintyTable}
-					<div class="panel-muted space-y-3 p-4">
-						<p class="m-0 text-sm font-medium text-black">Tabla de certeza</p>
+					<div class="panel-muted p-3">
+						<p class="m-0 mb-2 text-sm font-medium text-black">Tabla de certeza</p>
 						<div class="overflow-x-auto">
 							<CertaintyTableView table={previewQuery.data.certaintyTable!} />
 						</div>
@@ -187,11 +182,10 @@
 				{/if}
 			</div>
 
-			<div class="keyline"></div>
-			<div class="mt-auto flex flex-wrap items-center justify-between gap-3">
-				<a class="btn-tertiary" href={resolve("/join")}>
-					<TimerReset size={14} class="mr-1 inline" />
-					Cambiar código
+			<div class="mb-4 h-px bg-zinc-400/70"></div>
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<a class="action-tab justify-center" href={resolve("/join")}>
+					<TimerReset size={16} /> Cambiar código
 				</a>
 				<button
 					class="btn-primary"

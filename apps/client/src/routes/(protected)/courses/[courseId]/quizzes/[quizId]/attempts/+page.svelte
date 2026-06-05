@@ -43,13 +43,13 @@
 
 <section class="grid gap-4">
 	<header>
-		<h3 class="mt-2 mb-0 text-xl text-black">Intentos</h3>
+		<h3 class="mt-2 mb-0 text-xl text-black">{data.quizName} - Intentos</h3>
 		<p class="m-0 mt-2 text-zinc-700">
 			Revisa los intentos realizados por los estudiantes en este quiz.
 		</p>
 	</header>
 
-	<section class="panel-elevated p-4">
+	<section>
 		{#if attemptsQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando intentos...</p>
 		{:else if attemptsQuery.error}

@@ -83,7 +83,7 @@
 		</div>
 	</header>
 
-	<section class="panel-elevated p-4 sm:p-5">
+	<section>
 		{#if coursesQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando cursos...</p>
 		{:else if coursesQuery.error}

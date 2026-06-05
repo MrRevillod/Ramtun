@@ -9,7 +9,6 @@
 	import { toast } from "svelte-sonner"
 	import { Plus, Trash2 } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
-	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
@@ -20,11 +19,6 @@
 	let { data } = $props()
 
 	const queryClient = useQueryClient()
-
-	const courseQuery = createQuery(() => ({
-		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.get(data.courseId),
-	}))
 
 	const banksQuery = createQuery(() => ({
 		queryKey: ["banks", data.courseId],
@@ -61,9 +55,7 @@
 	<header>
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
-				<h3 class="mt-2 mb-0 text-xl text-black">
-					{courseQuery.data?.name ?? "Curso"} - Bancos de preguntas
-				</h3>
+				<h3 class="mt-2 mb-0 text-xl text-black">Bancos de preguntas</h3>
 				<p class="m-0 mt-2 text-zinc-700">
 					Sube y gestiona bancos de preguntas en formato JSON.
 				</p>
@@ -79,7 +71,7 @@
 		</div>
 	</header>
 
-	<section class="panel-elevated p-4">
+	<section>
 		{#if banksQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando bancos...</p>
 		{:else if banksQuery.isError}

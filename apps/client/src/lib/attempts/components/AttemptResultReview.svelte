@@ -1,15 +1,10 @@
 <script lang="ts">
-	import { BarChart3, CheckCircle2, CircleX, Trophy } from "lucide-svelte"
+	import { User, BarChart3, CheckCircle2, CircleX, Trophy } from "lucide-svelte"
 	import type { AttemptResult, CertaintyLevel } from "$lib/attempts/attempts.dtos"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
+	import { DateValue } from "$lib/shared/value-objects/date.value"
 
 	let { result }: { result: AttemptResult } = $props()
-
-	const formatDate = (value: string) =>
-		new Intl.DateTimeFormat("es-CL", {
-			dateStyle: "medium",
-			timeStyle: "short",
-		}).format(new Date(value))
 
 	const formatPoints = (value: number) =>
 		new Intl.NumberFormat("es-CL", {
@@ -55,32 +50,38 @@
 	}
 </script>
 
-<section class="panel-surface flex h-full min-h-0 flex-col gap-5 p-4 sm:p-5">
-	<div class="flex flex-wrap items-start justify-between gap-3">
-		<div>
-			<p class="section-kicker m-0">Resultado del intento</p>
-			<h3 class="mt-1 mb-0 text-2xl text-black">Corrección final</h3>
-			<p class="mt-2 text-sm text-zinc-700">
-				Enviado: {formatDate(result.submittedAt)}
+<section class="flex h-full min-h-0 flex-col gap-4">
+	<div class="grid gap-3 sm:grid-cols-[1.5fr_1fr_1fr_1fr]">
+		<div class="panel-muted p-3 sm:p-4">
+			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
+				<User size={13} /> Estudiante
+			</p>
+			<p class="mt-1 mb-0 text-lg font-semibold text-black">
+				{result.userName}
 			</p>
 		</div>
-	</div>
-
-	<div class="grid gap-3 sm:grid-cols-2">
-		<div class="panel-muted p-4">
-			<p class="m-0 flex items-center gap-2 text-sm font-medium text-zinc-700">
-				<Trophy size={15} /> Nota final
+		<div class="panel-muted p-3 sm:p-4">
+			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
+				<Trophy size={13} /> Nota
 			</p>
-			<p class="mt-2 mb-0 text-3xl font-semibold text-black">
+			<p class="mt-1 mb-0 text-lg font-semibold text-black">
 				{GradeValue.format(result.grade)}
 			</p>
 		</div>
-		<div class="panel-muted p-4">
-			<p class="m-0 flex items-center gap-2 text-sm font-medium text-zinc-700">
-				<BarChart3 size={15} /> Puntaje
+		<div class="panel-muted p-3 sm:p-4">
+			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
+				<BarChart3 size={13} /> Puntaje
 			</p>
-			<p class="mt-2 mb-0 text-3xl font-semibold text-black">
+			<p class="mt-1 mb-0 text-lg font-semibold text-black">
 				{result.score} / {result.maxScore}
+			</p>
+		</div>
+		<div class="panel-muted p-3 sm:p-4">
+			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
+				Enviado
+			</p>
+			<p class="mt-1 mb-0 text-lg font-semibold text-black">
+				{DateValue.format(result.submittedAt)}
 			</p>
 		</div>
 	</div>
@@ -88,23 +89,23 @@
 	<div class="min-h-0 space-y-4 overflow-auto pr-1">
 		{#each result.questions as question, index (question.questionId)}
 			<article class="panel-muted p-4 sm:p-5">
-				<div class="flex flex-wrap items-start justify-between gap-2">
-					<p class="m-0 text-sm font-medium text-zinc-700">
-						Pregunta {index + 1}
+				<div class="flex items-start justify-between gap-3">
+					<p class="m-0 text-base leading-relaxed text-black sm:text-lg">
+						{index + 1}. {question.question}
 					</p>
 					{#if question.isCorrect}
-						<span class="inline-flex items-center gap-1 text-sm text-emerald-700">
+						<span
+							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-emerald-700"
+						>
 							<CheckCircle2 size={14} /> Correcta
 						</span>
 					{:else}
-						<span class="inline-flex items-center gap-1 text-sm text-red-700">
+						<span
+							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700"
+						>
 							<CircleX size={14} /> Incorrecta
 						</span>
 					{/if}
-				</div>
-
-				<div class="mt-3 text-base text-black sm:text-lg">
-					{question.question}
 				</div>
 
 				{#if question.images.length > 0}
@@ -173,7 +174,7 @@
 				{/if}
 
 				{#if question.answerIndex === null}
-					<p class="mt-4 mb-0 text-sm text-zinc-700">
+					<p class="mt-4 mb-0 text-sm font-bold text-amber-700">
 						Sin respuesta en esta pregunta.
 					</p>
 				{/if}

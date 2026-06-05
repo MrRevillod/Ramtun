@@ -41,7 +41,7 @@
 		</a>
 	</header>
 
-	<section class="panel-elevated p-4">
+	<section>
 		{#if bankQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando banco...</p>
 		{:else if bankQuery.error}

@@ -1,9 +1,9 @@
+import { redirect } from "@sveltejs/kit"
 import type { PageLoad } from "./$types"
 
-export const load: PageLoad = async ({ params }) => {
-	return {
-		courseId: params.courseId,
-		quizId: params.quizId,
-		attemptId: params.attemptId,
-	}
+export const load: PageLoad = ({ params }) => {
+	redirect(
+		302,
+		`/courses/${params.courseId}/quizzes/${params.quizId}/attempts/${params.attemptId}/results`
+	)
 }

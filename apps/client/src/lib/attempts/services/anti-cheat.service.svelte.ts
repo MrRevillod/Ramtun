@@ -14,16 +14,6 @@ const canEmit = (key: string) => {
 	return true
 }
 
-const detailsMessages: Record<WarningType, string> = {
-	focus_loss: "No está permitido salir de la ventana en un cuestionario.",
-	clipboard: "No está permitido copiar texto en un cuestionario.",
-	screenshot: "No está permitido capturar pantalla en un cuestionario.",
-	navigation:
-		"No está permitido usar teclas de navegación del sistema en un cuestionario.",
-	devtools:
-		"No está permitido abrir herramientas de desarrollador en un cuestionario.",
-}
-
 const fire = (
 	attemptId: string,
 	type: WarningType,
@@ -32,7 +22,7 @@ const fire = (
 ) => {
 	if (!canEmit(type)) return
 	void attemptsService.recordWarning(attemptId, type, details)
-	onWarning?.(type, detailsMessages[type])
+	onWarning?.(type, details)
 }
 
 export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) => {

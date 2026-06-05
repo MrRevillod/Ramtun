@@ -37,7 +37,7 @@
 	<div
 		class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center"
 	>
-		<section class="panel-elevated w-full max-w-xl p-8 sm:p-10">
+		<section class="panel-elevated -mt-10 w-full max-w-xl p-8 sm:p-10">
 			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">
 				Iniciar sesión
 			</h1>

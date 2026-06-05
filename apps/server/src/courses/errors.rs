@@ -57,4 +57,11 @@ pub enum CoursesError {
     )]
     #[error("Cannot remove last member")]
     CannotRemoveLastMember,
+
+    #[http(
+        code = 400,
+        message = "No puedes eliminarte a ti mismo del curso. Solicita a un docente que lo haga."
+    )]
+    #[error("Cannot remove self from course")]
+    CannotRemoveSelf,
 }

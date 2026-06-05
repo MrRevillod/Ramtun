@@ -30,15 +30,15 @@
 	}
 </script>
 
-<section class="grid gap-5">
-	<header>
-		<h2 class="mt-2 mb-0 text-2xl text-black">Unirse a un quiz</h2>
-		<p class="mt-2 max-w-3xl text-zinc-700">
-			Ingresa tu código para revisar los datos del quiz antes de comenzar.
+<section class="flex flex-col gap-4">
+	<div>
+		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
+			Acceso rápido
 		</p>
-	</header>
+		<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">Unirse a un quiz</h2>
+	</div>
 
-	<section class="panel-elevated p-5 sm:p-6">
+	<section>
 		<Form of={form} onsubmit={handleSubmit}>
 			<div class="flex flex-col gap-3 sm:flex-row sm:items-start">
 				<div class="flex-1">

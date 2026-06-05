@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { fade } from "svelte/transition"
-	import { X, CheckCircle2, ArrowUpRight } from "lucide-svelte"
+	import { LoaderCircle, CheckCircle2 } from "lucide-svelte"
 
 	interface SubmitSuccessModalProps {
 		open: boolean
-		onautoclose: () => void
 	}
 
-	let { open, onautoclose }: SubmitSuccessModalProps = $props()
+	let { open }: SubmitSuccessModalProps = $props()
 </script>
 
 {#if open}
@@ -19,44 +16,19 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		onclick={onautoclose}
-		onkeydown={e => {
-			if (e.key === "Escape") onautoclose()
-		}}
 	>
-		<div
-			class="panel-surface w-full max-w-md p-6"
-			role="presentation"
-			tabindex="-1"
-			onclick={e => e.stopPropagation()}
-		>
-			<div class="mb-4 flex items-center justify-between">
-				<h3 class="m-0 flex items-center gap-2 text-xl text-black">
-					<CheckCircle2 size={20} class="text-emerald-600" aria-hidden="true" />
-					Intento enviado
-				</h3>
-				<button class="btn-tertiary p-1" type="button" onclick={onautoclose}>
-					<X size={18} aria-hidden="true" />
-				</button>
-			</div>
-			<p class="mb-4 text-sm text-zinc-700">
-				Tu intento fue enviado correctamente. Los resultados estarán disponibles
-				cuando el docente los publique.
-			</p>
-			<div class="grid gap-2">
-				<button
-					class="btn-primary flex items-center justify-center gap-1.5"
-					type="button"
-					onclick={() => goto("/results")}
-				>
-					<ArrowUpRight size={16} aria-hidden="true" />
-					Ir a Resultados
-				</button>
-				<button
-					class="btn-secondary"
-					type="button"
-					onclick={() => goto(resolve("/"))}>Volver al Inicio</button
-				>
+		<div class="panel-surface w-full max-w-md p-6" role="presentation" tabindex="-1">
+			<div class="flex flex-col items-center gap-4 py-6">
+				<CheckCircle2 size={32} class="text-emerald-600" aria-hidden="true" />
+				<h3 class="m-0 text-xl text-black">Intento enviado</h3>
+				<p class="m-0 text-center text-sm text-zinc-600">
+					Tu intento fue enviado correctamente. Los resultados estarán disponibles
+					cuando el docente los publique.
+				</p>
+				<div class="mt-2 flex items-center gap-2 text-sm text-zinc-500">
+					<LoaderCircle size={16} class="animate-spin" aria-hidden="true" />
+					Redirigiendo...
+				</div>
 			</div>
 		</div>
 	</div>

@@ -54,7 +54,7 @@
 		</p>
 	</header>
 
-	<section class="panel-elevated p-5 sm:p-6">
+	<section>
 		<Form of={form} onsubmit={handleSubmit}>
 			<div class="flex flex-col gap-3 sm:flex-row sm:items-start">
 				<div class="flex-1">

@@ -1,6 +1,6 @@
 [
 	{
-		"prompt": "Que imprime `print(type(3.14))`?",
+		"prompt": "¿Qué imprime `print(type(3.14))`?",
 		"options": [
 			"<class 'int'>",
 			"<class 'float'>",
@@ -11,7 +11,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Cual es el resultado de `len('hola')`?",
+		"prompt": "¿Cuál es el resultado de `len('hola')`?",
 		"options": [
 			"3",
 			"4",
@@ -22,7 +22,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que operador se usa para potencia en Python?",
+		"prompt": "¿Qué operador se usa para la potencia en Python?",
 		"options": [
 			"^",
 			"**",
@@ -33,7 +33,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que estructura es mutable?",
+		"prompt": "¿Qué estructura es mutable?",
 		"options": [
 			"tuple",
 			"str",
@@ -44,7 +44,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Cual es la salida de `print(7 // 2)`?",
+		"prompt": "¿Cuál es la salida de `print(7 // 2)`?",
 		"options": [
 			"3.5",
 			"3",
@@ -55,7 +55,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que palabra clave define una funcion?",
+		"prompt": "¿Qué palabra clave define una función?",
 		"options": [
 			"function",
 			"def",
@@ -66,7 +66,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que devuelve `range(3)` al convertirlo a lista?",
+		"prompt": "¿Qué devuelve `range(3)` al convertirlo en una lista?",
 		"options": [
 			"[1, 2, 3]",
 			"[0, 1, 2]",
@@ -77,7 +77,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Como se agrega un elemento al final de una lista `a`?",
+		"prompt": "¿Cómo se agrega un elemento al final de una lista `a`?",
 		"options": [
 			"a.add(x)",
 			"a.push(x)",
@@ -88,7 +88,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que imprime `print(bool(''))`?",
+		"prompt": "¿Qué imprime `print(bool(''))`?",
 		"options": [
 			"True",
 			"False",
@@ -99,7 +99,7 @@
 		"images": []
 	},
 	{
-		"prompt": "Que sentencia maneja excepciones?",
+		"prompt": "¿Qué sentencia se utiliza para manejar excepciones?",
 		"options": [
 			"if / else",
 			"for / while",

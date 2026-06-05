@@ -35,6 +35,13 @@ class QuizzesService {
 		})
 	}
 
+	public getQuiz(quizId: string): Promise<Quiz> {
+		return request<Quiz>({
+			method: "GET",
+			url: `/quizzes/${quizId}`,
+		})
+	}
+
 	public joinByCode(joinCode: string): Promise<JoinQuizPreview> {
 		return request<JoinQuizPreview>({
 			method: "POST",

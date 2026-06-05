@@ -8,6 +8,7 @@
 	import { Plus, Trash2 } from "lucide-svelte"
 	import { coursesService } from "$lib/courses/courses.service"
 	import { getErrorMessage } from "$lib/shared/errors"
+	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { usersService } from "$lib/users/users.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import AddMemberModal from "$lib/courses/components/AddMemberModal.svelte"
@@ -15,12 +16,9 @@
 
 	let { data } = $props()
 
-	const queryClient = useQueryClient()
+	const currentUserId = $derived(authStore.session?.user.id)
 
-	const courseQuery = createQuery(() => ({
-		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.get(data.courseId),
-	}))
+	const queryClient = useQueryClient()
 
 	const membersQuery = createQuery(() => ({
 		queryKey: ["course-members", data.courseId],
@@ -70,9 +68,7 @@
 	<header>
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
-				<h3 class="mt-2 mb-0 text-xl text-black">
-					{courseQuery.data?.name ?? "Curso"} - Miembros
-				</h3>
+				<h3 class="mt-2 mb-0 text-xl text-black">Miembros</h3>
 				<p class="mt-2 mb-0 text-zinc-700">Agrega o retira participantes.</p>
 			</div>
 			<button
@@ -86,7 +82,7 @@
 		</div>
 	</header>
 
-	<section class="panel-elevated p-4">
+	<section>
 		{#if membersQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando miembros...</p>
 		{:else if membersQuery.error}
@@ -114,19 +110,21 @@
 									>{RoleValue.format(member.role)}</td
 								>
 								<td class="px-3 py-2">
-									<button
-										class="icon-btn icon-btn-danger"
-										title="Quitar"
-										type="button"
-										onclick={() =>
-											(memberToRemove = {
-												userId: member.userId,
-												username: member.username,
-											})}
-										disabled={removeMemberMutation.isPending}
-									>
-										<Trash2 size={15} aria-hidden="true" />
-									</button>
+									{#if member.userId !== currentUserId}
+										<button
+											class="icon-btn icon-btn-danger"
+											title="Quitar"
+											type="button"
+											onclick={() =>
+												(memberToRemove = {
+													userId: member.userId,
+													username: member.username,
+												})}
+											disabled={removeMemberMutation.isPending}
+										>
+											<Trash2 size={15} aria-hidden="true" />
+										</button>
+									{/if}
 								</td>
 							</tr>
 						{/each}

@@ -166,6 +166,10 @@ impl CoursesService {
             .await?
             .ok_or(CoursesError::MemberNotFound)?;
 
+        if member.user_id == current_user.id {
+            return Err(CoursesError::CannotRemoveSelf)?;
+        }
+
         let member_count = self.repository.count_members(course_id).await?;
 
         if member_count <= 1 && member.user_id == current_user.id {
