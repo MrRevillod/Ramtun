@@ -3,7 +3,7 @@ import { attemptsService } from "$lib/attempts/attempts.service"
 
 type WarningHandler = (type: WarningType, details: string) => void
 
-const DEBOUNCE_MS = 2000
+const DEBOUNCE_MS = 1000
 
 const lastEmit: Record<string, number> = {}
 
@@ -26,21 +26,55 @@ const fire = (
 }
 
 export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) => {
+	let pendingKeyboardNav: "alt_tab" | "meta_key" | null = null
+	let pendingNavTimer: ReturnType<typeof setTimeout> | null = null
+	let focusLossFired = false
+
+	const clearPendingNav = () => {
+		pendingKeyboardNav = null
+		if (pendingNavTimer) {
+			clearTimeout(pendingNavTimer)
+			pendingNavTimer = null
+		}
+	}
+
 	const preventContextMenu = (e: MouseEvent) => {
 		e.preventDefault()
 		fire(
 			attemptId,
-			"clipboard",
+			"context_menu",
 			"No está permitido abrir el menú contextual en un cuestionario.",
 			onWarning
 		)
 	}
 
 	const onKeyDown = (e: KeyboardEvent) => {
-		if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+		if (e.key === "Alt") {
+			e.preventDefault()
+			clearPendingNav()
+			pendingKeyboardNav = "alt_tab"
+			pendingNavTimer = setTimeout(clearPendingNav, 1000)
+			return
+		}
+
+		if (e.key === "Meta") {
+			e.preventDefault()
 			fire(
 				attemptId,
-				"clipboard",
+				"meta_key",
+				"Se presionó la tecla Windows/Command en un cuestionario.",
+				onWarning
+			)
+			pendingKeyboardNav = "meta_key"
+			pendingNavTimer = setTimeout(clearPendingNav, 1000)
+			return
+		}
+
+		if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+			e.preventDefault()
+			fire(
+				attemptId,
+				"copy_attempt",
 				"No está permitido copiar texto en un cuestionario.",
 				onWarning
 			)
@@ -48,6 +82,7 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 		}
 
 		if (e.key === "PrintScreen") {
+			e.preventDefault()
 			fire(
 				attemptId,
 				"screenshot",
@@ -57,23 +92,44 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 			return
 		}
 
-		if (e.key === "Alt" || e.key === "Meta") {
+		if ((e.ctrlKey || e.metaKey) && (e.key === "f" || e.key === "F")) {
+			e.preventDefault()
 			fire(
 				attemptId,
-				"navigation",
-				"No está permitido usar teclas de navegación del sistema en un cuestionario.",
+				"search_attempt",
+				"No está permitido buscar en la página durante un cuestionario.",
 				onWarning
 			)
+			return
 		}
 	}
 
-	let focusLossFired = false
+	const onKeyUp = (e: KeyboardEvent) => {
+		if (e.key === "Alt") {
+			clearPendingNav()
+		}
+	}
+
 	const onBlur = () => {
 		focusLossFired = true
+		if (pendingKeyboardNav === "alt_tab") {
+			clearPendingNav()
+			fire(
+				attemptId,
+				"alt_tab",
+				"Se detectó cambio de ventana mediante teclas de navegación del sistema.",
+				onWarning
+			)
+			return
+		}
+		if (pendingKeyboardNav) {
+			clearPendingNav()
+			return
+		}
 		fire(
 			attemptId,
-			"focus_loss",
-			"No está permitido salir de la ventana en un cuestionario.",
+			"window_blur",
+			"La ventana del cuestionario perdió el foco.",
 			onWarning
 		)
 	}
@@ -82,8 +138,8 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 		if (document.hidden && !focusLossFired) {
 			fire(
 				attemptId,
-				"focus_loss",
-				"No está permitido salir de la ventana en un cuestionario.",
+				"tab_hide",
+				"Se cambió de pestaña durante el cuestionario.",
 				onWarning
 			)
 		}
@@ -112,6 +168,7 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 	const start = () => {
 		document.addEventListener("contextmenu", preventContextMenu)
 		window.addEventListener("keydown", onKeyDown)
+		window.addEventListener("keyup", onKeyUp)
 		window.addEventListener("blur", onBlur)
 		document.addEventListener("visibilitychange", onVisibilityChange)
 		devtoolsCheckId = setInterval(checkDevTools, 3000)
@@ -120,6 +177,7 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 	const stop = () => {
 		document.removeEventListener("contextmenu", preventContextMenu)
 		window.removeEventListener("keydown", onKeyDown)
+		window.removeEventListener("keyup", onKeyUp)
 		window.removeEventListener("blur", onBlur)
 		document.removeEventListener("visibilitychange", onVisibilityChange)
 		if (devtoolsCheckId) {

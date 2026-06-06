@@ -123,19 +123,21 @@
 <section class="flex flex-col gap-4 py-4">
 	<div>
 		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
-			Unirse a un quiz
+			Unirse a un cuestionario
 		</p>
 		{#if previewQuery.data}
 			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
 				{previewQuery.data.title}
 			</h2>
 		{:else}
-			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">Lobby del quiz</h2>
+			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
+				Sala de espera del cuestionario
+			</h2>
 		{/if}
 	</div>
 
 	{#if previewQuery.isLoading}
-		<p class="m-0 text-zinc-600">Cargando información del quiz...</p>
+		<p class="m-0 text-zinc-600">Cargando información del cuestionario...</p>
 	{:else if previewQuery.isError}
 		<p class="m-0 text-red-700">{getErrorMessage(previewQuery.error)}</p>
 	{:else if previewQuery.data}

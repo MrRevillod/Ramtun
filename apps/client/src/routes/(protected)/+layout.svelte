@@ -97,11 +97,11 @@
 	<header class="panel-elevated mx-auto w-full p-3 sm:p-4">
 		<div class="flex items-center justify-between gap-4 px-8">
 			<div>
-				<p class="m-0 text-[10px] font-semibold tracking-widest text-zinc-500">
+				<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
 					INF-UCT: RAMTUN
 				</p>
 				<h1 class="mt-0.5 mb-0 text-xl leading-tight text-black sm:text-2xl">
-					Cuestionarios y Tests de Certeza
+					Cuestionarios en línea
 				</h1>
 			</div>
 
@@ -112,7 +112,7 @@
 					href="/join"
 				>
 					<DoorOpen size={16} aria-hidden="true" />
-					Unirse
+					<span class="hidden lg:inline">Unirse</span>
 				</a>
 				<a
 					class="action-tab justify-center"
@@ -120,7 +120,7 @@
 					href="/results"
 				>
 					<ClipboardList size={16} aria-hidden="true" />
-					Resultados
+					<span class="hidden lg:inline">Resultados</span>
 				</a>
 				{#if showCoursesNav}
 					<a
@@ -129,7 +129,7 @@
 						href="/courses"
 					>
 						<Layers size={16} aria-hidden="true" />
-						Cursos
+						<span class="hidden lg:inline">Cursos</span>
 					</a>
 				{/if}
 

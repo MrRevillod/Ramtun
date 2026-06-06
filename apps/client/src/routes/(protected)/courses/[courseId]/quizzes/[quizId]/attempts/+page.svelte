@@ -45,7 +45,7 @@
 	<header>
 		<h3 class="mt-2 mb-0 text-xl text-black">{data.quizName} - Intentos</h3>
 		<p class="m-0 mt-2 text-zinc-700">
-			Revisa los intentos realizados por los estudiantes en este quiz.
+			Revisa los intentos realizados por los estudiantes en este cuestionario.
 		</p>
 	</header>
 
@@ -56,7 +56,7 @@
 			<p class="m-0 text-red-700">{getErrorMessage(attemptsQuery.error)}</p>
 		{:else if !attemptsQuery.data?.length}
 			<p class="notice notice-warn m-0">
-				Aún no hay intentos registrados para este quiz.
+				Aún no hay intentos registrados para este cuestionario.
 			</p>
 		{:else}
 			<div class="overflow-x-auto">

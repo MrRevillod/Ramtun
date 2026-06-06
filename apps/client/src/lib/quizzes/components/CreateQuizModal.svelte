@@ -130,7 +130,7 @@
 			onclick={e => e.stopPropagation()}
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
-				<h4 class="m-0 text-base text-black">Crear quiz</h4>
+				<h4 class="m-0 text-base text-black">Crear cuestionario</h4>
 				<button class="btn-tertiary p-1" type="button" onclick={onclose}>
 					<X size={18} aria-hidden="true" />
 				</button>
@@ -377,7 +377,7 @@
 						disabled={mutation.isPending}
 					>
 						<Plus size={16} aria-hidden="true" />
-						{mutation.isPending ? "Creando..." : "Crear quiz"}
+						{mutation.isPending ? "Creando..." : "Crear cuestionario"}
 					</button>
 				</div>
 			</Form>

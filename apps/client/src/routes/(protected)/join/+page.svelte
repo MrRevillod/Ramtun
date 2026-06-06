@@ -35,7 +35,9 @@
 		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
 			Acceso rápido
 		</p>
-		<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">Unirse a un quiz</h2>
+		<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
+			Unirse a un cuestionario
+		</h2>
 	</div>
 
 	<section>
@@ -48,10 +50,10 @@
 								<input
 									class="input-base"
 									type="text"
-									aria-label="Código de quiz"
+									aria-label="Código de cuestionario"
 									{...field.props}
 									value={field.input}
-									placeholder="Ingrese un código de Quiz. Ej: ABC1234"
+									placeholder="Ingrese un código del cuestionario. Ej: ABC1234"
 								/>
 								<span
 									class="text-sm text-red-700"

@@ -105,6 +105,13 @@ export type WarningType =
 	| "screenshot"
 	| "navigation"
 	| "devtools"
+	| "window_blur"
+	| "tab_hide"
+	| "alt_tab"
+	| "meta_key"
+	| "context_menu"
+	| "copy_attempt"
+	| "search_attempt"
 
 export type AttemptWarning = {
 	id: string
@@ -121,4 +128,35 @@ export const WARNING_LABELS: Record<WarningType, string> = {
 	screenshot: "Captura de pantalla",
 	navigation: "Navegación del sistema",
 	devtools: "Herramientas de desarrollador",
+	window_blur: "Pérdida de foco externa",
+	tab_hide: "Cambio de pestaña",
+	alt_tab: "Navegación con teclas",
+	meta_key: "Tecla Windows/Command",
+	context_menu: "Menú contextual",
+	copy_attempt: "Intento de copia",
+	search_attempt: "Búsqueda en página",
+}
+
+export type SeverityLevel = "leve" | "moderada" | "grave" | "critica"
+
+export const SEVERITY_GROUPS: SeverityLevel[] = [
+	"leve",
+	"moderada",
+	"grave",
+	"critica",
+]
+
+export const WARNING_SEVERITY: Record<WarningType, SeverityLevel> = {
+	context_menu: "leve",
+	meta_key: "leve",
+	search_attempt: "leve",
+	copy_attempt: "moderada",
+	screenshot: "moderada",
+	tab_hide: "moderada",
+	clipboard: "moderada",
+	window_blur: "grave",
+	alt_tab: "grave",
+	focus_loss: "grave",
+	navigation: "grave",
+	devtools: "critica",
 }

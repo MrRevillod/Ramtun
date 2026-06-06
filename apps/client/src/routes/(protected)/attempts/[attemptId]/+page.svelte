@@ -27,7 +27,6 @@
 	let showSubmitModal = $state(false)
 	let autoSubmitting = $state(false)
 	let timerId: ReturnType<typeof setInterval> | null = null
-	const debugSave = true
 
 	const loadSession = async () => {
 		const raw = localStorage.getItem("last-attempt-session")
@@ -180,19 +179,11 @@
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
 
-	const runSave = async (questionId: string, reason: string) => {
+	const runSave = async (questionId: string) => {
 		if (!session) return
 		const answer = answers[questionId]
 		if (saveAnswerMutation.isPending) return
 		if (!isAnswerComplete(answer)) return
-		if (debugSave) {
-			console.debug("[attempt] saveAnswer", {
-				reason,
-				questionId,
-				answerIndex: answer?.answerIndex,
-				certaintyLevel: answer?.certaintyLevel,
-			})
-		}
 
 		try {
 			await saveAnswerMutation.mutateAsync({
@@ -247,8 +238,6 @@
 				const gapIndex = firstCertaintyGapIndex()
 				if (gapIndex >= 0) {
 					applySessionUpdate({ currentIndex: gapIndex })
-				}
-				if (gapIndex >= 0) {
 					toast.error(
 						"Te falta seleccionar nivel de certeza en una o más preguntas."
 					)
@@ -324,12 +313,12 @@
 						toast.error("Debes seleccionar un nivel de certeza antes de continuar.")
 						return
 					}
-					await runSave(currentQuestionId, "next")
+					await runSave(currentQuestionId)
 					applySessionUpdate({ currentIndex: index })
 				}}
 				onsubmit={async () => {
 					if (currentQuestion) {
-						await runSave(currentQuestion.id, "submit")
+						await runSave(currentQuestion.id)
 					}
 					await submitAttempt()
 				}}

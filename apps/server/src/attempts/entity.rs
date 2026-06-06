@@ -62,6 +62,13 @@ pub enum WarningType {
     Screenshot,
     Navigation,
     Devtools,
+    WindowBlur,
+    TabHide,
+    AltTab,
+    MetaKey,
+    ContextMenu,
+    CopyAttempt,
+    SearchAttempt,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

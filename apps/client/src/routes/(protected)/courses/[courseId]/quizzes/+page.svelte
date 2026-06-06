@@ -29,7 +29,7 @@
 	const createQuizMutation = createMutation(() => ({
 		mutationFn: (input: CreateQuizInput) => quizzesService.create(input),
 		onSuccess: async created => {
-			toast.success(`Quiz ${created.title} creado.`)
+			toast.success(`Cuestionario ${created.title} creado.`)
 			await queryClient.invalidateQueries({
 				queryKey: ["quizzes", "course", data.courseId],
 			})
@@ -40,7 +40,7 @@
 	const deleteQuizMutation = createMutation(() => ({
 		mutationFn: (quizId: string) => quizzesService.remove(quizId),
 		onSuccess: async () => {
-			toast.success("Quiz eliminado correctamente.")
+			toast.success("Cuestionario eliminado correctamente.")
 			await queryClient.invalidateQueries({
 				queryKey: ["quizzes", "course", data.courseId],
 			})
@@ -51,7 +51,7 @@
 	const closeAndPublishMutation = createMutation(() => ({
 		mutationFn: (quizId: string) => quizzesService.closeAndPublish(quizId),
 		onSuccess: async () => {
-			toast.success("Quiz finalizado y resultados publicados.")
+			toast.success("Cuestionario finalizado y resultados publicados.")
 			await queryClient.invalidateQueries({
 				queryKey: ["quizzes", "course", data.courseId],
 			})
@@ -87,7 +87,7 @@
 	<header>
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
-				<h3 class="mt-2 mb-0 text-xl text-black">Quizzes</h3>
+				<h3 class="mt-2 mb-0 text-xl text-black">Cuestionarios</h3>
 				<p class="m-0 mt-2 text-zinc-700">
 					Programa evaluaciones, monitorea su estado y publica resultados cuando
 					corresponda.
@@ -99,18 +99,18 @@
 				onclick={() => (showCreateModal = true)}
 			>
 				<Plus size={16} aria-hidden="true" />
-				Nuevo quiz
+				Nuevo cuestionario
 			</button>
 		</div>
 	</header>
 
 	<section>
 		{#if quizzesQuery.isLoading}
-			<p class="m-0 text-zinc-600">Cargando quizzes...</p>
+			<p class="m-0 text-zinc-600">Cargando cuestionarios...</p>
 		{:else if quizzesQuery.error}
 			<p class="m-0 text-red-700">{getErrorMessage(quizzesQuery.error)}</p>
 		{:else if !quizzesQuery.data?.length}
-			<p class="m-0 text-zinc-600">Aún no existen quizzes para este curso.</p>
+			<p class="m-0 text-zinc-600">Aún no existen cuestionarios para este curso.</p>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-full border-collapse text-sm">
@@ -210,8 +210,10 @@
 
 	<ConfirmActionModal
 		open={!!quizToDelete}
-		title="Eliminar quiz"
-		message={quizToDelete ? `Se eliminara el quiz ${quizToDelete.title}.` : ""}
+		title="Eliminar cuestionario"
+		message={quizToDelete
+			? `Se eliminará el cuestionario ${quizToDelete.title}.`
+			: ""}
 		confirmLabel="Eliminar"
 		isPending={deleteQuizMutation.isPending}
 		onCancel={() => (quizToDelete = null)}

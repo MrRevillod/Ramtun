@@ -64,10 +64,10 @@
 								<input
 									class="input-base"
 									type="text"
-									aria-label="Código de quiz"
+									aria-label="Código de cuestionario"
 									{...field.props}
 									value={field.input}
-									placeholder="Ingrese un código de Quiz. Ej: ABC1234"
+									placeholder="Ingrese un código del cuestionario. Ej: ABC1234"
 								/>
 								<span
 									class="text-sm text-red-700"
@@ -100,11 +100,5 @@
 				</button>
 			</div>
 		</Form>
-
-		<div class="keyline mt-4"></div>
-		<p class="mt-4 mb-0 text-sm text-zinc-600">
-			Si el resultado aún no está publicado, te llevaremos a una sala de espera con
-			actualización automática.
-		</p>
 	</section>
 </section>

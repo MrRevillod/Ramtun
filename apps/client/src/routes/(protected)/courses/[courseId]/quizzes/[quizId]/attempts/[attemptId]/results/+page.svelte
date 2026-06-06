@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createQuery } from "@tanstack/svelte-query"
-	import { onDestroy } from "svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
 	import { getErrorMessage } from "$lib/shared/errors"
@@ -13,14 +12,13 @@
 		queryFn: () => attemptsService.getAttemptResultsManaged(data.attemptId),
 	}))
 
-	const unsubSubmit = onAttemptsSubmit(payload => {
-		if (payload.attemptId === data.attemptId) {
-			void resultsQuery.refetch()
-		}
-	})
-
-	onDestroy(() => {
-		unsubSubmit()
+	$effect(() => {
+		const unsub = onAttemptsSubmit(payload => {
+			if (payload.attemptId === data.attemptId) {
+				void resultsQuery.refetch()
+			}
+		})
+		return () => unsub()
 	})
 </script>
 
