@@ -72,20 +72,20 @@ impl AuthService {
             .decode(&token.to_string(), self.config.jwt_secret.as_ref())?;
 
         if claims.typ != "refresh" {
-            return Err(AppError::InvalidToken);
+            return Err(AuthError::InvalidToken)?;
         }
 
         let mut session = self
             .sessions
             .find_active_by_id(&claims.session_id)
             .await?
-            .ok_or(AppError::TokenNotFound)?;
+            .ok_or(AuthError::TokenNotFound)?;
 
         if session.refresh_expires_at <= Utc::now() {
             session.revoked_at = Some(Utc::now());
             self.sessions.save(&session).await?;
 
-            return Err(AppError::TokenNotFound);
+            return Err(AuthError::TokenNotFound)?;
         }
 
         let incoming_refresh_hash = Self::hash_token(token);
@@ -94,7 +94,7 @@ impl AuthService {
             session.revoked_at = Some(Utc::now());
             self.sessions.save(&session).await?;
 
-            return Err(AppError::InvalidToken);
+            return Err(AuthError::InvalidToken)?;
         }
 
         let access_token = self.generate_access_token(&session.id, &session.user_id)?;

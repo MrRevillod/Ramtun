@@ -1,6 +1,6 @@
 use crate::{
-    auth::AuthConfig,
-    shared::{AppError, AppResult},
+    auth::{AuthConfig, AuthError},
+    shared::AppResult,
     users::UserRole,
 };
 
@@ -34,11 +34,13 @@ impl LdapClient {
             .await
             .inspect_err(|e| {
                 tracing::error!("[!] Error de conexión durante bind admin: {e}");
-            })?
+            })
+            .map_err(AuthError::from)?
             .success()
             .inspect_err(|e| {
                 tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
-            })?;
+            })
+            .map_err(AuthError::from)?;
 
         let user_dn = self
             .find_user_dn(&mut ldap, username)
@@ -47,9 +49,12 @@ impl LdapClient {
                 tracing::error!("[!] No se pudo encontrar usuario {}: {}", username, e);
             })?;
 
-        ldap.unbind().await.inspect_err(|e| {
-            tracing::warn!("[!] Error al desautenticar admin: {e}");
-        })?;
+        ldap.unbind()
+            .await
+            .inspect_err(|e| {
+                tracing::warn!("[!] Error al desautenticar admin: {e}");
+            })
+            .ok();
 
         let mut ldap = self.ldap_connect().await?;
 
@@ -57,11 +62,13 @@ impl LdapClient {
             .await
             .inspect_err(|e| {
                 tracing::error!("[!] Error de conexión durante bind de usuario: {e}");
-            })?
+            })
+            .map_err(AuthError::from)?
             .success()
             .inspect_err(|e| {
                 tracing::warn!("[!] Autenticación fallida para usuario {}: {e}", username);
-            })?;
+            })
+            .map_err(|_| AuthError::LdapUsernameNotFound(username.into()))?;
 
         tracing::info!("[✓] Usuario {} autenticado exitosamente", username);
 
@@ -82,12 +89,14 @@ impl LdapClient {
                 &filter,
                 vec!["dn"],
             )
-            .await?
-            .success()?;
+            .await
+            .map_err(AuthError::from)?
+            .success()
+            .map_err(AuthError::from)?;
 
         if results.is_empty() {
             tracing::error!("[!] Usuario no encontrado en LDAP: {}", username);
-            return Err(AppError::LdapUsernameNotFound(username.to_string()));
+            return Err(AuthError::LdapUsernameNotFound(username.into()))?;
         }
 
         let dn = results
@@ -97,7 +106,7 @@ impl LdapClient {
             .first()
             .ok_or_else(|| {
                 tracing::error!("[!] No se pudo extraer DN para el usuario: {}", username);
-                AppError::LdapUsernameNotFound(username.to_string())
+                AuthError::LdapUsernameNotFound(username.into())
             })?
             .to_owned();
 
@@ -123,13 +132,14 @@ impl LdapClient {
                 filter,
                 vec!["mail", "cn", "gidNumber"],
             )
-            .await?
-            .success()?;
+            .await
+            .map_err(AuthError::from)?
+            .success()
+            .map_err(AuthError::from)?;
 
         let entry = results.into_iter().next().ok_or_else(|| {
             tracing::error!("[!] no se encontró correo electrónico para el usuario: {username}");
-
-            AppError::LdapEmailNotFound
+            AuthError::LdapEmailNotFound
         })?;
 
         let entry = SearchEntry::construct(entry);
@@ -143,7 +153,7 @@ impl LdapClient {
                     "[!] no se encontró correo electrónico para el usuario: {username}"
                 );
 
-                AppError::LdapEmailNotFound
+                AuthError::LdapEmailNotFound
             })?;
 
         let name = entry
@@ -199,7 +209,8 @@ impl LdapClient {
             .await
             .inspect_err(|e| {
                 tracing::error!("[!] Error de conexión LDAP: {e}");
-            })?;
+            })
+            .map_err(AuthError::from)?;
 
         ldap3::drive!(conn);
 

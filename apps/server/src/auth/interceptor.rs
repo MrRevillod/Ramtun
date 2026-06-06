@@ -46,6 +46,7 @@ impl OnRequest for SessionCheck {
                 token_type = %claims.typ,
                 "SessionCheck rejected: token type is not access"
             );
+
             return Err(JsonResponse::Unauthorized());
         }
 

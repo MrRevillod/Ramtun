@@ -1,4 +1,4 @@
-use crate::shared::AppResult;
+use crate::auth::AuthError;
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation};
 use serde::{Serialize, de::DeserializeOwned};
 use sword::prelude::*;
@@ -7,7 +7,7 @@ use sword::prelude::*;
 pub struct JsonWebTokenService;
 
 impl JsonWebTokenService {
-    pub fn encode<C>(&self, claims: &C, key: &[u8]) -> AppResult<String>
+    pub fn encode<C>(&self, claims: &C, key: &[u8]) -> Result<String, AuthError>
     where
         C: Serialize,
     {
@@ -18,7 +18,7 @@ impl JsonWebTokenService {
         )?)
     }
 
-    pub fn decode<C>(&self, token: &String, key: &[u8]) -> AppResult<C>
+    pub fn decode<C>(&self, token: &String, key: &[u8]) -> Result<C, AuthError>
     where
         C: DeserializeOwned,
     {
