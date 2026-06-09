@@ -13,7 +13,7 @@ pub struct Database {
 }
 
 #[config(key = "postgres-db")]
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct DatabaseConfig {
     pub user: String,
     pub password: String,
@@ -28,6 +28,8 @@ pub struct DatabaseConfig {
 
 impl Database {
     pub async fn new(db_conf: DatabaseConfig) -> Self {
+        dbg!(&db_conf);
+
         let pool = PgPoolOptions::new()
             .min_connections(db_conf.min_connections.into())
             .max_connections(db_conf.max_connections.into())
