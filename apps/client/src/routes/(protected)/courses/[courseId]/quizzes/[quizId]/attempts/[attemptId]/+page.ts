@@ -1,9 +1,12 @@
-import { redirect } from "@sveltejs/kit"
+import { quizzesService } from "$lib/quizzes/quizzes.service"
 import type { PageLoad } from "./$types"
 
-export const load: PageLoad = ({ params }) => {
-	redirect(
-		302,
-		`/courses/${params.courseId}/quizzes/${params.quizId}/attempts/${params.attemptId}/results`
-	)
+export const load: PageLoad = async ({ params }) => {
+	const quiz = await quizzesService.getQuiz(params.quizId)
+	return {
+		courseId: params.courseId,
+		quizId: params.quizId,
+		attemptId: params.attemptId,
+		quizName: quiz.title,
+	}
 }
