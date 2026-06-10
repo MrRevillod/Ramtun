@@ -22,6 +22,7 @@ pub struct AttemptListItemView {
     pub results_viewed_at: Option<DateTime<Utc>>,
     pub score: Option<i16>,
     pub grade: Option<f64>,
+    pub warning_count: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -86,6 +87,7 @@ impl From<Attempt> for AttemptListItemView {
             results_viewed_at: value.results_viewed_at,
             score: value.score,
             grade: value.grade,
+            warning_count: 0,
         }
     }
 }

@@ -2,9 +2,12 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { createQuery } from "@tanstack/svelte-query"
-	import { Eye } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import { onAttemptNew, onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
+	import {
+		onAttemptNew,
+		onAttemptsSubmit,
+		onAttemptWarning,
+	} from "$lib/shared/socket/attempts.socket"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
@@ -24,6 +27,13 @@
 		)
 	}
 
+	const warningBadge = (count: number) => {
+		if (count === 0) return "text-zinc-400"
+		if (count <= 2) return "bg-amber-100 text-amber-800"
+		if (count <= 5) return "bg-orange-100 text-orange-800"
+		return "bg-red-100 text-red-800"
+	}
+
 	$effect(() => {
 		const unsubSubmit = onAttemptsSubmit(payload => {
 			if (payload.quizId !== data.quizId) return
@@ -34,9 +44,14 @@
 			void attemptsQuery.refetch()
 		})
 
+		const unsubWarning = onAttemptWarning(() => {
+			void attemptsQuery.refetch()
+		})
+
 		return () => {
 			unsubSubmit()
 			unsubNew()
+			unsubWarning()
 		}
 	})
 </script>
@@ -68,7 +83,7 @@
 							<th class="px-3 py-2 text-left font-medium">Hora de envío</th>
 							<th class="px-3 py-2 text-left font-medium">Puntos</th>
 							<th class="px-3 py-2 text-left font-medium">Nota</th>
-							<th class="px-3 py-2 text-left font-medium">Acciones</th>
+							<th class="px-3 py-2 text-left font-medium">Alertas</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -93,17 +108,15 @@
 									{attempt.grade !== null ? GradeValue.format(attempt.grade) : "-"}
 								</td>
 								<td class="px-3 py-2">
-									<button
-										class="icon-btn"
-										type="button"
-										title="Ver intento"
-										onclick={e => {
-											e.stopPropagation()
-											viewAttempt(attempt.attemptId)
-										}}
-									>
-										<Eye size={15} aria-hidden="true" />
-									</button>
+									{#if attempt.warningCount > 0}
+										<span
+											class="inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums {warningBadge(attempt.warningCount)}"
+										>
+											{attempt.warningCount}
+										</span>
+									{:else}
+										<span class="text-zinc-400">-</span>
+									{/if}
 								</td>
 							</tr>
 						{/each}

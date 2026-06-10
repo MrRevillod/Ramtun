@@ -15,7 +15,7 @@
 	} = $props()
 </script>
 
-<div class="flex flex-row items-center justify-center gap-3">
+<div class="mb-4 flex flex-row items-center justify-center pt-2">
 	<div class="w-1/3">
 		<Title {supra} size="page" {tag}>{title}</Title>
 	</div>
@@ -23,4 +23,4 @@
 		{@render children()}
 	</div>
 </div>
-<div class="h-px bg-zinc-400/70"></div>
+<div class="mb-4 h-px bg-zinc-400/70"></div>

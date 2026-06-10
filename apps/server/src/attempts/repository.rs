@@ -79,7 +79,8 @@ impl AttemptRepository {
                 a.submitted_at,
                 a.results_viewed_at,
                 a.score,
-                a.grade
+                a.grade,
+                (SELECT COUNT(*)::BIGINT FROM attempt_warnings aw WHERE aw.attempt_id = a.id) AS warning_count
              FROM attempts a
              JOIN users u ON u.id = a.student_id
              WHERE a.deleted_at IS NULL",

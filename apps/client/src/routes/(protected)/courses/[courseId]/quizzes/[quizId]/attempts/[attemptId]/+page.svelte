@@ -116,43 +116,41 @@
 			.map(([type]) => type)
 </script>
 
-<section class="flex flex-col gap-3">
-	<section class="mt-4 mb-2">
-		<PageHeader supra="Revisión y Resultados" title={data.quizName} tag="h3">
-			<button
-				class="action-tab justify-center"
-				data-active={activeTab === "results"}
-				onclick={() => (activeTab = "results")}
-				type="button"
-			>
-				<FileText size={16} /> Resultados
-			</button>
-			<button
-				class="action-tab justify-center"
-				data-active={activeTab === "supervision"}
-				onclick={() => (activeTab = "supervision")}
-				type="button"
-			>
-				<div class="flex items-center gap-1.5">
-					<Shield size={16} /> Supervisión
-					{#if warningBadge > 0}
-						<span
-							class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white"
-						>
-							{warningBadge}
-						</span>
-					{/if}
-				</div>
-			</button>
-			<a
-				class="action-tab shrink-0 justify-center"
-				href={resolve(`/courses/${data.courseId}/quizzes/${data.quizId}/attempts`)}
-			>
-				<ArrowLeft size={16} aria-hidden="true" />
-				Volver
-			</a>
-		</PageHeader>
-	</section>
+<section class="flex flex-col">
+	<PageHeader supra="Revisión y Resultados" title={data.quizName} tag="h3">
+		<button
+			class="action-tab justify-center"
+			data-active={activeTab === "results"}
+			onclick={() => (activeTab = "results")}
+			type="button"
+		>
+			<FileText size={16} /> Resultados
+		</button>
+		<button
+			class="action-tab justify-center"
+			data-active={activeTab === "supervision"}
+			onclick={() => (activeTab = "supervision")}
+			type="button"
+		>
+			<div class="flex items-center gap-1.5">
+				<Shield size={16} /> Supervisión
+				{#if warningBadge > 0}
+					<span
+						class="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white"
+					>
+						{warningBadge}
+					</span>
+				{/if}
+			</div>
+		</button>
+		<a
+			class="action-tab shrink-0 justify-center"
+			href={resolve(`/courses/${data.courseId}/quizzes/${data.quizId}/attempts`)}
+		>
+			<ArrowLeft size={16} aria-hidden="true" />
+			Volver
+		</a>
+	</PageHeader>
 
 	{#if activeTab === "results"}
 		{#if resultsQuery.isLoading}
@@ -160,8 +158,8 @@
 		{:else if resultsQuery.error}
 			{#if getErrorMessage(resultsQuery.error).includes("no ha sido enviado")}
 				<p class="m-0 text-zinc-600">
-					El estudiante aún no ha enviado el intento. Los resultados estarán disponibles
-					una vez que lo complete.
+					El estudiante aún no ha enviado el intento. Los resultados estarán
+					disponibles una vez que lo complete.
 				</p>
 			{:else}
 				<p class="m-0 text-red-700">{getErrorMessage(resultsQuery.error)}</p>
@@ -170,7 +168,7 @@
 			<AttemptResultReview result={resultsQuery.data} />
 		{/if}
 	{:else}
-		<div class="flex items-center justify-between gap-3">
+		<div class="mb-2 flex items-center justify-between gap-3">
 			<h3 class="m-0 text-xl text-black">Advertencias del intento</h3>
 			<button
 				class="inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-zinc-300 bg-white text-zinc-500 transition-colors hover:border-zinc-800 hover:text-zinc-800"
@@ -183,8 +181,12 @@
 		</div>
 
 		{#if showInfo}
-			<div class="rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm">
-				<p class="m-0 mb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
+			<div
+				class="mb-2 gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm"
+			>
+				<p
+					class="m-0 mb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase"
+				>
 					Equivalencia de severidad
 				</p>
 				<div class="grid gap-2 sm:grid-cols-4">
@@ -215,7 +217,7 @@
 				No se registraron advertencias en este intento.
 			</p>
 		{:else}
-			<div class="grid gap-3 sm:grid-cols-4">
+			<div class="mb-2 grid gap-3 sm:grid-cols-4">
 				{#each SEVERITY_GROUPS as severity (severity)}
 					{@const Icon = severityIcon(severity)}
 					<div class="panel-muted p-3">

@@ -16,8 +16,8 @@
 	const isMembers = $derived(page.url.pathname.startsWith(membersHref))
 </script>
 
-<section class="flex flex-col gap-4 py-2">
-	<section class="flex flex-col gap-3">
+<section class="flex flex-col py-2">
+	<section class="flex flex-col">
 		<PageHeader
 			supra={`${data.course.code} - ${data.course.year}`}
 			title={data.course.name}

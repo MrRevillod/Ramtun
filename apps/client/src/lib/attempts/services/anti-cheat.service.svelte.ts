@@ -26,17 +26,7 @@ const fire = (
 }
 
 export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) => {
-	let pendingKeyboardNav: "alt_tab" | "meta_key" | null = null
-	let pendingNavTimer: ReturnType<typeof setTimeout> | null = null
 	let focusLossFired = false
-
-	const clearPendingNav = () => {
-		pendingKeyboardNav = null
-		if (pendingNavTimer) {
-			clearTimeout(pendingNavTimer)
-			pendingNavTimer = null
-		}
-	}
 
 	const preventContextMenu = (e: MouseEvent) => {
 		e.preventDefault()
@@ -49,27 +39,6 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 	}
 
 	const onKeyDown = (e: KeyboardEvent) => {
-		if (e.key === "Alt") {
-			e.preventDefault()
-			clearPendingNav()
-			pendingKeyboardNav = "alt_tab"
-			pendingNavTimer = setTimeout(clearPendingNav, 1000)
-			return
-		}
-
-		if (e.key === "Meta") {
-			e.preventDefault()
-			fire(
-				attemptId,
-				"meta_key",
-				"Se presionó la tecla Windows/Command en un cuestionario.",
-				onWarning
-			)
-			pendingKeyboardNav = "meta_key"
-			pendingNavTimer = setTimeout(clearPendingNav, 1000)
-			return
-		}
-
 		if ((e.ctrlKey || e.metaKey) && e.key === "c") {
 			e.preventDefault()
 			fire(
@@ -104,28 +73,9 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 		}
 	}
 
-	const onKeyUp = (e: KeyboardEvent) => {
-		if (e.key === "Alt") {
-			clearPendingNav()
-		}
-	}
-
 	const onBlur = () => {
+		if (focusLossFired) return
 		focusLossFired = true
-		if (pendingKeyboardNav === "alt_tab") {
-			clearPendingNav()
-			fire(
-				attemptId,
-				"alt_tab",
-				"Se detectó cambio de ventana mediante teclas de navegación del sistema.",
-				onWarning
-			)
-			return
-		}
-		if (pendingKeyboardNav) {
-			clearPendingNav()
-			return
-		}
 		fire(
 			attemptId,
 			"window_blur",
@@ -134,17 +84,21 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 		)
 	}
 
+	const onFocus = () => {
+		setTimeout(() => {
+			focusLossFired = false
+		}, 100)
+	}
+
 	const onVisibilityChange = () => {
 		if (document.hidden && !focusLossFired) {
+			focusLossFired = true
 			fire(
 				attemptId,
 				"tab_hide",
 				"Se cambió de pestaña durante el cuestionario.",
 				onWarning
 			)
-		}
-		if (!document.hidden) {
-			focusLossFired = false
 		}
 	}
 
@@ -168,8 +122,8 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 	const start = () => {
 		document.addEventListener("contextmenu", preventContextMenu)
 		window.addEventListener("keydown", onKeyDown)
-		window.addEventListener("keyup", onKeyUp)
 		window.addEventListener("blur", onBlur)
+		window.addEventListener("focus", onFocus)
 		document.addEventListener("visibilitychange", onVisibilityChange)
 		devtoolsCheckId = setInterval(checkDevTools, 3000)
 	}
@@ -177,8 +131,8 @@ export const createAntiCheat = (attemptId: string, onWarning?: WarningHandler) =
 	const stop = () => {
 		document.removeEventListener("contextmenu", preventContextMenu)
 		window.removeEventListener("keydown", onKeyDown)
-		window.removeEventListener("keyup", onKeyUp)
 		window.removeEventListener("blur", onBlur)
+		window.removeEventListener("focus", onFocus)
 		document.removeEventListener("visibilitychange", onVisibilityChange)
 		if (devtoolsCheckId) {
 			clearInterval(devtoolsCheckId)

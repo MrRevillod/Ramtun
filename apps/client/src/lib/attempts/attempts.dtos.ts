@@ -47,6 +47,7 @@ export type AttemptListItem = {
 	resultsViewedAt: string | null
 	score: number | null
 	grade: number | null
+	warningCount: number
 }
 
 export type AttemptSubmitView = {
