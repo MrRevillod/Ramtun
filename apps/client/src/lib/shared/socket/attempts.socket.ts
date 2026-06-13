@@ -1,5 +1,4 @@
 import { io, type Socket } from "socket.io-client"
-import { sessionManager } from "$lib/shared/auth/session.manager"
 import type { AttemptSubmitView, AttemptWarning } from "$lib/attempts/attempts.dtos"
 
 type AttemptsSocket = Socket
@@ -15,9 +14,7 @@ const getSocket = () => {
 			autoConnect: false,
 			path: SOCKET_PATH,
 			transports: ["websocket"],
-			query: {
-				token: sessionManager.getAccessToken() ?? "",
-			},
+			withCredentials: true,
 		})
 	}
 
@@ -28,11 +25,6 @@ export const connectAttemptsSocket = () => {
 	const currentSocket = getSocket()
 
 	if (!currentSocket) return null
-
-	const accessToken = sessionManager.getAccessToken()
-	if (accessToken) {
-		currentSocket.io.opts.query = { token: accessToken }
-	}
 
 	if (!currentSocket.connected) {
 		currentSocket.connect()

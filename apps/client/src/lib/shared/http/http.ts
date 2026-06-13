@@ -12,7 +12,6 @@ type ApiResponse<T = unknown> = {
 }
 
 export type ApiRequestConfig<TData = unknown> = AxiosRequestConfig<TData> & {
-	skipAuth?: boolean
 	skipRefresh?: boolean
 	_retry?: boolean
 }
@@ -113,5 +112,5 @@ export const request = <T>(config: ApiRequestConfig): Promise<T> =>
 		},
 		(error: unknown): never => {
 			throw mapTransportError(error)
-		}
+		},
 	)

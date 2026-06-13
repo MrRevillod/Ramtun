@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 export type User = {
 	id: string
 	username: string
@@ -6,18 +8,16 @@ export type User = {
 	role: "student" | "func" | "admin"
 }
 
-export type LoginInput = {
-	username: string
-	password: string
-}
+export const loginSchema = v.object({
+	username: v.pipe(
+		v.string(),
+		v.trim(),
+		v.minLength(1, "El usuario es obligatorio."),
+	),
+	password: v.pipe(
+		v.string(),
+		v.minLength(1, "La contraseña es obligatoria."),
+	),
+})
 
-export type LoginResponse = {
-	user: User
-	accessToken: string
-	refreshToken: string
-}
-
-export type AuthTokens = {
-	accessToken: string
-	refreshToken: string
-}
+export type LoginInput = v.InferInput<typeof loginSchema>

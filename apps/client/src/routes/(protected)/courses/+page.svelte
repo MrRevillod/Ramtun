@@ -48,7 +48,7 @@
 	let showCreateModal = $state(false)
 	let courseToDelete = $state<{ id: string; name: string } | null>(null)
 
-	const role = $derived(authStore.session?.user.role)
+	const role = $derived(authStore.user?.role)
 	const canCreateCourse = $derived(isFunc(role) || isAdmin(role))
 
 	const confirmDeleteCourse = async () => {

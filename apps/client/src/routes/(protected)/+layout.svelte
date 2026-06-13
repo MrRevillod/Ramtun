@@ -8,7 +8,6 @@
 	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
 	import { coursesService } from "$lib/courses/courses.service"
-	import { sessionManager } from "$lib/shared/auth/session.manager"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import {
 		connectAttemptsSocket,
@@ -24,12 +23,12 @@
 	const logoutMutation = createMutation(() => ({
 		mutationFn: () => authService.logout(),
 		onSuccess: async () => {
-			sessionManager.clearSession()
+			authStore.clearSession()
 			await goto("/login")
 		},
 		onError: error => {
 			toast.error(getErrorMessage(error))
-			sessionManager.clearSession()
+			authStore.clearSession()
 			void goto("/login")
 		},
 	}))
@@ -38,7 +37,7 @@
 		await logoutMutation.mutateAsync()
 	}
 
-	const role = $derived(authStore.session?.user.role)
+	const role = $derived(authStore.user?.role)
 	const displayRole = $derived(role ? RoleValue.format(role) : "")
 
 	let studentHasCourses = $state(false)
@@ -140,7 +139,7 @@
 						class="flex h-9 min-w-0 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-2.5 text-left sm:h-10 sm:min-w-44 sm:px-3 sm:text-right"
 					>
 						<p class="truncate text-sm font-semibold text-zinc-800">
-							{authStore.session?.user.name}
+							{authStore.user?.name}
 						</p>
 						<p class="text-xs text-zinc-600">{displayRole}</p>
 					</div>
