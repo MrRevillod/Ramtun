@@ -6,7 +6,7 @@ use crate::{
     users::{User, UserId, UserRepository},
 };
 
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use sword::prelude::*;
@@ -23,16 +23,16 @@ pub struct AuthService {
 }
 
 impl AuthService {
-    pub async fn login(&self, input: LoginDto) -> AppResult<LoginResponse> {
+    pub async fn login(&self, input: &LoginDto) -> AppResult<LoginResponse> {
         let LoginDto { username, password } = input;
 
-        let ldap_user = self.ldap.authenticate(&username, &password).await?;
+        let ldap_user = self.ldap.authenticate(username, password).await?;
 
-        let user = match self.users.find_by_username(&username).await? {
+        let user = match self.users.find_by_username(username).await? {
             Some(existing) => existing,
             None => {
                 let incoming_user = User::builder()
-                    .username(username)
+                    .username(username.clone())
                     .email(ldap_user.email)
                     .name(ldap_user.name)
                     .role(ldap_user.role)
@@ -43,8 +43,11 @@ impl AuthService {
         };
 
         let session_id = SessionId::new();
-        let access_token = self.generate_access_token(&session_id, &user.id)?;
-        let refresh_token = self.generate_refresh_token(&session_id, &user.id)?;
+
+        let (access_token, access_token_exp) = self.generate_access_token(&session_id, &user.id)?;
+        let (refresh_token, refresh_token_exp) =
+            self.generate_refresh_token(&session_id, &user.id)?;
+
         let now = Utc::now();
 
         let session = Session {
@@ -52,8 +55,8 @@ impl AuthService {
             user_id: user.id,
             refresh_token_hash: Self::hash_token(&refresh_token),
             created_at: now,
-            expires_at: now + Duration::days(self.config.session_exp_days),
-            refresh_expires_at: now + Duration::days(self.config.refresh_exp_days),
+            expires_at: access_token_exp,
+            refresh_expires_at: refresh_token_exp,
             revoked_at: None,
         };
 
@@ -62,52 +65,37 @@ impl AuthService {
         Ok(LoginResponse {
             user,
             access_token,
+            access_token_exp,
             refresh_token,
+            refresh_token_exp,
         })
     }
 
-    pub async fn refresh(&self, token: &str) -> AppResult<RefreshResponse> {
-        let claims: SessionClaims = self
+    pub async fn refresh(&self, token: &String) -> AppResult<RefreshResponse> {
+        let claims = self
             .jwt_service
-            .decode(&token.to_string(), self.config.jwt_secret.as_ref())?;
+            .decode::<SessionClaims>(token, self.config.jwt_secret.as_ref())?;
 
         if claims.typ != "refresh" {
             return Err(AuthError::InvalidToken)?;
         }
 
-        let mut session = self
+        let session = self
             .sessions
-            .find_active_by_id(&claims.session_id)
+            .find_active_by_refresh_id(&claims.session_id)
             .await?
             .ok_or(AuthError::TokenNotFound)?;
 
-        if session.refresh_expires_at <= Utc::now() {
-            session.revoked_at = Some(Utc::now());
-            self.sessions.save(&session).await?;
+        let (access_token, access_token_exp) =
+            self.generate_access_token(&session.id, &session.user_id)?;
 
-            return Err(AuthError::TokenNotFound)?;
-        }
-
-        let incoming_refresh_hash = Self::hash_token(token);
-
-        if incoming_refresh_hash != session.refresh_token_hash {
-            session.revoked_at = Some(Utc::now());
-            self.sessions.save(&session).await?;
-
-            return Err(AuthError::InvalidToken)?;
-        }
-
-        let access_token = self.generate_access_token(&session.id, &session.user_id)?;
-        let refresh_token = self.generate_refresh_token(&session.id, &session.user_id)?;
-
-        session.refresh_token_hash = Self::hash_token(&refresh_token);
-        session.refresh_expires_at = Utc::now() + Duration::days(self.config.refresh_exp_days);
-
-        self.sessions.save(&session).await?;
+        self.sessions
+            .update_expires_at(&session.id, access_token_exp)
+            .await?;
 
         Ok(RefreshResponse {
             access_token,
-            refresh_token,
+            access_token_exp,
         })
     }
 
@@ -120,11 +108,17 @@ impl AuthService {
         Ok(())
     }
 
-    fn generate_access_token(&self, session_id: &SessionId, user_id: &UserId) -> AppResult<String> {
+    fn generate_access_token(
+        &self,
+        session_id: &SessionId,
+        user_id: &UserId,
+    ) -> AppResult<(String, DateTime<Utc>)> {
+        let expiration = Utc::now() + Duration::minutes(self.config.access_exp_minutes);
+
         let claims = SessionClaims {
             session_id: *session_id,
             user_id: *user_id,
-            exp: (Utc::now() + Duration::minutes(self.config.access_exp_minutes)).timestamp(),
+            exp: expiration.timestamp(),
             typ: "access".to_string(),
         };
 
@@ -132,18 +126,20 @@ impl AuthService {
             .jwt_service
             .encode(&claims, self.config.jwt_secret.as_ref())?;
 
-        Ok(token)
+        Ok((token, expiration))
     }
 
     fn generate_refresh_token(
         &self,
         session_id: &SessionId,
         user_id: &UserId,
-    ) -> AppResult<String> {
+    ) -> AppResult<(String, DateTime<Utc>)> {
+        let expiration = Utc::now() + Duration::days(self.config.refresh_exp_days);
+
         let claims = SessionClaims {
             session_id: *session_id,
             user_id: *user_id,
-            exp: (Utc::now() + Duration::days(self.config.refresh_exp_days)).timestamp(),
+            exp: expiration.timestamp(),
             typ: "refresh".to_string(),
         };
 
@@ -151,7 +147,7 @@ impl AuthService {
             .jwt_service
             .encode(&claims, self.config.jwt_secret.as_ref())?;
 
-        Ok(token)
+        Ok((token, expiration))
     }
 
     fn hash_token(token: &str) -> String {

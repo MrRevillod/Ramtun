@@ -17,14 +17,16 @@ pub struct LoginDto {
 pub struct LoginResponse {
     pub user: User,
     pub access_token: String,
+    pub access_token_exp: DateTime<Utc>,
     pub refresh_token: String,
+    pub refresh_token_exp: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RefreshResponse {
     pub access_token: String,
-    pub refresh_token: String,
+    pub access_token_exp: DateTime<Utc>,
 }
 
 pub type SessionId = Id<Session>;

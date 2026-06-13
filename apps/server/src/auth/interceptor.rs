@@ -20,19 +20,18 @@ impl OnRequest for SessionCheck {
         let method = req.method().to_string();
         let path = req.uri();
 
-        let Some(auth_header) = req.authorization() else {
-            tracing::warn!(method = %method, path = %path, "SessionCheck rejected: missing Authorization header");
-            return Err(JsonResponse::Unauthorized());
-        };
-
-        let Some(token) = auth_header.strip_prefix("Bearer ") else {
-            tracing::warn!(method = %method, path = %path, "SessionCheck rejected: invalid Authorization scheme");
-            return Err(JsonResponse::Unauthorized());
-        };
+        let token = req
+            .cookies()?
+            .get("RAMTUN_ACCESS_TOKEN")
+            .map(|c| c.value().to_string())
+            .ok_or_else(|| {
+	            tracing::warn!(method = %method, path = %path, "SessionCheck rejected: missing Access token cookie");
+	            JsonResponse::Unauthorized()
+            })?;
 
         let claims: SessionClaims = self
             .jwt_service
-            .decode(&token.to_string(), self.config.jwt_secret.as_ref())
+            .decode(&token, self.config.jwt_secret.as_ref())
             .inspect_err(|error| {
                 tracing::warn!(method = %method, path = %path, error = %error, "SessionCheck rejected: token decode failed");
             })?;
@@ -79,23 +78,23 @@ impl OnConnect for SessionCheck {
     type Error = String;
 
     async fn on_connect(&self, socket: SocketContext) -> Result<(), Self::Error> {
-        let token = socket.req_parts().uri.query().and_then(|q| {
-            q.split('&')
-                .find_map(|pair| pair.split_once('='))
-                .filter(|(key, _)| *key == "token")
-                .map(|(_, value)| value.to_string())
-        });
-
-        let Some(ref token) = token else {
-            tracing::warn!(socket_id = %socket.id(), "SessionCheck rejected: missing token");
-            return Err("Missing token".into());
+        let Some(cookies) = socket.cookies() else {
+            tracing::warn!(socket_id = %socket.id(), "SessionCheck rejected: missing cookies");
+            return Err("Missing cookies".into());
         };
+
+        let access_cookie = cookies.get("RAMTUN_ACCESS_TOKEN").ok_or_else(|| {
+			tracing::warn!(socket_id = %socket.id(), "SessionCheck rejected: missing Access token cookie");
+			"Missing Access token cookie".to_string()
+		})?;
+
+        let token = access_cookie.value().to_string();
 
         tracing::debug!(socket_id = %socket.id(), "SessionCheck on_connect: received token");
 
         let claims: SessionClaims = self
             .jwt_service
-            .decode(token, self.config.jwt_secret.as_ref())
+            .decode(&token, self.config.jwt_secret.as_ref())
             .inspect_err(|error| {
                 tracing::warn!(socket_id = %socket.id(), error = %error, "SessionCheck rejected: token decode failed");
             })

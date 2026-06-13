@@ -2,6 +2,7 @@ use crate::{
     auth::{Session, SessionId},
     shared::{AppResult, Database},
 };
+use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use sword::prelude::*;
 
@@ -67,5 +68,31 @@ impl SessionRepository {
         .await?;
 
         Ok(res)
+    }
+
+    pub async fn find_active_by_refresh_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
+        let res = sqlx::query_as::<_, Session>(
+            "SELECT * FROM sessions
+             WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
+        )
+        .bind(id)
+        .fetch_optional(self.database.get_pool())
+        .await?;
+
+        Ok(res)
+    }
+
+    pub async fn update_expires_at(
+        &self,
+        id: &SessionId,
+        expires_at: DateTime<Utc>,
+    ) -> AppResult<()> {
+        sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
+            .bind(expires_at)
+            .bind(id)
+            .execute(self.database.get_pool())
+            .await?;
+
+        Ok(())
     }
 }

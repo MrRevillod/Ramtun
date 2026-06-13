@@ -38,7 +38,6 @@ ldap_admin_password = "${LDAP_ADMIN_PASSWORD}"
 jwt_secret = "${JWT_SECRET}"
 access_exp_minutes = 15
 refresh_exp_days = 7
-session_exp_days = 30
 
 [tracing]
 enabled = true
