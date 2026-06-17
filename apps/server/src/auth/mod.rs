@@ -15,6 +15,8 @@ pub use interceptor::SessionCheck;
 pub use repository::SessionRepository;
 pub use services::{AuthService, LdapClient};
 
+use crate::shared::CookieManager;
+
 #[config(key = "auth")]
 #[derive(Clone, Deserialize)]
 pub struct AuthConfig {
@@ -38,5 +40,6 @@ impl Module for AuthModule {
         components.register::<AuthService>();
         components.register::<LdapClient>();
         components.register::<SessionRepository>();
+        components.register::<CookieManager>();
     }
 }

@@ -1,3 +1,4 @@
+mod cookies;
 mod database;
 mod errors;
 mod extensions;
@@ -7,6 +8,7 @@ mod jsonwebtoken;
 use database::DatabaseConfig;
 use sword::prelude::*;
 
+pub use cookies::*;
 pub use database::{Database, TransactionManager, Tx};
 pub use errors::*;
 pub use extensions::*;

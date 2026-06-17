@@ -39,6 +39,13 @@ jwt_secret = "${JWT_SECRET}"
 access_exp_minutes = 15
 refresh_exp_days = 7
 
+[cookies]
+path = "/"
+secure = true
+http_only = true
+access_cookie_name = "RAMTUN_ACCESS_TOKEN"
+refresh_cookie_name = "RAMTUN_REFRESH_TOKEN"
+
 [tracing]
 enabled = true
 display = false

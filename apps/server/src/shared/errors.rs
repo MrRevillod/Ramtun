@@ -53,4 +53,8 @@ pub enum AppError {
     #[http(code = 400)]
     #[error("Bad request: {0}")]
     BadRequest(String),
+
+    #[http(code = 500)]
+    #[error("Internal Server error")]
+    InternalError,
 }
