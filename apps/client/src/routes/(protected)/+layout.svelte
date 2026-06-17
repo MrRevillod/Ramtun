@@ -8,7 +8,6 @@
 	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
 	import { coursesService } from "$lib/courses/courses.service"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import {
 		connectAttemptsSocket,
 		disconnectAttemptsSocket,
@@ -22,14 +21,10 @@
 
 	const logoutMutation = createMutation(() => ({
 		mutationFn: () => authService.logout(),
-		onSuccess: async () => {
+		onSettled: async () => {
 			authStore.clearSession()
+			toast.info("Cerrando sesión...")
 			await goto("/login")
-		},
-		onError: error => {
-			toast.error(getErrorMessage(error))
-			authStore.clearSession()
-			void goto("/login")
 		},
 	}))
 
