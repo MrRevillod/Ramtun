@@ -1,6 +1,5 @@
 use crate::auth::*;
-use crate::shared::CookieManager;
-use crate::shared::RequestExt;
+use crate::shared::{CookieManager, RequestExt};
 
 use chrono::Utc;
 use std::sync::Arc;

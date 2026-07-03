@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ArrowLeft, FileText, Shield } from "lucide-svelte"
-	import { AlertTriangle, AlertOctagon, ShieldOff, Siren, Info } from "lucide-svelte"
+	import { AlertTriangle, AlertOctagon, ShieldOff, Info } from "lucide-svelte"
 	import { createQuery } from "@tanstack/svelte-query"
 	import { resolve } from "$app/paths"
 	import { attemptsService } from "$lib/attempts/attempts.service"
@@ -61,8 +61,6 @@
 				return "text-orange-700 bg-orange-50 border-orange-300"
 			case "grave":
 				return "text-red-700 bg-red-50 border-red-300"
-			case "critica":
-				return "text-red-800 bg-red-100 border-red-500"
 		}
 	}
 
@@ -74,8 +72,6 @@
 				return AlertOctagon
 			case "grave":
 				return ShieldOff
-			case "critica":
-				return Siren
 		}
 	}
 
@@ -87,8 +83,6 @@
 				return "Moderadas"
 			case "grave":
 				return "Graves"
-			case "critica":
-				return "Críticas"
 		}
 	}
 
@@ -101,7 +95,6 @@
 			leve: 0,
 			moderada: 0,
 			grave: 0,
-			critica: 0,
 		}
 		for (const w of items) {
 			const s = WARNING_SEVERITY[w.warningType]
@@ -189,7 +182,7 @@
 				>
 					Equivalencia de severidad
 				</p>
-				<div class="grid gap-2 sm:grid-cols-4">
+				<div class="grid gap-2 sm:grid-cols-3">
 					{#each SEVERITY_GROUPS as severity (severity)}
 						{@const Icon = severityIcon(severity)}
 						<div class="rounded-sm border border-zinc-200 bg-white p-2.5">
@@ -217,7 +210,7 @@
 				No se registraron advertencias en este intento.
 			</p>
 		{:else}
-			<div class="mb-2 grid gap-3 sm:grid-cols-4">
+			<div class="mb-2 grid gap-3 sm:grid-cols-3">
 				{#each SEVERITY_GROUPS as severity (severity)}
 					{@const Icon = severityIcon(severity)}
 					<div class="panel-muted p-3">

@@ -9,6 +9,7 @@ privatekey
 **/.svelte-kit
 .svelte-kit
 apps/client/.svelte-kit
+**/.pnpm-store
 
 .output
 .vercel

@@ -12,6 +12,7 @@ sword = { git = "https://github.com/sword-web/sword.git", features = [
     "validation-validator",
 ] }
 
+lettre = { version = "0.11.19", features = ["tokio1", "tokio1-native-tls"] }
 uuid = { version = "1.19.0", features = ["serde", "v4"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
@@ -39,3 +40,4 @@ rand = "0.10.0"
 bon = "3.9.1"
 futures = "0.3.32"
 time = "0.3.47"
+tokio = { version = "1.52.3", features = ["full"] }
