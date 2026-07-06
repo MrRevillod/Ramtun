@@ -1,7 +1,7 @@
+use crate::users::{User, UserFilter, UserId, UserRole, UsersError};
+use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 use std::str::FromStr;
-
-use crate::users::{UserFilter, UserRole, UsersError};
-use serde::Deserialize;
 use validator::Validate;
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -13,14 +13,41 @@ pub enum ManageableUserRole {
 
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUserRoleRequest {
+pub struct UpdateUserRoleDto {
     pub role: ManageableUserRole,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdatePasswordDto {
+    pub email: String,
+    pub password: String,
 }
 
 #[derive(Debug, Default, Deserialize)]
 pub struct SearchUsersQuery {
     pub search: Option<String>,
     pub roles: Option<String>,
+}
+
+#[derive(Debug, Serialize, FromRow)]
+pub struct UserView {
+    pub id: UserId,
+    pub username: String,
+    pub name: String,
+    pub email: String,
+    pub role: UserRole,
+}
+
+impl From<User> for UserView {
+    fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        }
+    }
 }
 
 impl From<ManageableUserRole> for UserRole {

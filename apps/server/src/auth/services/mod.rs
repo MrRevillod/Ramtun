@@ -20,22 +20,31 @@ pub struct AuthService {
     users: Arc<UserRepository>,
     jwt_service: Arc<JsonWebTokenService>,
     sessions: Arc<SessionRepository>,
+    hasher: Arc<Hasher>,
 }
 
 impl AuthService {
     pub async fn login(&self, input: &LoginDto) -> AppResult<LoginResponse> {
         let LoginDto { username, password } = input;
 
-        let ldap_user = self.ldap.authenticate(username, password).await?;
+        let mut user = match self.users.find_by_username(username).await? {
+            Some(mut user) => {
+                if !self.hasher.verify(password, &user.password_hash).await? {
+                    self.ldap.authenticate(username, password).await?;
+                    user.password_hash = self.hasher.hash(password).await?;
+                }
 
-        let user = match self.users.find_by_username(username).await? {
-            Some(existing) => existing,
+                user
+            }
             None => {
+                let ldap_user = self.ldap.authenticate(username, password).await?;
+
                 let incoming_user = User::builder()
                     .username(username.clone())
                     .email(ldap_user.email)
                     .name(ldap_user.name)
                     .role(ldap_user.role)
+                    .password_hash(self.hasher.hash(password).await?)
                     .build();
 
                 self.users.save(&incoming_user).await?
@@ -60,10 +69,13 @@ impl AuthService {
             revoked_at: None,
         };
 
+        user.last_login_at = Some(now);
+
         self.sessions.save(&session).await?;
+        self.users.save(&user).await?;
 
         Ok(LoginResponse {
-            user,
+            user: user.into(),
             access_token,
             access_token_exp,
             refresh_token,

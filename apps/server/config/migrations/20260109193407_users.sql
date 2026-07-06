@@ -5,7 +5,9 @@ CREATE TABLE users (
     username TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     role user_role NOT NULL DEFAULT 'student',
-    email TEXT UNIQUE NOT NULL
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    last_login_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_users_username ON users(username);

@@ -41,3 +41,4 @@ bon = "3.9.1"
 futures = "0.3.32"
 time = "0.3.47"
 tokio = { version = "1.52.3", features = ["full"] }
+bcrypt = "0.19.2"
