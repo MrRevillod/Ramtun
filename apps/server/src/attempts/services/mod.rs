@@ -14,12 +14,12 @@ use crate::{
 
 use chrono::{Duration, Utc};
 use futures::TryFutureExt;
+use grading::GradingOutput;
 use std::collections::HashMap;
 use std::sync::Arc;
 use sword::prelude::*;
 
 pub use answers::AnswerService;
-use grading::GradingOutput;
 pub use grading::GradingService;
 pub use questions::QuestionService;
 
@@ -66,12 +66,34 @@ impl AttemptsService {
     }
 
     /// Initializes a new attempt for a given quiz and user.
-    /// It checks if the quiz is available for attempt and if the user has not already attempted
+    /// If the user already has an active (in-progress) attempt, it returns that one.
+    /// If the user already submitted or completed this quiz, returns an error.
     pub async fn initialize_attempt(
         &self,
         quiz_id: QuizId,
         user_id: UserId,
     ) -> AppResult<AttemptView> {
+        if let Some(active) = self.repository.find_active_by_user(&user_id).await? {
+            let quiz = self
+                .quizzes
+                .find_by_id(&active.quiz_id)
+                .await?
+                .ok_or(QuizError::NotFound(active.quiz_id))?;
+
+            let questions = self
+                .questions
+                .get_quiz_questions(&active.quiz_id)
+                .and_then(|q| self.questions.filter_questions(q, &active.question_order))
+                .and_then(|q| self.questions.into_views(q))
+                .await?;
+
+            let answers = self.get_saved_answer_views(&active.id).await?;
+
+            return Ok(AttemptView::from((
+                active, questions, quiz.kind, quiz.title, answers,
+            )));
+        }
+
         let Some(quiz) = self.quizzes.find_by_id(&quiz_id).await? else {
             return Err(QuizError::NotFound(quiz_id))?;
         };
@@ -122,7 +144,73 @@ impl AttemptsService {
             .and_then(|q| self.questions.into_views(q))
             .await?;
 
-        Ok(AttemptView::from((attempt, questions)))
+        Ok(AttemptView::from((
+            attempt,
+            questions,
+            quiz.kind,
+            quiz.title,
+            Vec::new(),
+        )))
+    }
+
+    pub async fn get_active_attempt(&self, user_id: &UserId) -> AppResult<Option<AttemptView>> {
+        let Some(active) = self.repository.find_active_by_user(user_id).await? else {
+            return Ok(None);
+        };
+
+        let quiz = self
+            .quizzes
+            .find_by_id(&active.quiz_id)
+            .await?
+            .ok_or(QuizError::NotFound(active.quiz_id))?;
+
+        let questions = self
+            .questions
+            .get_quiz_questions(&active.quiz_id)
+            .and_then(|q| self.questions.filter_questions(q, &active.question_order))
+            .and_then(|q| self.questions.into_views(q))
+            .await?;
+
+        let answers = self.get_saved_answer_views(&active.id).await?;
+
+        Ok(Some(AttemptView::from((
+            active, questions, quiz.kind, quiz.title, answers,
+        ))))
+    }
+
+    pub async fn get_attempt_view(
+        &self,
+        attempt_id: AttemptId,
+        user_id: UserId,
+    ) -> AppResult<AttemptView> {
+        let attempt = self.get_attempt_for_user(attempt_id, user_id).await?;
+
+        let quiz = self
+            .quizzes
+            .find_by_id(&attempt.quiz_id)
+            .await?
+            .ok_or(QuizError::NotFound(attempt.quiz_id))?;
+
+        let questions = self
+            .questions
+            .get_quiz_questions(&attempt.quiz_id)
+            .and_then(|q| self.questions.filter_questions(q, &attempt.question_order))
+            .and_then(|q| self.questions.into_views(q))
+            .await?;
+
+        let answers = self.get_saved_answer_views(&attempt.id).await?;
+
+        Ok(AttemptView::from((
+            attempt, questions, quiz.kind, quiz.title, answers,
+        )))
+    }
+
+    async fn get_saved_answer_views(
+        &self,
+        attempt_id: &AttemptId,
+    ) -> AppResult<Vec<SavedAnswerView>> {
+        let answers = self.repository.list_attempt_answers(attempt_id).await?;
+        Ok(answers.into_iter().map(SavedAnswerView::from).collect())
     }
 
     pub async fn save_answer(&self, user_id: UserId, input: SaveAttemptAnswerDto) -> AppResult<()> {

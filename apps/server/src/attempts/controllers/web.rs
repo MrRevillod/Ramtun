@@ -1,14 +1,14 @@
-use std::sync::Arc;
-use sword::prelude::*;
-use sword::socketio::SocketIo;
-use sword::web::*;
-
 use crate::attempts::*;
 use crate::auth::SessionCheck;
 use crate::authz::*;
 use crate::courses::CourseId;
 use crate::quizzes::QuizId;
-use crate::shared::RequestExt;
+use crate::shared::{CookieManager, RequestExt};
+
+use std::sync::Arc;
+use sword::prelude::*;
+use sword::socketio::SocketIo;
+use sword::web::*;
 
 #[controller(kind = Controller::Web, path = "/attempts")]
 #[interceptor(SessionCheck)]
@@ -16,6 +16,7 @@ pub struct AttemptsController {
     socket_io: SocketIo,
     attempts: Arc<AttemptsService>,
     warnings: Arc<WarningService>,
+    cookie_manager: Arc<CookieManager>,
 }
 
 impl AttemptsController {
@@ -24,7 +25,6 @@ impl AttemptsController {
     async fn list_quiz_attempts(&self, req: Request) -> WebResult {
         let quiz_id = req.param::<QuizId>("quizId")?;
         let course_id = req.param::<CourseId>("courseId")?;
-
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
         let filter = AttemptFilter {
@@ -46,6 +46,12 @@ impl AttemptsController {
 
         let attempt = self.attempts.initialize_attempt(quiz_id, user.id).await?;
 
+        let cookie = self
+            .cookie_manager
+            .build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
+
+        req.cookies()?.add(cookie);
+
         if let Some(namespace) = self.socket_io.of("/attempts") {
             namespace
                 .broadcast()
@@ -55,6 +61,36 @@ impl AttemptsController {
         }
 
         Ok(JsonResponse::Created().data(attempt))
+    }
+
+    #[get("/me/active-attempt")]
+    async fn get_active_attempt(&self, req: Request) -> WebResult {
+        let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
+
+        let Some(attempt) = self.attempts.get_active_attempt(&claims.user_id).await? else {
+            return Err(JsonResponse::NotFound());
+        };
+
+        let cookie = self
+            .cookie_manager
+            .build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
+
+        req.cookies()?.add(cookie);
+
+        Ok(JsonResponse::Ok().data(attempt))
+    }
+
+    #[get("/{attemptId}")]
+    async fn get_attempt(&self, req: Request) -> WebResult {
+        let attempt_id = req.param::<AttemptId>("attemptId")?;
+        let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
+
+        let view = self
+            .attempts
+            .get_attempt_view(attempt_id, claims.user_id)
+            .await?;
+
+        Ok(JsonResponse::Ok().data(view))
     }
 
     #[put("/{attemptId}/answers/{questionId}")]
@@ -85,6 +121,9 @@ impl AttemptsController {
         let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
         let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
+        let clear = self.cookie_manager.clear_active_attempt_cookie()?;
+
+        req.cookies()?.add(clear);
 
         if let Some(attempts_socketio_namespace) = self.socket_io.of("/attempts") {
             attempts_socketio_namespace
@@ -151,7 +190,6 @@ impl AttemptsController {
     #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
     async fn get_attempt_warnings(&self, req: Request) -> WebResult {
         let attempt_id = req.param::<AttemptId>("attemptId")?;
-
         let warnings = self.warnings.get_warnings_for_attempt(attempt_id).await?;
 
         Ok(JsonResponse::Ok().data(warnings))
@@ -161,7 +199,6 @@ impl AttemptsController {
     #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
     async fn get_quiz_warnings(&self, req: Request) -> WebResult {
         let quiz_id = req.param::<QuizId>("quizId")?;
-
         let warnings = self.warnings.get_warnings_for_quiz(quiz_id).await?;
 
         Ok(JsonResponse::Ok().data(warnings))

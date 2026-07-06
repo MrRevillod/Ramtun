@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
-	import { createMutation } from "@tanstack/svelte-query"
+	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
 	import { onDestroy } from "svelte"
 	import { toast } from "svelte-sonner"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import type {
 		AnswerState,
-		AttemptSession,
 		CertaintyLevel,
 		WarningType,
 	} from "$lib/attempts/attempts.dtos"
+	import { useAttempt } from "$lib/attempts/attempts.queries"
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { createAntiCheat } from "$lib/attempts/services/anti-cheat.service.svelte"
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
@@ -20,7 +20,12 @@
 	import SubmitSuccessModal from "$lib/attempts/components/SubmitSuccessModal.svelte"
 
 	let { data } = $props()
-	let session = $state<AttemptSession | null>(null)
+
+	const attemptId = $derived(data.attemptId)
+
+	const attemptQuery = useAttempt(() => attemptId)
+	const queryClient = useQueryClient()
+
 	let currentIndex = $state(0)
 	let answers = $state<Record<string, AnswerState>>({})
 	let remainingSeconds = $state(0)
@@ -28,32 +33,24 @@
 	let autoSubmitting = $state(false)
 	let timerId: ReturnType<typeof setInterval> | null = null
 
-	const loadSession = async () => {
-		const raw = localStorage.getItem("last-attempt-session")
-		if (!raw) {
-			await goto("/join")
-			return
-		}
+	$effect(() => {
+		const attempt = attemptQuery.data
+		if (!attempt) return
 
-		try {
-			const parsed = JSON.parse(raw) as AttemptSession
-			if (parsed.attempt.attemptId !== data.attemptId) {
-				await goto("/join")
-				return
+		const savedAnswers: Record<string, AnswerState> = {}
+		for (const a of attempt.answers) {
+			savedAnswers[a.questionId] = {
+				answerIndex: a.answerIndex,
+				certaintyLevel: a.certaintyLevel,
 			}
-
-			session = parsed
-			currentIndex = Math.max(
-				0,
-				Math.min(parsed.index, parsed.attempt.questions.length - 1)
-			)
-			answers = parsed.answers
-		} catch {
-			await goto("/join")
 		}
-	}
+		answers = savedAnswers
 
-	void loadSession()
+		const firstUnanswered = attempt.questions.findIndex(
+			q => savedAnswers[q.id]?.answerIndex === undefined
+		)
+		currentIndex = firstUnanswered >= 0 ? firstUnanswered : 0
+	})
 
 	const onWarning = (_type: WarningType, details: string) => {
 		toast.warning(details, { duration: 4000 })
@@ -62,9 +59,9 @@
 	let antiCheat: ReturnType<typeof createAntiCheat> | null = null
 
 	$effect(() => {
-		if (!session) return
+		if (!attemptQuery.data) return
 
-		antiCheat = createAntiCheat(session.attempt.attemptId, onWarning)
+		antiCheat = createAntiCheat(attemptQuery.data.attemptId, onWarning)
 		antiCheat.start()
 
 		return () => {
@@ -73,28 +70,7 @@
 		}
 	})
 
-	const persistSession = () => {
-		if (!session) return
-		localStorage.setItem(
-			"last-attempt-session",
-			JSON.stringify({
-				...session,
-				index: currentIndex,
-				answers,
-			})
-		)
-	}
-
-	const applySessionUpdate = (next: {
-		answers?: Record<string, AnswerState>
-		currentIndex?: number
-	}) => {
-		if (next.answers) answers = next.answers
-		if (next.currentIndex !== undefined) currentIndex = next.currentIndex
-		persistSession()
-	}
-
-	const isCertaintyQuiz = () => session?.preview.kind === "certainty"
+	const isCertaintyQuiz = () => attemptQuery.data?.kind === "certainty"
 	const isAnswered = (answer?: AnswerState | null) =>
 		answer?.answerIndex !== undefined
 	const isCertaintyComplete = (answer?: AnswerState | null) =>
@@ -105,14 +81,14 @@
 		return true
 	}
 	const firstUnansweredIndex = () => {
-		if (!session) return -1
-		return session.attempt.questions.findIndex(
+		if (!attemptQuery.data) return -1
+		return attemptQuery.data.questions.findIndex(
 			q => answers[q.id]?.answerIndex === undefined
 		)
 	}
 	const firstCertaintyGapIndex = () => {
-		if (!session || !isCertaintyQuiz()) return -1
-		return session.attempt.questions.findIndex(q => {
+		if (!attemptQuery.data || !isCertaintyQuiz()) return -1
+		return attemptQuery.data.questions.findIndex(q => {
 			const answer = answers[q.id]
 			return !!answer && answer.certaintyLevel === null
 		})
@@ -145,8 +121,8 @@
 	}
 
 	$effect(() => {
-		if (!session) return
-		startTimer(session.attempt.expiresAt)
+		if (!attemptQuery.data) return
+		startTimer(attemptQuery.data.expiresAt)
 		return () => clearTimer()
 	})
 
@@ -169,47 +145,44 @@
 	const submitMutation = createMutation(() => ({
 		mutationFn: (attemptId: string) => attemptsService.submit(attemptId),
 		onSuccess: () => {
-			localStorage.removeItem("last-attempt-session")
-			if (session) localStorage.setItem("last-submitted-join-code", session.joinCode)
+			queryClient.setQueryData(["attempts", "active"], null)
+			queryClient.invalidateQueries({ queryKey: ["attempts"] })
 			clearTimer()
 			showSubmitModal = true
-			toast.success("Intento enviado. Redirigiendo a resultados...")
-			setTimeout(() => goto("/results"), 2500)
+			toast.success("Intento enviado correctamente.")
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
 
 	const runSave = async (questionId: string) => {
-		if (!session) return
+		if (!attemptQuery.data) return
 		const answer = answers[questionId]
 		if (saveAnswerMutation.isPending) return
 		if (!isAnswerComplete(answer)) return
 
 		try {
 			await saveAnswerMutation.mutateAsync({
-				attemptId: session.attempt.attemptId,
+				attemptId: attemptQuery.data.attemptId,
 				questionId,
 				answerIndex: answer.answerIndex,
 				certaintyLevel: answer.certaintyLevel,
 			})
-			persistSession()
 		} catch {
 			// handled by mutation onError
 		}
 	}
 
 	const selectOption = (questionId: string, answerIndex: number) => {
-		if (!session) return
+		if (!attemptQuery.data) return
 		const prev = answers[questionId]
 		const nextAnswer = {
 			answerIndex,
 			certaintyLevel: prev?.certaintyLevel ?? null,
 		}
-		const nextAnswers = {
+		answers = {
 			...answers,
 			[questionId]: nextAnswer,
 		}
-		applySessionUpdate({ answers: nextAnswers })
 	}
 
 	const selectCertainty = async (questionId: string, certainty: CertaintyLevel) => {
@@ -218,26 +191,25 @@
 			toast.info("Primero selecciona una alternativa.")
 			return
 		}
-		const nextAnswers = {
+		answers = {
 			...answers,
 			[questionId]: { answerIndex: prev.answerIndex, certaintyLevel: certainty },
 		}
-		applySessionUpdate({ answers: nextAnswers })
 	}
 
 	const submitAttempt = async (force = false) => {
-		if (!session) return
+		if (!attemptQuery.data) return
 		if (!force) {
 			const unansweredIdx = firstUnansweredIndex()
 			if (unansweredIdx >= 0) {
-				applySessionUpdate({ currentIndex: unansweredIdx })
+				currentIndex = unansweredIdx
 				toast.error("Debes responder todas las preguntas antes de enviar.")
 				return
 			}
 			if (isCertaintyQuiz()) {
 				const gapIndex = firstCertaintyGapIndex()
 				if (gapIndex >= 0) {
-					applySessionUpdate({ currentIndex: gapIndex })
+					currentIndex = gapIndex
 					toast.error(
 						"Te falta seleccionar nivel de certeza en una o más preguntas."
 					)
@@ -245,26 +217,46 @@
 				}
 			}
 		}
-		await submitMutation.mutateAsync(session.attempt.attemptId)
+
+		if (submitMutation.isPending) return
+		await submitMutation.mutateAsync(attemptQuery.data.attemptId)
 	}
 
-	const currentQuestion = $derived(session?.attempt.questions[currentIndex] ?? null)
-	const totalQuestions = $derived(session?.attempt.questions.length ?? 0)
+	const currentQuestion = $derived(
+		attemptQuery.data?.questions[currentIndex] ?? null
+	)
+	const totalQuestions = $derived(attemptQuery.data?.questions.length ?? 0)
 	const currentAnswer = $derived(
 		currentQuestion ? answers[currentQuestion.id] : null
 	)
 	const progress = $derived(
-		session ? `${currentIndex + 1}/${session.attempt.questions.length}` : "0/0"
+		attemptQuery.data
+			? `${currentIndex + 1}/${attemptQuery.data.questions.length}`
+			: "0/0"
 	)
 </script>
 
-{#if session && currentQuestion}
+{#if attemptQuery.isLoading}
+	<section class="grid gap-5">
+		<section>
+			<h3 class="m-0 text-xl text-black">Cargando intento...</h3>
+			<p class="mt-2 text-zinc-600">Preparando pregunta...</p>
+		</section>
+	</section>
+{:else if attemptQuery.isError || !attemptQuery.data}
+	<section class="grid gap-5">
+		<section>
+			<h3 class="m-0 text-xl text-black">Error</h3>
+			<p class="mt-2 text-zinc-600">No se pudo cargar el intento.</p>
+		</section>
+	</section>
+{:else if currentQuestion}
 	<section class="grid gap-5">
 		<section class="py-6">
 			<header class="mb-5 flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<h3 class="m-0 text-xl text-black">
-						{data.quizTitle || session.preview.title}
+						{attemptQuery.data.title}
 					</h3>
 					<p class="mt-1 mb-0 text-sm text-zinc-600">Pregunta {progress}</p>
 					<div class="mt-2">
@@ -289,7 +281,7 @@
 				{/each}
 			</div>
 
-			{#if session.preview.kind === "certainty"}
+			{#if attemptQuery.data.kind === "certainty"}
 				<CertaintySelector
 					selected={currentAnswer?.certaintyLevel ?? null}
 					onclick={level => selectCertainty(currentQuestion.id, level)}
@@ -303,18 +295,18 @@
 				isPending={submitMutation.isPending}
 				{autoSubmitting}
 				onnavigate={async index => {
-					const currentQuestionId = session!.attempt.questions[currentIndex].id
-					const currentAnswer = answers[currentQuestionId]
-					if (!isAnswered(currentAnswer)) {
+					const currentQuestionId = attemptQuery.data!.questions[currentIndex].id
+					const currentAns = answers[currentQuestionId]
+					if (!isAnswered(currentAns)) {
 						toast.error("Debes seleccionar una alternativa antes de continuar.")
 						return
 					}
-					if (!isAnswerComplete(currentAnswer)) {
+					if (!isAnswerComplete(currentAns)) {
 						toast.error("Debes seleccionar un nivel de certeza antes de continuar.")
 						return
 					}
 					await runSave(currentQuestionId)
-					applySessionUpdate({ currentIndex: index })
+					currentIndex = index
 				}}
 				onsubmit={async () => {
 					if (currentQuestion) {
@@ -325,15 +317,6 @@
 			/>
 		</section>
 	</section>
-{:else}
-	<section class="grid gap-5">
-		<section>
-			<h3 class="m-0 text-xl text-black">
-				{data.quizTitle || "Cargando intento..."}
-			</h3>
-			<p class="mt-2 text-zinc-600">Preparando pregunta...</p>
-		</section>
-	</section>
 {/if}
 
-<SubmitSuccessModal open={showSubmitModal} />
+<SubmitSuccessModal open={showSubmitModal} onContinue={() => goto("/results")} />

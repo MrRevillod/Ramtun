@@ -50,7 +50,7 @@ refresh_cookie_name = "RAMTUN_REFRESH_TOKEN"
 [tracing]
 enabled = true
 display = false
-filter = "info,sword=info,sqlx=error"
+filter = "debug,sword=info,sqlx=error"
 format = "dev"
 time-style = "none"
 time-pattern = "%H:%M:%S"

@@ -21,13 +21,15 @@ export const setupApiInterceptors = () => {
 			config._retry = true
 
 			try {
-				await apiClient.post("/auth/refresh", null, { skipRefresh: true } as ApiRequestConfig)
+				await apiClient.post("/auth/refresh", null, {
+					skipRefresh: true,
+				} as ApiRequestConfig)
 				return await apiClient.request(config)
 			} catch {
 				authStore.clearSession()
 				window.location.href = "/login"
 				return Promise.reject(error)
 			}
-		},
+		}
 	)
 }

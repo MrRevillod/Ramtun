@@ -12,6 +12,8 @@ use crate::{
     users::UserId,
 };
 
+use chrono::Utc;
+
 #[injectable]
 pub struct AttemptRepository {
     db: Arc<Database>,
@@ -40,6 +42,24 @@ impl AttemptRepository {
             "SELECT * FROM attempts WHERE id = $1 AND deleted_at IS NULL",
         )
         .bind(attempt_id)
+        .fetch_optional(self.db.get_pool())
+        .await?;
+
+        Ok(attempt)
+    }
+
+    pub async fn find_active_by_user(&self, student_id: &UserId) -> AppResult<Option<Attempt>> {
+        let attempt = sqlx::query_as::<_, Attempt>(
+            "SELECT * FROM attempts
+             WHERE student_id = $1
+             AND submitted_at IS NULL
+             AND expires_at > $2
+             AND deleted_at IS NULL
+             ORDER BY started_at DESC
+             LIMIT 1",
+        )
+        .bind(student_id)
+        .bind(Utc::now())
         .fetch_optional(self.db.get_pool())
         .await?;
 

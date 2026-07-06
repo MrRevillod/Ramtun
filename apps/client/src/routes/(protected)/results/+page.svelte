@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
+	import { page } from "$app/state"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { toast } from "svelte-sonner"
-	import { Search, History } from "lucide-svelte"
+	import { onMount } from "svelte"
+	import { Search } from "lucide-svelte"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import {
 		joinCodeFormSchema,
@@ -29,28 +31,24 @@
 		},
 	}))
 
-	const loadLastAttempt = async () => {
-		const code = localStorage.getItem("last-submitted-join-code")
-
-		if (!code) {
-			toast.error("No hay un intento reciente guardado.")
-			return
-		}
-
-		byJoinCodeMutation.mutate(code)
-	}
-
 	const handleSubmit = (input: JoinCodeFormData) => {
-		localStorage.setItem("last-submitted-join-code", input.joinCode)
 		byJoinCodeMutation.mutate(input.joinCode)
 	}
+
+	const initialCode = $derived(page.url.searchParams.get("code") ?? "")
+
+	onMount(() => {
+		if (initialCode) {
+			byJoinCodeMutation.mutate(initialCode)
+		}
+	})
 </script>
 
 <section class="grid gap-5">
 	<header>
 		<h2 class="mt-2 mb-0 text-2xl text-black">Resultados</h2>
 		<p class="mt-2 max-w-3xl text-zinc-700">
-			Busca tu resultado por código o recupera tu último intento guardado.
+			Busca tu resultado por código.
 		</p>
 	</header>
 
@@ -88,15 +86,6 @@
 				>
 					<Search size={16} aria-hidden="true" />
 					{byJoinCodeMutation.isPending ? "Consultando..." : "Ver resultados"}
-				</button>
-
-				<button
-					class="btn-secondary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
-					type="button"
-					onclick={loadLastAttempt}
-				>
-					<History size={16} aria-hidden="true" />
-					Cargar último intento
 				</button>
 			</div>
 		</Form>

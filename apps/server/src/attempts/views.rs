@@ -3,9 +3,9 @@ use serde::Serialize;
 use sqlx::FromRow;
 
 use crate::{
-    attempts::{Attempt, AttemptId},
+    attempts::{Attempt, AttemptAnswer, AttemptId},
     banks::{QuestionId, QuestionView},
-    quizzes::{CertaintyLevel, QuizId},
+    quizzes::{CertaintyLevel, QuizId, QuizKind},
     users::UserId,
 };
 
@@ -30,11 +30,32 @@ pub struct AttemptListItemView {
 pub struct AttemptView {
     pub attempt_id: AttemptId,
     pub quiz_id: QuizId,
+    pub kind: QuizKind,
+    pub title: String,
     pub started_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
     pub submitted_at: Option<DateTime<Utc>>,
     pub results_viewed_at: Option<DateTime<Utc>>,
     pub questions: Vec<QuestionView>,
+    pub answers: Vec<SavedAnswerView>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedAnswerView {
+    pub question_id: QuestionId,
+    pub answer_index: i16,
+    pub certainty_level: Option<CertaintyLevel>,
+}
+
+impl From<AttemptAnswer> for SavedAnswerView {
+    fn from(value: AttemptAnswer) -> Self {
+        Self {
+            question_id: value.question_id,
+            answer_index: value.answer_index,
+            certainty_level: value.certainty_level,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -92,17 +113,20 @@ impl From<Attempt> for AttemptListItemView {
     }
 }
 
-impl From<(Attempt, Vec<QuestionView>)> for AttemptView {
-    fn from(value: (Attempt, Vec<QuestionView>)) -> Self {
-        let (attempt, questions) = value;
+impl From<(Attempt, Vec<QuestionView>, QuizKind, String, Vec<SavedAnswerView>)> for AttemptView {
+    fn from(value: (Attempt, Vec<QuestionView>, QuizKind, String, Vec<SavedAnswerView>)) -> Self {
+        let (attempt, questions, kind, title, answers) = value;
         Self {
             attempt_id: attempt.id,
             quiz_id: attempt.quiz_id,
+            kind,
+            title,
             started_at: attempt.started_at,
             expires_at: attempt.expires_at,
             submitted_at: attempt.submitted_at,
             results_viewed_at: attempt.results_viewed_at,
             questions,
+            answers,
         }
     }
 }

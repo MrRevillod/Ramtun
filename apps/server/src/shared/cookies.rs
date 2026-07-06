@@ -6,6 +6,8 @@ use sword::prelude::*;
 use sword::web::{Cookie, CookieBuilder, CookiesExpiration, SameSite};
 use time::OffsetDateTime;
 
+pub const ACTIVE_ATTEMPT_COOKIE: &str = "RAMTUN_ACTIVE_ATTEMPT";
+
 #[derive(Debug, Clone, Deserialize)]
 #[config(key = "cookies")]
 pub struct CookieConfig {
@@ -48,6 +50,40 @@ impl CookieManager {
         let expiration = self.format_expiration(exp)?;
 
         let cookie = CookieBuilder::new(self.config.refresh_cookie_name.clone(), value)
+            .http_only(self.config.http_only)
+            .secure(self.config.secure)
+            .same_site(SameSite::Strict)
+            .path(self.config.path.clone())
+            .expires(expiration)
+            .build();
+
+        Ok(cookie)
+    }
+
+    pub fn build_active_attempt_cookie(
+        &self,
+        attempt_id: &str,
+        exp: DateTime<Utc>,
+    ) -> AppResult<Cookie<'static>> {
+        let expiration = self.format_expiration(exp)?;
+
+        let cookie = CookieBuilder::new(ACTIVE_ATTEMPT_COOKIE.to_string(), attempt_id.to_string())
+            .http_only(self.config.http_only)
+            .secure(self.config.secure)
+            .same_site(SameSite::Strict)
+            .path(self.config.path.clone())
+            .expires(expiration)
+            .build();
+
+        Ok(cookie)
+    }
+
+    pub fn clear_active_attempt_cookie(&self) -> AppResult<Cookie<'static>> {
+        let expiration = CookiesExpiration::DateTime(
+            OffsetDateTime::from_unix_timestamp(0).unwrap_or_else(|_| OffsetDateTime::now_utc()),
+        );
+
+        let cookie = CookieBuilder::new(ACTIVE_ATTEMPT_COOKIE.to_string(), String::new())
             .http_only(self.config.http_only)
             .secure(self.config.secure)
             .same_site(SameSite::Strict)

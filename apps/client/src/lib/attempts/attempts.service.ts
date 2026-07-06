@@ -17,6 +17,20 @@ class AttemptsService {
 		})
 	}
 
+	public getActive(): Promise<AttemptView> {
+		return request<AttemptView>({
+			method: "GET",
+			url: "/attempts/me/active-attempt",
+		})
+	}
+
+	public getById(attemptId: string): Promise<AttemptView> {
+		return request<AttemptView>({
+			method: "GET",
+			url: `/attempts/${attemptId}`,
+		})
+	}
+
 	public initialize(quizId: string): Promise<AttemptView> {
 		return request<AttemptView>({
 			method: "POST",

@@ -15,7 +15,7 @@
 	import { themeStore } from "$lib/shared/theme.store.svelte"
 	import { RoleValue } from "$lib/shared/value-objects/role.value"
 	import { onMount } from "svelte"
-	import type { AttemptSession } from "$lib/attempts/attempts.dtos"
+	import { useActiveAttempt } from "$lib/attempts/attempts.queries"
 
 	let { children } = $props()
 
@@ -57,28 +57,18 @@
 	const isActive = (href: string) => page.url.pathname.startsWith(href)
 	const isAuthenticated = $derived(authStore.isAuthenticated())
 
-	onMount(() => {
-		const raw = localStorage.getItem("last-attempt-session")
-		if (raw) {
-			try {
-				const session = JSON.parse(raw) as AttemptSession
-				const expiresAt = new Date(session.attempt.expiresAt).getTime()
-				const now = Date.now()
+	const activeAttemptQuery = useActiveAttempt()
 
-				if (session.attempt.submittedAt || expiresAt < now - 60000) {
-					localStorage.removeItem("last-attempt-session")
-				} else {
-					const attemptPath = `/attempts/${session.attempt.attemptId}`
-					if (!page.url.pathname.startsWith(attemptPath)) {
-						void goto(attemptPath)
-						return
-					}
-				}
-			} catch {
-				localStorage.removeItem("last-attempt-session")
-			}
+	$effect(() => {
+		const active = activeAttemptQuery.data
+		if (!active) return
+		const attemptPath = `/attempts/${active.attemptId}`
+		if (!page.url.pathname.startsWith(attemptPath)) {
+			void goto(attemptPath)
 		}
+	})
 
+	onMount(() => {
 		if (isAuthenticated) {
 			connectAttemptsSocket()
 		}

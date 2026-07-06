@@ -8,8 +8,7 @@
 	import { getErrorMessage } from "$lib/shared/errors"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { Play, TimerReset } from "lucide-svelte"
-	import { createMutation, createQuery } from "@tanstack/svelte-query"
-	import type { AttemptSession } from "$lib/attempts/attempts.dtos"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 
 	import CertaintyTableView from "$lib/quizzes/components/CertaintyTableView.svelte"
 	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values"
@@ -29,25 +28,13 @@
 		)
 	})
 
+	const queryClient = useQueryClient()
+
 	const initializeAttemptMutation = createMutation(() => ({
 		mutationFn: () => attemptsService.initialize(previewQuery.data!.quizId),
 		onSuccess: async attempt => {
-			if (!previewQuery.data) {
-				toast.error("No se pudo obtener la información del intento.")
-				return
-			}
-
-			const session: AttemptSession = {
-				joinCode,
-				preview: previewQuery.data,
-				attempt,
-				answers: {},
-				index: 0,
-			}
-
-			localStorage.setItem("last-attempt-session", JSON.stringify(session))
-
-			await goto(`/attempts/${attempt.attemptId}`)
+			await queryClient.invalidateQueries({ queryKey: ["attempts"] })
+			await goto(`/attempts/${attempt.attemptId}?code=${joinCode}`)
 		},
 		onError: error => toast.error(getErrorMessage(error)),
 	}))
@@ -82,26 +69,6 @@
 			}
 
 			return
-		}
-
-		const raw = localStorage.getItem("last-attempt-session")
-		if (raw) {
-			try {
-				const session = JSON.parse(raw) as AttemptSession
-				const now = Date.now()
-				const expiresAt = new Date(session.attempt.expiresAt).getTime()
-
-				if (
-					!session.attempt.submittedAt &&
-					expiresAt >= now - 60000 &&
-					session.preview.quizId === previewQuery.data.quizId
-				) {
-					void goto(`/attempts/${session.attempt.attemptId}`)
-					return
-				}
-			} catch {
-				// ignore corrupt data
-			}
 		}
 
 		startPreAttemptCountdown(previewQuery.data.startsAt)

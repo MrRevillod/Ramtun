@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { fade } from "svelte/transition"
-	import { LoaderCircle, CheckCircle2 } from "lucide-svelte"
+	import { CheckCircle2 } from "lucide-svelte"
 
 	interface SubmitSuccessModalProps {
 		open: boolean
+		onContinue: () => void
 	}
 
-	let { open }: SubmitSuccessModalProps = $props()
+	let { open, onContinue }: SubmitSuccessModalProps = $props()
 </script>
 
 {#if open}
@@ -25,10 +26,9 @@
 					Tu intento fue enviado correctamente. Los resultados estarán disponibles
 					cuando el docente los publique.
 				</p>
-				<div class="mt-2 flex items-center gap-2 text-sm text-zinc-500">
-					<LoaderCircle size={16} class="animate-spin" aria-hidden="true" />
-					Redirigiendo...
-				</div>
+				<button class="btn-primary mt-2" type="button" onclick={onContinue}>
+					Ir a resultados
+				</button>
 			</div>
 		</div>
 	</div>

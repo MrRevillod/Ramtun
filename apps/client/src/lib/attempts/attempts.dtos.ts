@@ -1,5 +1,4 @@
 import * as v from "valibot"
-import type { JoinQuizPreview } from "$lib/quizzes/quizzes.dtos"
 
 export const joinCodeFormSchema = v.object({
 	joinCode: v.nonOptional(
@@ -26,14 +25,23 @@ export type AttemptQuestion = {
 	images: string[]
 }
 
+export type SavedAnswer = {
+	questionId: string
+	answerIndex: number
+	certaintyLevel: CertaintyLevel | null
+}
+
 export type AttemptView = {
 	attemptId: string
 	quizId: string
+	kind: "traditional" | "certainty"
+	title: string
 	startedAt: string
 	expiresAt: string
 	submittedAt: string | null
 	resultsViewedAt: string | null
 	questions: AttemptQuestion[]
+	answers: SavedAnswer[]
 }
 
 export type AttemptListItem = {
@@ -90,14 +98,6 @@ export type SaveAnswerInput = {
 export type AnswerState = {
 	answerIndex: number
 	certaintyLevel: CertaintyLevel | null
-}
-
-export type AttemptSession = {
-	joinCode: string
-	preview: JoinQuizPreview
-	attempt: AttemptView
-	answers: Record<string, AnswerState>
-	index: number
 }
 
 export type WarningType =
