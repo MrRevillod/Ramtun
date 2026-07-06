@@ -319,7 +319,7 @@ impl AttemptsService {
             .users
             .find_by_id(&attempt.student_id)
             .await?
-            .ok_or(UsersError::NotFound(attempt.student_id.to_string()))?;
+            .ok_or(UsersError::NotFound(attempt.student_id))?;
 
         Ok(AttemptResultView {
             attempt_id: attempt.id,

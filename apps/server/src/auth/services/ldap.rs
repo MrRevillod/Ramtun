@@ -8,7 +8,7 @@ use ldap3::{Ldap, LdapConnAsync as LdapConn, LdapConnSettings, Scope, SearchEntr
 use std::time::Duration;
 use sword::prelude::*;
 
-#[injectable]
+#[injectable(provider)]
 pub struct LdapClient {
     config: AuthConfig,
 }
@@ -20,8 +20,32 @@ pub struct LdapUserInfo {
 }
 
 impl LdapClient {
+    pub async fn new(config: AuthConfig) -> AppResult<Self> {
+        let admin_dn = format!("{},{}", config.ldap_admin_user, config.ldap_base_dn);
+
+        tracing::debug!("[*] Autenticando como admin: {}", admin_dn);
+
+        let mut ldap = Self::ldap_connect(&config).await?;
+
+        ldap.simple_bind(&admin_dn, &config.ldap_admin_password)
+            .await
+            .inspect_err(|e| {
+                tracing::error!("[!] Error de conexión durante bind admin: {e}");
+            })
+            .map_err(AuthError::from)?
+            .success()
+            .inspect_err(|e| {
+                tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
+            })
+            .map_err(AuthError::from)?;
+
+        tracing::info!("[✓] Conexión LDAP exitosa como admin");
+
+        Ok(LdapClient { config })
+    }
+
     pub async fn authenticate(&self, username: &str, password: &str) -> AppResult<LdapUserInfo> {
-        let mut ldap = self.ldap_connect().await?;
+        let mut ldap = Self::ldap_connect(&self.config).await?;
 
         let admin_dn = format!(
             "{},{}",
@@ -56,7 +80,7 @@ impl LdapClient {
             })
             .ok();
 
-        let mut ldap = self.ldap_connect().await?;
+        let mut ldap = Self::ldap_connect(&self.config).await?;
 
         ldap.simple_bind(&user_dn, password)
             .await
@@ -200,12 +224,12 @@ impl LdapClient {
         Ok(user_info)
     }
 
-    async fn ldap_connect(&self) -> AppResult<Ldap> {
+    async fn ldap_connect(config: &AuthConfig) -> AppResult<Ldap> {
         let settings = LdapConnSettings::new()
             .set_conn_timeout(Duration::from_secs(5))
             .set_no_tls_verify(true);
 
-        let (conn, ldap) = LdapConn::with_settings(settings, &self.config.ldap_url)
+        let (conn, ldap) = LdapConn::with_settings(settings, &config.ldap_url)
             .await
             .inspect_err(|e| {
                 tracing::error!("[!] Error de conexión LDAP: {e}");

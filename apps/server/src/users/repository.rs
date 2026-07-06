@@ -1,6 +1,6 @@
 use crate::{
     shared::{AppResult, Database},
-    users::{User, UserFilter, UserId},
+    users::{User, UserFilter, UserId, UserView},
 };
 
 use sqlx::{Postgres, QueryBuilder};
@@ -22,6 +22,15 @@ impl UserRepository {
         Ok(result)
     }
 
+    pub async fn find_by_email(&self, email: &str) -> AppResult<Option<User>> {
+        let result = sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
+            .bind(email)
+            .fetch_optional(self.db.get_pool())
+            .await?;
+
+        Ok(result)
+    }
+
     pub async fn find_by_username(&self, username: &str) -> AppResult<Option<User>> {
         let result = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = $1")
             .bind(username)
@@ -33,27 +42,32 @@ impl UserRepository {
 
     pub async fn save(&self, user: &User) -> AppResult<User> {
         let result = sqlx::query_as::<_, User>(
-            "INSERT INTO users (id, username, name, email, role)
-             VALUES ($1, $2, $3, $4, $5)
+            "INSERT INTO users (id, username, name, email, password_hash, role, last_login_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (username) DO UPDATE
              SET name = EXCLUDED.name,
                  email = EXCLUDED.email,
-                 role = EXCLUDED.role
+                 role = EXCLUDED.role,
+                 password_hash = EXCLUDED.password_hash,
+                 last_login_at = EXCLUDED.last_login_at
              RETURNING *",
         )
         .bind(user.id)
         .bind(&user.username)
         .bind(&user.name)
         .bind(&user.email)
+        .bind(&user.password_hash)
         .bind(&user.role)
+        .bind(user.last_login_at)
         .fetch_one(self.db.get_pool())
         .await?;
 
         Ok(result)
     }
 
-    pub async fn list_users(&self, filter: UserFilter) -> AppResult<Vec<User>> {
-        let mut qb: QueryBuilder<Postgres> = QueryBuilder::new("SELECT * FROM users WHERE 1=1");
+    pub async fn list_users(&self, filter: UserFilter) -> AppResult<Vec<UserView>> {
+        let mut qb: QueryBuilder<Postgres> =
+            QueryBuilder::new("SELECT id, name, username, email, role FROM users WHERE 1=1");
 
         if let Some(q) = filter.search {
             let pattern = format!("%{}%", q.trim());
@@ -81,7 +95,7 @@ impl UserRepository {
         qb.push(" ORDER BY username ASC LIMIT 200");
 
         let users = qb
-            .build_query_as::<User>()
+            .build_query_as::<UserView>()
             .fetch_all(self.db.get_pool())
             .await?;
 

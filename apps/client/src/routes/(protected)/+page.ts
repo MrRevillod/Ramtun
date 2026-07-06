@@ -4,7 +4,7 @@ import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
 import { coursesService } from "$lib/courses/courses.service"
 
 export const load = async () => {
-	const role = authStore.session?.user.role
+	const role = authStore.user?.role
 
 	if (isAdmin(role) || isFunc(role)) {
 		throw redirect(302, "/courses")

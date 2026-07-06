@@ -1,5 +1,7 @@
 use crate::shared::{Entity, Id};
+
 use bon::Builder;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 
@@ -21,7 +23,9 @@ pub struct User {
     pub username: String,
     pub name: String,
     pub email: String,
+    pub password_hash: String,
     pub role: UserRole,
+    pub last_login_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for User {

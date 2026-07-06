@@ -12,6 +12,13 @@ pub enum AuthError {
     #[error("The provided token is invalid")]
     InvalidToken,
 
+    #[http(
+        code = 401,
+        message = "Credenciales inválidas. Verifica tu usuario y contraseña."
+    )]
+    #[error("Invalid credentials")]
+    InvalidCredentials,
+
     #[error("LDAP authentication failed: {0}")]
     Ldap(#[from] LdapError),
 
@@ -33,4 +40,9 @@ pub enum AuthError {
     #[tracing(error)]
     #[error("JWT Error: {0}")]
     Jwt(#[from] JwtError),
+
+    #[http(code = 500, message = "Internal server error")]
+    #[tracing(error)]
+    #[error("Internal server error - Hashing: {0}")]
+    Hashing(#[from] Box<dyn std::error::Error + Send + Sync>),
 }

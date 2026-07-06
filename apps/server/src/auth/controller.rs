@@ -1,14 +1,15 @@
 use crate::auth::*;
-use crate::shared::RequestExt;
+use crate::shared::{CookieManager, RequestExt};
 
+use chrono::Utc;
 use std::sync::Arc;
 use sword::prelude::*;
 use sword::web::*;
-use time::OffsetDateTime as OffsetDT;
 
 #[controller(kind = Controller::Web, path = "/auth")]
 pub struct AuthController {
     auth_service: Arc<AuthService>,
+    cookie_manager: Arc<CookieManager>,
 }
 
 impl AuthController {
@@ -26,32 +27,13 @@ impl AuthController {
 
         tracing::info!("User login attempt for username: {}", dto.username);
 
-        let Ok(access_exp_dt) = OffsetDT::from_unix_timestamp(access_token_exp.timestamp()) else {
-            tracing::error!("Access token expiration Datetime convertion error on login attempt");
-            return Err(JsonResponse::InternalServerError());
-        };
+        let access_cookie = self
+            .cookie_manager
+            .build_access_cookie(access_token, access_token_exp)?;
 
-        let Ok(refresh_exp_dt) = OffsetDT::from_unix_timestamp(refresh_token_exp.timestamp())
-        else {
-            tracing::error!("Refresh token expiration Datetime convertion error on login attempt");
-            return Err(JsonResponse::InternalServerError());
-        };
-
-        let access_cookie = CookieBuilder::new("RAMTUN_ACCESS_TOKEN", access_token)
-            .http_only(true)
-            .secure(false)
-            .same_site(SameSite::Strict)
-            .path("/")
-            .expires(CookiesExpiration::DateTime(access_exp_dt))
-            .build();
-
-        let refresh_cookie = CookieBuilder::new("RAMTUN_REFRESH_TOKEN", refresh_token)
-            .http_only(true)
-            .secure(false)
-            .same_site(SameSite::Strict)
-            .path("/")
-            .expires(CookiesExpiration::DateTime(refresh_exp_dt))
-            .build();
+        let refresh_cookie = self
+            .cookie_manager
+            .build_refresh_cookie(refresh_token, refresh_token_exp)?;
 
         req.cookies()?.add(access_cookie);
         req.cookies()?.add(refresh_cookie);
@@ -72,18 +54,9 @@ impl AuthController {
             access_token_exp,
         } = self.auth_service.refresh(&token).await?;
 
-        let Ok(access_exp_dt) = OffsetDT::from_unix_timestamp(access_token_exp.timestamp()) else {
-            tracing::error!("Access token expiration Datetime conversion error on refresh");
-            return Err(JsonResponse::InternalServerError());
-        };
-
-        let access_cookie = CookieBuilder::new("RAMTUN_ACCESS_TOKEN", access_token)
-            .http_only(true)
-            .secure(false)
-            .same_site(SameSite::Strict)
-            .path("/")
-            .expires(CookiesExpiration::DateTime(access_exp_dt))
-            .build();
+        let access_cookie = self
+            .cookie_manager
+            .build_access_cookie(access_token, access_token_exp)?;
 
         req.cookies()?.add(access_cookie);
 
@@ -97,11 +70,16 @@ impl AuthController {
 
         self.auth_service.logout(&session_claims.session_id).await?;
 
-        req.cookies()?
-            .remove(Cookie::new("RAMTUN_ACCESS_TOKEN", ""));
+        let access_cookie = self
+            .cookie_manager
+            .build_access_cookie("".into(), Utc::now())?;
 
-        req.cookies()?
-            .remove(Cookie::new("RAMTUN_REFRESH_TOKEN", ""));
+        let refresh_cookie = self
+            .cookie_manager
+            .build_refresh_cookie("".into(), Utc::now())?;
+
+        req.cookies()?.remove(access_cookie);
+        req.cookies()?.remove(refresh_cookie);
 
         Ok(JsonResponse::Ok().message("Sesión cerrada correctamente"))
     }

@@ -1,6 +1,5 @@
 use std::time::Duration;
 use sword::internal::web::{AxumBody, AxumRequest, AxumResponse};
-
 use tower_http::classify::{ServerErrorsAsFailures, SharedClassifier};
 use tower_http::trace::{MakeSpan, OnRequest, OnResponse, TraceLayer};
 use tracing::Span;

@@ -16,7 +16,7 @@
 
 	let { data } = $props()
 
-	const currentUserId = $derived(authStore.session?.user.id)
+	const currentUserId = $derived(authStore.user?.id)
 
 	const queryClient = useQueryClient()
 

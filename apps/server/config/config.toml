@@ -38,6 +38,14 @@ ldap_admin_password = "${LDAP_ADMIN_PASSWORD}"
 jwt_secret = "${JWT_SECRET}"
 access_exp_minutes = 15
 refresh_exp_days = 7
+password_sync_api_key = "${PASSWORD_SYNC_ENDPOINT_API_KEY}"
+
+[cookies]
+path = "/"
+secure = true
+http_only = true
+access_cookie_name = "RAMTUN_ACCESS_TOKEN"
+refresh_cookie_name = "RAMTUN_REFRESH_TOKEN"
 
 [tracing]
 enabled = true
@@ -47,3 +55,6 @@ format = "dev"
 time-style = "none"
 time-pattern = "%H:%M:%S"
 with-fields = []
+
+[hasher]
+cost = 12

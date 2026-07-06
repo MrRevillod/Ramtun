@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { LoginInput } from "$lib/auth/auth.dtos"
+	import * as v from "valibot"
+	import { loginSchema, type LoginInput } from "$lib/auth/auth.dtos"
 
 	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
@@ -7,16 +8,17 @@
 	import { toast } from "svelte-sonner"
 	import { LogIn } from "lucide-svelte"
 	import { authService } from "$lib/auth/auth.service"
-	import { sessionManager } from "$lib/shared/auth/session.manager"
+	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { getErrorMessage } from "$lib/shared/errors"
 
 	let username = $state("")
 	let password = $state("")
+	let errors = $state<Record<string, string>>({})
 
 	const loginMutation = createMutation(() => ({
 		mutationFn: (payload: LoginInput) => authService.login(payload),
-		onSuccess: async session => {
-			sessionManager.setSession(session)
+		onSuccess: async user => {
+			authStore.setSession(user)
 			password = ""
 			await goto(resolve("/"))
 		},
@@ -29,7 +31,21 @@
 
 	const handleSubmit = async (event: SubmitEvent) => {
 		event.preventDefault()
-		await loginMutation.mutateAsync({ username, password })
+		errors = {}
+
+		const result = v.safeParse(loginSchema, { username, password })
+
+		if (!result.success) {
+			const flat = v.flatten(result.issues)
+			if (flat.nested) {
+				for (const [key, msgs] of Object.entries(flat.nested)) {
+					if (msgs?.length) errors[key] = msgs[0]
+				}
+			}
+			return
+		}
+
+		await loginMutation.mutateAsync(result.output)
 	}
 </script>
 
@@ -50,22 +66,28 @@
 					<span class="text-sm text-zinc-800">Usuario</span>
 					<input
 						class="input-base"
+						class:border-red-500={errors.username}
 						type="text"
 						bind:value={username}
-						required
 						autocomplete="username"
 					/>
+					{#if errors.username}
+						<p class="text-xs text-red-600">{errors.username}</p>
+					{/if}
 				</label>
 
 				<label class="grid gap-1.5">
 					<span class="text-sm text-zinc-800">Contraseña</span>
 					<input
 						class="input-base"
+						class:border-red-500={errors.password}
 						type="password"
 						bind:value={password}
-						required
 						autocomplete="current-password"
 					/>
+					{#if errors.password}
+						<p class="text-xs text-red-600">{errors.password}</p>
+					{/if}
 				</label>
 
 				<button

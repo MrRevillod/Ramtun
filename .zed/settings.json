@@ -10,7 +10,8 @@
 		"**/target/**",
 		"**/routeTree.gen.ts",
 		"**/dist/**",
-		"**/build/**"
+		"**/build/**",
+		"**/.pnpm-store"
 	],
 	"languages": {
 		"YAML": {

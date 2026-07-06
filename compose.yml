@@ -74,6 +74,7 @@ services:
     env_file:
       - .env
     environment:
+      - CI=true
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - VITE_CACHE_DIR=/tmp/.vite

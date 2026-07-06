@@ -1,97 +1,46 @@
 import { authStore } from "$lib/auth/auth.store.svelte"
-import { sessionManager } from "$lib/shared/auth/session.manager"
 import { request } from "$lib/shared/http/http"
-import type { AuthTokens, LoginInput, LoginResponse } from "$lib/auth/auth.dtos"
+import type { LoginInput, User } from "$lib/auth/auth.dtos"
 
 class AuthService {
-	#bootstrapPromise: Promise<void> | null = null
+	private bootstrapPromise: Promise<void> | null = null
 
-	public login(input: LoginInput): Promise<LoginResponse> {
-		return request<LoginResponse>({
+	public async login(input: LoginInput): Promise<User> {
+		return request<User>({
 			method: "POST",
 			url: "/auth/login",
 			data: input,
-			skipAuth: true,
 			skipRefresh: true,
 		})
-	}
-
-	public async refresh(): Promise<AuthTokens> {
-		const refreshToken = sessionManager.getRefreshToken()
-
-		if (!refreshToken) {
-			throw {
-				kind: "auth",
-				code: "missing_refresh_token",
-				message: "No se encontró el token de refresco de la sesión.",
-			} as const
-		}
-
-		const tokens = await request<AuthTokens>({
-			method: "POST",
-			url: "/auth/refresh",
-			data: null,
-			headers: {
-				Authorization: `Bearer ${refreshToken}`,
-			},
-			skipAuth: true,
-			skipRefresh: true,
-		})
-
-		if (!sessionManager.getUser()) {
-			throw {
-				kind: "auth",
-				code: "invalid_session",
-				message: "No es posible refrescar tokens sin un usuario autenticado.",
-			} as const
-		}
-
-		return tokens
 	}
 
 	public async logout(): Promise<void> {
-		const accessToken = sessionManager.getAccessToken()
-
-		if (!accessToken) return
-
-		await request<null>({
-			method: "POST",
-			url: "/auth/logout",
-			data: null,
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-			},
-			skipRefresh: true,
+		return request<void>({ method: "POST", url: "/auth/logout" }).catch(() => {
+			authStore.clearSession()
 		})
 	}
 
 	public async bootstrapSession(): Promise<void> {
 		if (authStore.isReady) return
 
-		if (this.#bootstrapPromise) return this.#bootstrapPromise
+		if (this.bootstrapPromise) return this.bootstrapPromise
 
-		this.#bootstrapPromise = (async () => {
+		this.bootstrapPromise = (async () => {
 			authStore.isBootstrapping = true
 
-			if (!authStore.refreshToken) {
-				authStore.isReady = true
-				authStore.isBootstrapping = false
-				return
-			}
-
 			try {
-				const tokens = await this.refresh()
-				sessionManager.updateTokens(tokens)
+				const user = await request<User>({ method: "GET", url: "/users/me" })
+				authStore.setSession(user)
 			} catch {
-				// Sesión no existe — no es un error
+				// Sin sesión — no es un error
 			}
 
 			authStore.isReady = true
 			authStore.isBootstrapping = false
 		})()
 
-		const result = await this.#bootstrapPromise
-		this.#bootstrapPromise = null
+		const result = await this.bootstrapPromise
+		this.bootstrapPromise = null
 		return result
 	}
 }

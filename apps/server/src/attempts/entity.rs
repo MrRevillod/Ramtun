@@ -57,18 +57,11 @@ impl Entity for AttemptWarning {
 #[sqlx(type_name = "warning_type", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum WarningType {
-    FocusLoss,
-    Clipboard,
-    Screenshot,
-    Navigation,
-    Devtools,
-    WindowBlur,
-    TabHide,
-    AltTab,
-    MetaKey,
     ContextMenu,
     CopyAttempt,
     SearchAttempt,
+    Screenshot,
+    AltTab,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

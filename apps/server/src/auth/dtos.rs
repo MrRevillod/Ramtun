@@ -1,7 +1,8 @@
 use crate::{
     shared::{Entity, Id},
-    users::{User, UserId},
+    users::{UserId, UserView},
 };
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -15,7 +16,7 @@ pub struct LoginDto {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
-    pub user: User,
+    pub user: UserView,
     pub access_token: String,
     pub access_token_exp: DateTime<Utc>,
     pub refresh_token: String,

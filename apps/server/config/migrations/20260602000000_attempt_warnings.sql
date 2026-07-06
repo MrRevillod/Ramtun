@@ -1,9 +1,9 @@
 CREATE TYPE warning_type AS ENUM (
-	'focus_loss',
-	'clipboard',
+	'context_menu',
+	'copy_attempt',
+	'search_attempt',
 	'screenshot',
-	'navigation',
-	'devtools'
+	'alt_tab'
 );
 
 CREATE TABLE attempt_warnings (

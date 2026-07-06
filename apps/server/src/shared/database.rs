@@ -28,8 +28,6 @@ pub struct DatabaseConfig {
 
 impl Database {
     pub async fn new(db_conf: DatabaseConfig) -> Self {
-        dbg!(&db_conf);
-
         let pool = PgPoolOptions::new()
             .min_connections(db_conf.min_connections.into())
             .max_connections(db_conf.max_connections.into())

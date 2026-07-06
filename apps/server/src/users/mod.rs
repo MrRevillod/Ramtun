@@ -9,7 +9,7 @@ mod service;
 use controller::UsersController;
 use sword::prelude::*;
 
-pub use dtos::{SearchUsersQuery, UpdateUserRoleRequest};
+pub use dtos::*;
 pub use entity::*;
 pub use errors::UsersError;
 pub use policy::UserPolicy;
