@@ -67,7 +67,7 @@ impl UsersController {
             .headers()
             .get("Authorization")
             .and_then(|v| v.to_str().ok())
-            .ok_or_else(|| JsonResponse::Unauthorized())?;
+            .ok_or_else(JsonResponse::Unauthorized)?;
 
         if provided_api_key != self.auth_config.password_sync_api_key {
             return Err(JsonResponse::Unauthorized());

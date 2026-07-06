@@ -58,7 +58,7 @@ impl UserRepository {
         .bind(&user.email)
         .bind(&user.password_hash)
         .bind(&user.role)
-        .bind(&user.last_login_at)
+        .bind(user.last_login_at)
         .fetch_one(self.db.get_pool())
         .await?;
 

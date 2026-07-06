@@ -47,7 +47,7 @@ impl UsersService {
             .users
             .find_by_id(user_id)
             .await?
-            .ok_or_else(|| UsersError::NotFound(*user_id))?;
+            .ok_or(UsersError::NotFound(*user_id))?;
 
         target.role = UserRole::from(input.role);
 
@@ -61,7 +61,7 @@ impl UsersService {
             .users
             .find_by_email(&input.email)
             .await?
-            .ok_or_else(|| UsersError::UserNotFound)?;
+            .ok_or(UsersError::UserNotFound)?;
 
         target.password_hash = self.hasher.hash(&input.password).await?;
 
