@@ -23,7 +23,7 @@ impl LdapClient {
     pub async fn new(config: AuthConfig) -> AppResult<Self> {
         let admin_dn = format!("{},{}", config.ldap_admin_user, config.ldap_base_dn);
 
-        tracing::debug!("[*] Autenticando como admin: {}", admin_dn);
+        tracing::debug!("Iniciando conexión inicial con INF-UCT ldap: {}", admin_dn);
 
         let mut ldap = Self::ldap_connect(&config).await?;
 
@@ -39,7 +39,7 @@ impl LdapClient {
             })
             .map_err(AuthError::from)?;
 
-        tracing::info!("[✓] Conexión LDAP exitosa como admin");
+        tracing::info!("Conexión inicial con INF-UCT ldap exitosa: {}", admin_dn);
 
         Ok(LdapClient { config })
     }
@@ -51,8 +51,6 @@ impl LdapClient {
             "{},{}",
             self.config.ldap_admin_user, self.config.ldap_base_dn
         );
-
-        tracing::debug!("[*] Autenticando como admin: {}", admin_dn);
 
         ldap.simple_bind(&admin_dn, &self.config.ldap_admin_password)
             .await

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade } from "svelte/transition"
-	import { CheckCircle2 } from "lucide-svelte"
+	import { CircleCheck } from "lucide-svelte"
 
 	interface SubmitSuccessModalProps {
 		open: boolean
@@ -20,11 +20,11 @@
 	>
 		<div class="panel-surface w-full max-w-md p-6" role="presentation" tabindex="-1">
 			<div class="flex flex-col items-center gap-4 py-6">
-				<CheckCircle2 size={32} class="text-emerald-600" aria-hidden="true" />
+				<CircleCheck size={32} class="text-emerald-600" aria-hidden="true" />
 				<h3 class="m-0 text-xl text-black">Intento enviado</h3>
 				<p class="m-0 text-center text-sm text-zinc-600">
-					Tu intento fue enviado correctamente. Los resultados estarán disponibles
-					cuando el docente los publique.
+					Tu intento fue enviado correctamente. Los resultados estarán disponibles cuando el docente
+					los publique.
 				</p>
 				<button class="btn-primary mt-2" type="button" onclick={onContinue}>
 					Ir a resultados

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Copy, Check } from "lucide-svelte"
+	import { inlineTryAsync } from "$lib/shared/try"
 
 	interface CodeBlockProps {
 		code: string
@@ -10,22 +11,19 @@
 
 	let copied = $state(false)
 
-	const copyToClipboard = async () => {
-		try {
+	const copyToClipboard = () => {
+		inlineTryAsync(async () => {
 			await navigator.clipboard.writeText(code)
 			copied = true
 			setTimeout(() => {
 				copied = false
 			}, 2000)
-		} catch {
-			// fallback: silently ignore
-		}
+		})
 	}
 </script>
 
 <div class="relative {className}">
-	<pre
-		class="overflow-x-auto rounded-md bg-zinc-50 p-4 text-sm text-zinc-800">{code}</pre>
+	<pre class="overflow-x-auto rounded-md bg-zinc-50 p-4 text-sm text-zinc-800">{code}</pre>
 
 	<button
 		type="button"

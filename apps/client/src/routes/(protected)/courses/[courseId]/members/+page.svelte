@@ -1,18 +1,14 @@
 <script lang="ts">
-	import {
-		createMutation,
-		createQuery,
-		useQueryClient,
-	} from "@tanstack/svelte-query"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { toast } from "svelte-sonner"
 	import { Plus, Trash2 } from "lucide-svelte"
 	import { coursesService } from "$lib/courses/courses.service"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { usersService } from "$lib/users/users.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import AddMemberModal from "$lib/courses/components/AddMemberModal.svelte"
 	import { RoleValue } from "$lib/shared/value-objects/role.value.js"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
@@ -31,27 +27,31 @@
 	}))
 
 	const addMemberMutation = createMutation(() => ({
-		mutationFn: (input: { userId: string }) =>
-			coursesService.addMember(data.courseId, input),
+		mutationFn: (input: { userId: string }) => coursesService.addMember(data.courseId, input),
 		onSuccess: async () => {
 			toast.success("Miembro agregado correctamente.")
 			await queryClient.invalidateQueries({
 				queryKey: ["course-members", data.courseId],
 			})
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const removeMemberMutation = createMutation(() => ({
-		mutationFn: (userId: string) =>
-			coursesService.removeMember(data.courseId, userId),
+		mutationFn: (userId: string) => coursesService.removeMember(data.courseId, userId),
 		onSuccess: async () => {
 			toast.success("Miembro removido correctamente.")
 			await queryClient.invalidateQueries({
 				queryKey: ["course-members", data.courseId],
 			})
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	let showAddModal = $state(false)
@@ -86,7 +86,9 @@
 		{#if membersQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando miembros...</p>
 		{:else if membersQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(membersQuery.error)}</p>
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(membersQuery.error)}
+			</p>
 		{:else if !membersQuery.data?.length}
 			<p class="notice notice-warn m-0">El curso aún no tiene miembros.</p>
 		{:else}
@@ -103,12 +105,9 @@
 					<tbody>
 						{#each membersQuery.data as member (member.userId)}
 							<tr class="table-row">
-								<td class="px-3 py-2 font-medium text-zinc-900">{member.username}</td
-								>
+								<td class="px-3 py-2 font-medium text-zinc-900">{member.username}</td>
 								<td class="px-3 py-2 text-zinc-800">{member.name}</td>
-								<td class="px-3 py-2 text-zinc-700"
-									>{RoleValue.format(member.role)}</td
-								>
+								<td class="px-3 py-2 text-zinc-700">{RoleValue.format(member.role)}</td>
 								<td class="px-3 py-2">
 									{#if member.userId !== currentUserId}
 										<button
@@ -144,9 +143,7 @@
 	<ConfirmActionModal
 		open={!!memberToRemove}
 		title="Quitar miembro"
-		message={memberToRemove
-			? `Se quitara a ${memberToRemove.username} de este curso.`
-			: ""}
+		message={memberToRemove ? `Se quitara a ${memberToRemove.username} de este curso.` : ""}
 		confirmLabel="Quitar"
 		isPending={removeMemberMutation.isPending}
 		onCancel={() => (memberToRemove = null)}

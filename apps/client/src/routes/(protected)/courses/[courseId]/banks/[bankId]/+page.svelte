@@ -4,7 +4,7 @@
 	import { resolve } from "$app/paths"
 	import { banksService } from "$lib/banks/banks.service"
 	import { coursesService } from "$lib/courses/courses.service"
-	import { getErrorMessage } from "$lib/shared/errors"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
@@ -45,7 +45,9 @@
 		{#if bankQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando banco...</p>
 		{:else if bankQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(bankQuery.error)}</p>
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(bankQuery.error)}
+			</p>
 		{:else if bankQuery.data}
 			<div class="grid gap-4">
 				{#each bankQuery.data.questions as question, index (question.id)}
@@ -55,10 +57,7 @@
 						</h4>
 						<div class="grid gap-2">
 							{#each question.options as option, optionIndex (optionIndex)}
-								<div
-									class="quiz-option"
-									data-active={optionIndex === correctIndex(question)}
-								>
+								<div class="quiz-option" data-active={optionIndex === correctIndex(question)}>
 									{option}
 								</div>
 							{/each}

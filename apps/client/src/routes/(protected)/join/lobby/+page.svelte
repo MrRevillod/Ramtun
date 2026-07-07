@@ -5,13 +5,13 @@
 	import { toast } from "svelte-sonner"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { Play, TimerReset } from "lucide-svelte"
 	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 
 	import CertaintyTableView from "$lib/quizzes/components/CertaintyTableView.svelte"
 	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	const joinCode = $derived.by(() => page.url.searchParams.get("joinCode") ?? "")
 
@@ -23,9 +23,7 @@
 
 	const hasCertaintyTable = $derived.by(() => {
 		if (!previewQuery.data) return false
-		return (
-			previewQuery.data.kind === "certainty" && !!previewQuery.data.certaintyTable
-		)
+		return previewQuery.data.kind === "certainty" && !!previewQuery.data.certaintyTable
 	})
 
 	const queryClient = useQueryClient()
@@ -36,7 +34,10 @@
 			await queryClient.invalidateQueries({ queryKey: ["attempts"] })
 			await goto(`/attempts/${attempt.attemptId}?code=${joinCode}`)
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	let preAttemptSeconds = $state(0)
@@ -46,10 +47,7 @@
 		if (preAttemptTimerId) clearInterval(preAttemptTimerId)
 
 		const update = () => {
-			const diff = Math.max(
-				0,
-				Math.floor((new Date(startsAt).getTime() - Date.now()) / 1000)
-			)
+			const diff = Math.max(0, Math.floor((new Date(startsAt).getTime() - Date.now()) / 1000))
 
 			preAttemptSeconds = diff
 		}
@@ -89,9 +87,7 @@
 
 <section class="flex flex-col gap-4 py-4">
 	<div>
-		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
-			Unirse a un cuestionario
-		</p>
+		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">Unirse a un cuestionario</p>
 		{#if previewQuery.data}
 			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
 				{previewQuery.data.title}
@@ -105,8 +101,10 @@
 
 	{#if previewQuery.isLoading}
 		<p class="m-0 text-zinc-600">Cargando información del cuestionario...</p>
-	{:else if previewQuery.isError}
-		<p class="m-0 text-red-700">{getErrorMessage(previewQuery.error)}</p>
+		{:else if previewQuery.isError}
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(previewQuery.error)}
+			</p>
 	{:else if previewQuery.data}
 		<section class="flex flex-col gap-3">
 			<div class="grid gap-2 sm:grid-cols-3">

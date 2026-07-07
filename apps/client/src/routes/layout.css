@@ -1,6 +1,5 @@
 @import url("https://fonts.cdnfonts.com/css/palatino");
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
 	--paper: #f8f8f6;
@@ -21,24 +20,6 @@
 	font-family: "Palatino", sans-serif;
 	color: var(--ink);
 	background: var(--paper);
-}
-
-html.dark {
-	--paper: #141414;
-	--paper-soft: #1b1b1b;
-	--paper-deep: #232323;
-	--paper-muted: #1f1f1f;
-	--ink: #f2f2f2;
-	--ink-soft: #dddddd;
-	--ink-muted: #a3a3a3;
-	--line: #323232;
-	--line-strong: #464646;
-	--accent: #111111;
-	--accent-soft: #2a2a2a;
-	--highlight: #c9c9c9;
-	--ok: #38a169;
-	--warn: #d69e2e;
-	--danger: #f56565;
 }
 
 html,
@@ -155,11 +136,7 @@ body {
 	.panel-muted {
 		@apply rounded-md border;
 		border-color: color-mix(in srgb, var(--line) 92%, white);
-		background: linear-gradient(
-			180deg,
-			var(--paper-soft) 0%,
-			var(--paper-muted) 100%
-		);
+		background: linear-gradient(180deg, var(--paper-soft) 0%, var(--paper-muted) 100%);
 	}
 
 	.input-base {
@@ -426,103 +403,5 @@ body {
 		.quiz-shell {
 			grid-template-columns: minmax(0, 1fr) 21rem;
 		}
-	}
-}
-
-@layer utilities {
-	html.dark .panel-elevated {
-		border-color: color-mix(in srgb, var(--line-strong) 78%, black);
-		background: #1b1b1b;
-	}
-
-	html.dark .panel-muted {
-		border-color: color-mix(in srgb, var(--line-strong) 78%, black);
-		background: #1a1a1a;
-	}
-
-	html.dark .panel-surface {
-		border-color: color-mix(in srgb, var(--line-strong) 78%, black);
-		background: #1d1d1d;
-	}
-
-	html.dark .stat-card {
-		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
-		background: linear-gradient(180deg, #222 0%, #1b1b1b 100%);
-	}
-
-	html.dark .code-chip {
-		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
-		background: #212121;
-		color: #e5e5e5;
-	}
-
-	html.dark .table-head {
-		background: #2a2a2a;
-		color: #ececec;
-	}
-
-	html.dark .table-row {
-		background: #1c1c1c;
-	}
-
-	html.dark .action-tab {
-		border-color: color-mix(in srgb, var(--line-strong) 70%, black);
-		background: #202020;
-		color: #d4d4d4;
-	}
-
-	html.dark .action-tab[data-active="true"] {
-		background: #202020;
-		color: #ffffff;
-	}
-
-	html.dark .action-tab[data-active="true"] {
-		background: #202020;
-		color: #ffffff;
-		box-shadow: inset 0 -2px 0 0 #e5e5e5;
-		border-bottom-color: transparent;
-	}
-
-	html.dark .btn-secondary,
-	html.dark .btn-tertiary {
-		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
-		background: #222;
-		color: #e5e5e5;
-	}
-
-	html.dark .icon-btn {
-		border-color: color-mix(in srgb, var(--line-strong) 68%, black);
-		background: #222;
-		color: #d4d4d4;
-	}
-
-	html.dark .bg-white,
-	html.dark .bg-white\/80,
-	html.dark .bg-white\/90 {
-		background-color: color-mix(in srgb, var(--paper-soft) 88%, black);
-	}
-
-	html.dark .text-black,
-	html.dark .text-zinc-900,
-	html.dark .text-zinc-800,
-	html.dark .text-zinc-700,
-	html.dark .text-zinc-600 {
-		color: var(--ink-soft);
-	}
-
-	html.dark .border-zinc-300,
-	html.dark .border-zinc-200 {
-		border-color: color-mix(in srgb, var(--line-strong) 72%, black);
-	}
-
-	html.dark .bg-zinc-50,
-	html.dark .bg-zinc-100,
-	html.dark .bg-zinc-200 {
-		background-color: color-mix(in srgb, var(--paper-muted) 90%, black);
-	}
-
-	html.dark .sticky-actions {
-		border-color: color-mix(in srgb, var(--line) 80%, black);
-		background: color-mix(in srgb, var(--paper-soft) 88%, black);
 	}
 }

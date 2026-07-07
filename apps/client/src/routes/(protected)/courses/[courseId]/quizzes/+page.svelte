@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		createMutation,
-		createQuery,
-		useQueryClient,
-	} from "@tanstack/svelte-query"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
@@ -11,11 +7,11 @@
 	import { CircleStop } from "lucide-svelte"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
 	import type { CreateQuizInput } from "$lib/quizzes/quizzes.dtos"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 	import CreateQuizModal from "$lib/quizzes/components/CreateQuizModal.svelte"
 	import QuizStatusBadge from "$lib/quizzes/components/QuizStatusBadge.svelte"
 	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values.js"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
@@ -34,7 +30,10 @@
 				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const deleteQuizMutation = createMutation(() => ({
@@ -45,7 +44,10 @@
 				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const closeAndPublishMutation = createMutation(() => ({
@@ -56,7 +58,10 @@
 				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	let showCreateModal = $state(false)
@@ -89,8 +94,7 @@
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Cuestionarios</h3>
 				<p class="m-0 mt-2 text-zinc-700">
-					Programa evaluaciones, monitorea su estado y publica resultados cuando
-					corresponda.
+					Programa evaluaciones, monitorea su estado y publica resultados cuando corresponda.
 				</p>
 			</div>
 			<button
@@ -108,7 +112,9 @@
 		{#if quizzesQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando cuestionarios...</p>
 		{:else if quizzesQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(quizzesQuery.error)}</p>
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(quizzesQuery.error)}
+			</p>
 		{:else if !quizzesQuery.data?.length}
 			<p class="m-0 text-zinc-600">Aún no existen cuestionarios para este curso.</p>
 		{:else}
@@ -128,14 +134,10 @@
 							<tr
 								class="row-hover table-row cursor-pointer"
 								onclick={() =>
-									goto(
-										resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)
-									)}
+									goto(resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`))}
 							>
 								<td class="px-3 py-2 text-zinc-900">{quiz.title}</td>
-								<td class="px-3 py-2 text-zinc-700"
-									>{QuizKindValue.format(quiz.kind)}</td
-								>
+								<td class="px-3 py-2 text-zinc-700">{QuizKindValue.format(quiz.kind)}</td>
 								<td class="px-3 py-2 text-zinc-700">
 									<QuizStatusBadge resultsPublishedAt={quiz.resultsPublishedAt} />
 								</td>
@@ -158,9 +160,7 @@
 											class="icon-btn cursor-pointer"
 											title="Ver intentos"
 											onclick={e => e.stopPropagation()}
-											href={resolve(
-												`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`
-											)}
+											href={resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)}
 										>
 											<Eye size={15} aria-hidden="true" /></a
 										>
@@ -211,9 +211,7 @@
 	<ConfirmActionModal
 		open={!!quizToDelete}
 		title="Eliminar cuestionario"
-		message={quizToDelete
-			? `Se eliminará el cuestionario ${quizToDelete.title}.`
-			: ""}
+		message={quizToDelete ? `Se eliminará el cuestionario ${quizToDelete.title}.` : ""}
 		confirmLabel="Eliminar"
 		isPending={deleteQuizMutation.isPending}
 		onCancel={() => (quizToDelete = null)}

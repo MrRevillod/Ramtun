@@ -1,14 +1,18 @@
 <script lang="ts">
-	import { Upload, Code, X } from "lucide-svelte"
 	import * as v from "valibot"
-	import { scale } from "svelte/transition"
-	import type { QuestionInput } from "$lib/banks/banks.dtos"
-	import { bankQuestionsSchema, normalizeQuestions } from "$lib/banks/banks.dtos"
-	import CodeBlock from "$lib/shared/components/CodeBlock.svelte"
-	import { toast } from "svelte-sonner"
-	import { getErrorMessage } from "$lib/shared/errors"
-	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
 	import type { CreateMutationResult } from "@tanstack/svelte-query"
+	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
+	import type { QuestionInput } from "$lib/banks/banks.dtos"
+
+	import { scale } from "svelte/transition"
+	import { toast } from "svelte-sonner"
+	import { Upload, Code, X } from "lucide-svelte"
+	import { bankQuestionsSchema } from "$lib/banks/banks.dtos"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { inlineTryAsync } from "$lib/shared/try"
+
+	import CodeBlock from "$lib/shared/components/CodeBlock.svelte"
 
 	interface BankUploadModalProps {
 		open: boolean
@@ -18,11 +22,25 @@
 		mutation: CreateMutationResult<void, Error, CreateQuestionBankInput, unknown>
 	}
 
-	let { open, courseId, onclose, onsuccess, mutation }: BankUploadModalProps =
-		$props()
+	let { open, courseId, onclose, onsuccess, mutation }: BankUploadModalProps = $props()
 
-	let bankName = $state("")
+	const bankUploadFormSchema = v.object({
+		name: v.pipe(
+			v.string(),
+			v.trim(),
+			v.minLength(1, "El nombre es obligatorio."),
+			v.maxLength(120, "Máximo 120 caracteres.")
+		),
+	})
+
+	const form = createForm({
+		schema: bankUploadFormSchema,
+		initialInput: { name: "" },
+	})
+
 	let selectedFile = $state<File | null>(null)
+	let parsedQuestions = $state<QuestionInput[]>([])
+	let fileError = $state<string | null>(null)
 	let fileInput = $state<HTMLInputElement | null>(null)
 	let showFormatModal = $state(false)
 
@@ -41,59 +59,56 @@
      }
   ]`
 
-	const handleFileChange = (e: Event) => {
-		const input = e.target as HTMLInputElement
-		selectedFile = input.files?.[0] ?? null
+	const handleFileChange = async (e: Event) => {
+		const file = (e.target as HTMLInputElement).files?.[0] ?? null
+		selectedFile = file
+		fileError = null
+		parsedQuestions = []
+
+		if (!file) return
+
+		const [parsed, parseError] = await inlineTryAsync<unknown>(
+			() => file.text().then(t => JSON.parse(t))
+		)
+
+		if (parseError !== null) {
+			fileError = "El archivo no contiene un JSON válido."
+			return
+		}
+
+		const result = v.safeParse(bankQuestionsSchema, parsed)
+		if (!result.success) {
+			fileError = result.issues[0]?.message ?? "El archivo JSON no es válido."
+			return
+		}
+
+		parsedQuestions = result.output
 	}
 
-	const handleSubmit = async () => {
-		try {
-			if (!selectedFile) return
-
-			const text = await selectedFile.text()
-			let parsed: unknown
-
-			try {
-				parsed = JSON.parse(text)
-			} catch {
-				throw new Error("El archivo no contiene un JSON válido.")
-			}
-
-			const rawQuestions = normalizeQuestions(parsed)
-
-			const mapped = rawQuestions.map(q => ({
-				...q,
-				images: q.images ?? [],
-			}))
-
-			const questionsResult = v.safeParse(bankQuestionsSchema, mapped)
-			if (!questionsResult.success) {
-				const issues = questionsResult.issues.map(i => i.message).join("; ")
-				throw new Error(`Datos inválidos: ${issues}`)
-			}
-
-			const nameResult = v.safeParse(
-				v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(120)),
-				bankName
-			)
-			if (!nameResult.success) {
-				throw new Error("El nombre del banco es obligatorio.")
-			}
-
-			await mutation.mutateAsync({
-				courseId,
-				name: nameResult.output,
-				questions: questionsResult.output as QuestionInput[],
-			})
-
-			bankName = ""
-			selectedFile = null
-			if (fileInput) fileInput.value = ""
-
-			onsuccess()
-		} catch (err) {
-			toast.error(getErrorMessage(err))
+	const handleSubmit: SubmitEventHandler<typeof bankUploadFormSchema> = async output => {
+		if (!selectedFile) {
+			toast.error("Selecciona un archivo JSON.")
+			return
 		}
+
+		if (fileError) {
+			toast.error("Corrige los errores del archivo antes de continuar.")
+			return
+		}
+
+		await mutation.mutateAsync({
+			courseId,
+			name: output.name,
+			questions: parsedQuestions,
+		})
+
+		reset(form)
+		selectedFile = null
+		parsedQuestions = []
+		fileError = null
+		if (fileInput) fileInput.value = ""
+
+		onsuccess()
 	}
 </script>
 
@@ -124,52 +139,63 @@
 			<section class="page-main">
 				<div class="form-stack">
 					<div class="form-stack mt-3">
-						<label class="grid gap-1.5">
-							<span class="text-sm text-zinc-800">Nombre del banco</span>
-							<input
-								class="input-base"
-								type="text"
-								bind:value={bankName}
-								placeholder="Ej: Guía 1 - Mecánica"
-							/>
-						</label>
+						<Form of={form} onsubmit={handleSubmit} class="form-stack">
+							<Field of={form} path={["name"]}>
+								{#snippet children(field)}
+									<label class="grid gap-1.5">
+										<span class="text-sm text-zinc-800">Nombre del banco</span>
+										<input
+											{...field.props}
+											class="input-base"
+											value={field.input ?? ""}
+											placeholder="Ej: Guía 1 - Mecánica"
+										/>
+										{#if field.errors?.[0]}
+											<span class="text-sm text-red-700">{field.errors[0]}</span>
+										{/if}
+									</label>
+								{/snippet}
+							</Field>
 
-						<div class="grid gap-1.5">
-							<span class="text-sm text-zinc-800">Archivo JSON</span>
-							<label
-								class="btn-secondary file-label flex cursor-pointer items-center justify-start gap-1.5 text-left"
-							>
-								<Upload size={16} aria-hidden="true" />
-								{selectedFile ? selectedFile.name : "Seleccionar archivo JSON"}
-								<input
-									type="file"
-									accept=".json,application/json"
-									class="sr-only"
-									onchange={handleFileChange}
-									bind:this={fileInput}
-								/>
-							</label>
-						</div>
+							<div class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Archivo JSON</span>
+								<label
+									class="btn-secondary file-label flex cursor-pointer items-center justify-start gap-1.5 text-left"
+								>
+									<Upload size={16} aria-hidden="true" />
+									{selectedFile ? selectedFile.name : "Seleccionar archivo JSON"}
+									<input
+										type="file"
+										accept=".json,application/json"
+										class="sr-only"
+										onchange={handleFileChange}
+										bind:this={fileInput}
+									/>
+								</label>
+								{#if fileError}
+									<span class="text-sm text-red-700">{fileError}</span>
+								{/if}
+							</div>
 
-						<div class="sticky-actions mt-">
-							<button
-								class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
-								type="button"
-								onclick={handleSubmit}
-								disabled={mutation.isPending || !bankName || !selectedFile}
-							>
-								<Upload size={16} aria-hidden="true" />
-								{mutation.isPending ? "Subiendo..." : "Subir banco"}
-							</button>
-							<button
-								class="btn-secondary flex w-full items-center gap-1.5 sm:w-auto"
-								type="button"
-								onclick={() => (showFormatModal = true)}
-							>
-								<Code size={16} aria-hidden="true" />
-								Ver formato JSON
-							</button>
-						</div>
+							<div class="sticky-actions mt-">
+								<button
+									class="btn-primary flex w-full items-center gap-1.5 sm:w-auto"
+									type="submit"
+									disabled={mutation.isPending || !selectedFile || !!fileError}
+								>
+									<Upload size={16} aria-hidden="true" />
+									{mutation.isPending ? "Subiendo..." : "Subir banco"}
+								</button>
+								<button
+									class="btn-secondary flex w-full items-center gap-1.5 sm:w-auto"
+									type="button"
+									onclick={() => (showFormatModal = true)}
+								>
+									<Code size={16} aria-hidden="true" />
+									Ver formato JSON
+								</button>
+							</div>
+						</Form>
 					</div>
 				</div>
 			</section>
@@ -204,28 +230,21 @@
 
 			<ul class="mt-4 mb-0 list-inside list-disc text-sm text-zinc-700">
 				<li>
-					<code class="text-zinc-900">prompt</code>: texto de la pregunta (1-1000
-					caracteres)
+					<code class="text-zinc-900">prompt</code>: texto de la pregunta (1-1000 caracteres)
 				</li>
 				<li>
 					<code class="text-zinc-900">options</code>: array de 2 a 5 opciones
 				</li>
 				<li>
-					<code class="text-zinc-900">answerIndex</code>: índice de la respuesta
-					correcta (0-based)
+					<code class="text-zinc-900">answerIndex</code>: índice de la respuesta correcta (0-based)
 				</li>
 				<li>
-					<code class="text-zinc-900">images</code>: array de URLs de imágenes
-					(opcional, máx 5)
+					<code class="text-zinc-900">images</code>: array de URLs de imágenes (opcional, máx 5)
 				</li>
 			</ul>
 
 			<div class="mt-5 flex justify-end">
-				<button
-					class="btn-primary"
-					type="button"
-					onclick={() => (showFormatModal = false)}
-				>
+				<button class="btn-primary" type="button" onclick={() => (showFormatModal = false)}>
 					Cerrar
 				</button>
 			</div>

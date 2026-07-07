@@ -126,11 +126,7 @@ export const WARNING_LABELS: Record<WarningType, string> = {
 
 export type SeverityLevel = "leve" | "moderada" | "grave"
 
-export const SEVERITY_GROUPS: SeverityLevel[] = [
-	"leve",
-	"moderada",
-	"grave",
-]
+export const SEVERITY_GROUPS: SeverityLevel[] = ["leve", "moderada", "grave"]
 
 export const WARNING_SEVERITY: Record<WarningType, SeverityLevel> = {
 	context_menu: "leve",

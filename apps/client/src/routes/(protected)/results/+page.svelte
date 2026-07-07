@@ -1,17 +1,16 @@
 <script lang="ts">
+	import type { JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
-	import { createMutation } from "@tanstack/svelte-query"
 	import { toast } from "svelte-sonner"
-	import { onMount } from "svelte"
 	import { Search } from "lucide-svelte"
+	import { onMount } from "svelte"
+	import { createMutation } from "@tanstack/svelte-query"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import {
-		joinCodeFormSchema,
-		type JoinCodeFormData,
-	} from "$lib/attempts/attempts.dtos"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { joinCodeFormSchema } from "$lib/attempts/attempts.dtos"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	const form = createForm({
 		schema: joinCodeFormSchema,
@@ -27,7 +26,10 @@
 			})
 		},
 		onError: error => {
-			toast.error(getErrorMessage(error))
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error), {
+				duration: 4000,
+			})
 		},
 	}))
 
@@ -47,9 +49,7 @@
 <section class="grid gap-5">
 	<header>
 		<h2 class="mt-2 mb-0 text-2xl text-black">Resultados</h2>
-		<p class="mt-2 max-w-3xl text-zinc-700">
-			Busca tu resultado por código.
-		</p>
+		<p class="mt-2 max-w-3xl text-zinc-700">Busca tu resultado por código.</p>
 	</header>
 
 	<section>

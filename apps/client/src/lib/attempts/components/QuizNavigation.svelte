@@ -33,11 +33,7 @@
 			<ArrowRight size={16} aria-hidden="true" />
 		</button>
 	{:else}
-		<button
-			class="btn-primary flex items-center gap-1.5"
-			type="button"
-			onclick={onsubmit}
-		>
+		<button class="btn-primary flex items-center gap-1.5" type="button" onclick={onsubmit}>
 			<Send size={16} aria-hidden="true" />
 			{isPending || autoSubmitting ? "Enviando..." : "Finalizar intento"}
 		</button>

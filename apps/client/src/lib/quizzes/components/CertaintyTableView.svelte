@@ -15,15 +15,11 @@
 </script>
 
 <table class="w-full border-collapse text-xs">
-	<thead class="dark:bg-zinc-900/80 dark:text-zinc-100">
+	<thead class="table-head">
 		<tr>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left dark:border-zinc-700"
-				>Nivel</th
-			>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left dark:border-zinc-700">
-				Correcta
-			</th>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left dark:border-zinc-700">
+			<th class="border border-zinc-300 px-2 py-1.5 text-left">Nivel</th>
+			<th class="border border-zinc-300 px-2 py-1.5 text-left"> Correcta </th>
+			<th class="border border-zinc-300 px-2 py-1.5 text-left">
 				Incorrecta
 			</th>
 		</tr>
@@ -31,19 +27,13 @@
 	<tbody>
 		{#each levels as level (level.key)}
 			<tr>
-				<td
-					class="border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-				>
+				<td class="border border-zinc-300 px-2 py-1.5">
 					{level.label}
 				</td>
-				<td
-					class="border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-				>
+				<td class="border border-zinc-300 px-2 py-1.5">
 					{table[level.key].correct}
 				</td>
-				<td
-					class="border border-zinc-300 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-				>
+				<td class="border border-zinc-300 px-2 py-1.5">
 					{table[level.key].incorrect}
 				</td>
 			</tr>

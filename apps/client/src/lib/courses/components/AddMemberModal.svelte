@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { fade, scale } from "svelte/transition"
-	import {
-		createForm,
-		Field,
-		Form,
-		type SubmitEventHandler,
-		reset,
-	} from "@formisch/svelte"
-	import { Plus, X } from "lucide-svelte"
-	import { addCourseMemberSchema } from "$lib/courses/courses.dtos"
 	import type { ManagedUser } from "$lib/users/users.dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
+
+	import { Plus, X } from "lucide-svelte"
+	import { fade, scale } from "svelte/transition"
+	import { addCourseMemberSchema } from "$lib/courses/courses.dtos"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	interface AddMemberModalProps {
 		open: boolean
@@ -28,9 +24,7 @@
 		initialInput: { userId: "" },
 	})
 
-	const handleSubmit: SubmitEventHandler<
-		typeof addCourseMemberSchema
-	> = async output => {
+	const handleSubmit: SubmitEventHandler<typeof addCourseMemberSchema> = async output => {
 		await mutation.mutateAsync(output)
 		reset(form)
 		oncancel()
@@ -84,9 +78,7 @@
 				</Field>
 
 				<div class="flex justify-end gap-2">
-					<button class="btn-tertiary" type="button" onclick={oncancel}
-						>Cancelar</button
-					>
+					<button class="btn-tertiary" type="button" onclick={oncancel}>Cancelar</button>
 					<button class="btn-primary flex items-center gap-1.5" type="submit">
 						<Plus size={16} aria-hidden="true" />
 						{mutation.isPending ? "Agregando..." : "Agregar miembro"}

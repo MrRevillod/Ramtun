@@ -1,17 +1,14 @@
 <script lang="ts">
+	import type { AnswerState, CertaintyLevel, WarningType } from "$lib/attempts/attempts.dtos"
+
 	import { goto } from "$app/navigation"
-	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
-	import { onDestroy } from "svelte"
 	import { toast } from "svelte-sonner"
-	import { attemptsService } from "$lib/attempts/attempts.service"
-	import type {
-		AnswerState,
-		CertaintyLevel,
-		WarningType,
-	} from "$lib/attempts/attempts.dtos"
+	import { onDestroy } from "svelte"
 	import { useAttempt } from "$lib/attempts/attempts.queries"
-	import { getErrorMessage } from "$lib/shared/errors"
+	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { createAntiCheat } from "$lib/attempts/services/anti-cheat.service.svelte"
+	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
+
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
 	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
 	import QuizOption from "$lib/attempts/components/QuizOption.svelte"
@@ -71,8 +68,7 @@
 	})
 
 	const isCertaintyQuiz = () => attemptQuery.data?.kind === "certainty"
-	const isAnswered = (answer?: AnswerState | null) =>
-		answer?.answerIndex !== undefined
+	const isAnswered = (answer?: AnswerState | null) => answer?.answerIndex !== undefined
 	const isCertaintyComplete = (answer?: AnswerState | null) =>
 		!!answer && answer.certaintyLevel !== null
 	const isAnswerComplete = (answer?: AnswerState | null) => {
@@ -82,9 +78,7 @@
 	}
 	const firstUnansweredIndex = () => {
 		if (!attemptQuery.data) return -1
-		return attemptQuery.data.questions.findIndex(
-			q => answers[q.id]?.answerIndex === undefined
-		)
+		return attemptQuery.data.questions.findIndex(q => answers[q.id]?.answerIndex === undefined)
 	}
 	const firstCertaintyGapIndex = () => {
 		if (!attemptQuery.data || !isCertaintyQuiz()) return -1
@@ -104,10 +98,7 @@
 	const startTimer = (expiresAt: string) => {
 		clearTimer()
 		const update = () => {
-			const diff = Math.max(
-				0,
-				Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
-			)
+			const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
 			remainingSeconds = diff
 			if (diff === 0 && !autoSubmitting && !submitMutation.isPending) {
 				autoSubmitting = true
@@ -151,7 +142,10 @@
 			showSubmitModal = true
 			toast.success("Intento enviado correctamente.")
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error("Error submitting attempt:", error)
+			toast.error("Error al enviar el intento. Por favor, inténtalo de nuevo.")
+		},
 	}))
 
 	const runSave = async (questionId: string) => {
@@ -210,9 +204,7 @@
 				const gapIndex = firstCertaintyGapIndex()
 				if (gapIndex >= 0) {
 					currentIndex = gapIndex
-					toast.error(
-						"Te falta seleccionar nivel de certeza en una o más preguntas."
-					)
+					toast.error("Te falta seleccionar nivel de certeza en una o más preguntas.")
 					return
 				}
 			}
@@ -222,17 +214,11 @@
 		await submitMutation.mutateAsync(attemptQuery.data.attemptId)
 	}
 
-	const currentQuestion = $derived(
-		attemptQuery.data?.questions[currentIndex] ?? null
-	)
+	const currentQuestion = $derived(attemptQuery.data?.questions[currentIndex] ?? null)
 	const totalQuestions = $derived(attemptQuery.data?.questions.length ?? 0)
-	const currentAnswer = $derived(
-		currentQuestion ? answers[currentQuestion.id] : null
-	)
+	const currentAnswer = $derived(currentQuestion ? answers[currentQuestion.id] : null)
 	const progress = $derived(
-		attemptQuery.data
-			? `${currentIndex + 1}/${attemptQuery.data.questions.length}`
-			: "0/0"
+		attemptQuery.data ? `${currentIndex + 1}/${attemptQuery.data.questions.length}` : "0/0"
 	)
 </script>
 

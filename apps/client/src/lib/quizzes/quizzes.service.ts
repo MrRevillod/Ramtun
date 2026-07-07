@@ -1,20 +1,16 @@
-import { request } from "$lib/shared/http/http"
-import type {
-	CreateQuizInput,
-	JoinQuizPreview,
-	Quiz,
-} from "$lib/quizzes/quizzes.dtos"
+import { http } from "$lib/shared/http/request"
+import type { CreateQuizInput, JoinQuizPreview, Quiz } from "$lib/quizzes/quizzes.dtos"
 
 class QuizzesService {
 	public listByCourse(courseId: string): Promise<Quiz[]> {
-		return request<Quiz[]>({
+		return http.request<Quiz[]>({
 			method: "GET",
 			url: `/quizzes/course/${courseId}`,
 		})
 	}
 
 	public create(input: CreateQuizInput): Promise<Quiz> {
-		return request<Quiz>({
+		return http.request<Quiz>({
 			method: "POST",
 			url: "/quizzes",
 			data: input,
@@ -22,28 +18,28 @@ class QuizzesService {
 	}
 
 	public remove(quizId: string): Promise<void> {
-		return request<void>({
+		return http.request<void>({
 			method: "DELETE",
 			url: `/quizzes/${quizId}`,
 		})
 	}
 
 	public closeAndPublish(quizId: string): Promise<void> {
-		return request<void>({
+		return http.request<void>({
 			method: "POST",
 			url: `/quizzes/${quizId}/close-and-publish`,
 		})
 	}
 
 	public getQuiz(quizId: string): Promise<Quiz> {
-		return request<Quiz>({
+		return http.request<Quiz>({
 			method: "GET",
 			url: `/quizzes/${quizId}`,
 		})
 	}
 
 	public joinByCode(joinCode: string): Promise<JoinQuizPreview> {
-		return request<JoinQuizPreview>({
+		return http.request<JoinQuizPreview>({
 			method: "POST",
 			url: `/quizzes/join/${joinCode}`,
 		})

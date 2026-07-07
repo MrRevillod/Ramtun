@@ -1,15 +1,15 @@
 <script lang="ts">
 	import * as v from "valibot"
-	import { loginSchema, type LoginInput } from "$lib/auth/auth.dtos"
+	import type { LoginInput } from "$lib/auth/auth.dtos"
 
-	import { createMutation } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 	import { LogIn } from "lucide-svelte"
-	import { authService } from "$lib/auth/auth.service"
 	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { getErrorMessage } from "$lib/shared/errors"
+	import { authService } from "$lib/auth/auth.service"
+	import { loginSchema } from "$lib/auth/auth.dtos"
+	import { createMutation } from "@tanstack/svelte-query"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let username = $state("")
 	let password = $state("")
@@ -20,10 +20,13 @@
 		onSuccess: async user => {
 			authStore.setSession(user)
 			password = ""
-			await goto(resolve("/"))
+			await goto("/")
 		},
 		onError: error => {
-			toast.error(getErrorMessage(error))
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error), {
+				duration: 4000,
+			})
 		},
 	}))
 
@@ -50,13 +53,9 @@
 </script>
 
 <main class="min-h-dvh px-4 py-8 sm:px-6 sm:py-12">
-	<div
-		class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center"
-	>
+	<div class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center">
 		<section class="panel-elevated -mt-10 w-full max-w-xl p-8 sm:p-10">
-			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">
-				Iniciar sesión
-			</h1>
+			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">Iniciar sesión</h1>
 			<p class="mt-3 mb-7 max-w-md text-base leading-relaxed text-zinc-700">
 				Usa tus credenciales Pillan/LDAP para ingresar.
 			</p>

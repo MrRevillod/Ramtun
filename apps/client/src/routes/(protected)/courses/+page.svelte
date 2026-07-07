@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		createMutation,
-		createQuery,
-		useQueryClient,
-	} from "@tanstack/svelte-query"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
@@ -11,8 +7,8 @@
 	import type { CreateCourseFormValues } from "$lib/courses/courses.dtos"
 	import { coursesService } from "$lib/courses/courses.service"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import CreateCourseModal from "$lib/courses/components/CreateCourseModal.svelte"
+	import { ApiResponse } from "$lib/shared/http/response"
 	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
 	import { authStore } from "$lib/auth/auth.store.svelte"
 
@@ -31,7 +27,8 @@
 			await queryClient.invalidateQueries({ queryKey: coursesKey })
 		},
 		onError: error => {
-			toast.error(getErrorMessage(error))
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
 		},
 	}))
 
@@ -42,7 +39,10 @@
 			courseToDelete = null
 			await queryClient.invalidateQueries({ queryKey: coursesKey })
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	let showCreateModal = $state(false)
@@ -87,7 +87,9 @@
 		{#if coursesQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando cursos...</p>
 		{:else if coursesQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(coursesQuery.error)}</p>
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(coursesQuery.error)}
+			</p>
 		{:else if !coursesQuery.data?.length}
 			<p class="notice notice-warn m-0">Aún no tienes cursos creados.</p>
 		{:else}

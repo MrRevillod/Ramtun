@@ -3,7 +3,7 @@
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
-	import { DoorOpen, Layers, ClipboardList, LogOut, Moon, Sun } from "lucide-svelte"
+	import { DoorOpen, Layers, ClipboardList, LogOut } from "lucide-svelte"
 	import { authService } from "$lib/auth/auth.service"
 	import { authStore } from "$lib/auth/auth.store.svelte"
 	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
@@ -12,7 +12,6 @@
 		connectAttemptsSocket,
 		disconnectAttemptsSocket,
 	} from "$lib/shared/socket/attempts.socket"
-	import { themeStore } from "$lib/shared/theme.store.svelte"
 	import { RoleValue } from "$lib/shared/value-objects/role.value"
 	import { onMount } from "svelte"
 	import { useActiveAttempt } from "$lib/attempts/attempts.queries"
@@ -81,37 +80,23 @@
 	<header class="panel-elevated mx-auto w-full p-3 sm:p-4">
 		<div class="flex items-center justify-between gap-4 px-8">
 			<div>
-				<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
-					INF-UCT: RAMTUN
-				</p>
+				<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">INF-UCT: RAMTUN</p>
 				<h1 class="mt-0.5 mb-0 text-xl leading-tight text-black sm:text-2xl">
 					Cuestionarios en línea
 				</h1>
 			</div>
 
 			<div class="mt-2.5 flex items-center gap-1">
-				<a
-					class="action-tab justify-center"
-					data-active={isActive("/join")}
-					href="/join"
-				>
+				<a class="action-tab justify-center" data-active={isActive("/join")} href="/join">
 					<DoorOpen size={16} aria-hidden="true" />
 					<span class="hidden lg:inline">Unirse</span>
 				</a>
-				<a
-					class="action-tab justify-center"
-					data-active={isActive("/results")}
-					href="/results"
-				>
+				<a class="action-tab justify-center" data-active={isActive("/results")} href="/results">
 					<ClipboardList size={16} aria-hidden="true" />
 					<span class="hidden lg:inline">Resultados</span>
 				</a>
 				{#if showCoursesNav}
-					<a
-						class="action-tab justify-center"
-						data-active={isActive("/courses")}
-						href="/courses"
-					>
+					<a class="action-tab justify-center" data-active={isActive("/courses")} href="/courses">
 						<Layers size={16} aria-hidden="true" />
 						<span class="hidden lg:inline">Cursos</span>
 					</a>
@@ -128,20 +113,6 @@
 						</p>
 						<p class="text-xs text-zinc-600">{displayRole}</p>
 					</div>
-					<button
-						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-300 bg-white text-zinc-800 transition-colors duration-200 hover:border-zinc-900 hover:bg-zinc-100 sm:size-10"
-						type="button"
-						onclick={() => themeStore.toggle()}
-						title={themeStore.preference === "dark"
-							? "Cambiar a modo claro"
-							: "Cambiar a modo oscuro"}
-					>
-						{#if themeStore.preference === "dark"}
-							<Sun size={16} aria-hidden="true" />
-						{:else}
-							<Moon size={16} aria-hidden="true" />
-						{/if}
-					</button>
 					<button
 						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
 						type="button"

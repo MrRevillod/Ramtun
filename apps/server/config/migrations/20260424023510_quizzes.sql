@@ -31,7 +31,8 @@ CREATE TABLE quizzes (
 	attempt_duration_minutes SMALLINT NOT NULL,
 	starts_at TIMESTAMPTZ NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
-	deleted_at TIMESTAMPTZ
+	deleted_at TIMESTAMPTZ,
+	results_published_at TIMESTAMPTZ
 );
 
 CREATE TABLE quiz_question_banks (
@@ -50,3 +51,4 @@ CREATE INDEX idx_quizzes_deleted_at ON quizzes(deleted_at);
 CREATE INDEX idx_quiz_question_banks_quiz_id ON quiz_question_banks(quiz_id);
 CREATE INDEX idx_quiz_question_banks_question_bank_id ON quiz_question_banks(question_bank_id);
 CREATE INDEX idx_question_bank_snapshots_deleted_at ON question_bank_snapshots(deleted_at);
+CREATE INDEX idx_quizzes_results_published_at ON quizzes(results_published_at);

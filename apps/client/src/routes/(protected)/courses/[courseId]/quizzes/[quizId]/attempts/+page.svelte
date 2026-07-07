@@ -8,9 +8,9 @@
 		onAttemptsSubmit,
 		onAttemptWarning,
 	} from "$lib/shared/socket/attempts.socket"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
@@ -20,11 +20,7 @@
 	}))
 
 	const viewAttempt = (attemptId: string) => {
-		void goto(
-			resolve(
-				`/courses/${data.courseId}/quizzes/${data.quizId}/attempts/${attemptId}`
-			)
-		)
+		void goto(resolve(`/courses/${data.courseId}/quizzes/${data.quizId}/attempts/${attemptId}`))
 	}
 
 	const warningBadge = (count: number) => {
@@ -68,11 +64,11 @@
 		{#if attemptsQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando intentos...</p>
 		{:else if attemptsQuery.error}
-			<p class="m-0 text-red-700">{getErrorMessage(attemptsQuery.error)}</p>
-		{:else if !attemptsQuery.data?.length}
-			<p class="notice notice-warn m-0">
-				Aún no hay intentos registrados para este cuestionario.
+			<p class="m-0 text-red-700">
+				{ApiResponse.messageOrDefault(attemptsQuery.error)}
 			</p>
+		{:else if !attemptsQuery.data?.length}
+			<p class="notice notice-warn m-0">Aún no hay intentos registrados para este cuestionario.</p>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="min-w-full border-collapse text-sm">
@@ -92,15 +88,9 @@
 								class="row-hover table-row cursor-pointer"
 								onclick={() => viewAttempt(attempt.attemptId)}
 							>
-								<td class="px-3 py-2 font-medium text-zinc-900"
-									>{attempt.userName}</td
-								>
-								<td class="px-3 py-2 text-zinc-700"
-									>{DateValue.format(attempt.startedAt)}</td
-								>
-								<td class="px-3 py-2 text-zinc-700"
-									>{DateValue.format(attempt.submittedAt)}</td
-								>
+								<td class="px-3 py-2 font-medium text-zinc-900">{attempt.userName}</td>
+								<td class="px-3 py-2 text-zinc-700">{DateValue.format(attempt.startedAt)}</td>
+								<td class="px-3 py-2 text-zinc-700">{DateValue.format(attempt.submittedAt)}</td>
 								<td class="px-3 py-2 text-zinc-700">
 									{attempt.score !== null ? attempt.score : "-"}
 								</td>
@@ -110,7 +100,9 @@
 								<td class="px-3 py-2">
 									{#if attempt.warningCount > 0}
 										<span
-											class="inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums {warningBadge(attempt.warningCount)}"
+											class="inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums {warningBadge(
+												attempt.warningCount
+											)}"
 										>
 											{attempt.warningCount}
 										</span>

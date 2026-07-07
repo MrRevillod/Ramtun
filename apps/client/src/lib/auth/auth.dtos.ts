@@ -9,15 +9,8 @@ export type User = {
 }
 
 export const loginSchema = v.object({
-	username: v.pipe(
-		v.string(),
-		v.trim(),
-		v.minLength(1, "El usuario es obligatorio."),
-	),
-	password: v.pipe(
-		v.string(),
-		v.minLength(1, "La contraseña es obligatoria."),
-	),
+	username: v.pipe(v.string(), v.trim(), v.minLength(1, "El usuario es obligatorio.")),
+	password: v.pipe(v.string(), v.minLength(1, "La contraseña es obligatoria.")),
 })
 
 export type LoginInput = v.InferInput<typeof loginSchema>

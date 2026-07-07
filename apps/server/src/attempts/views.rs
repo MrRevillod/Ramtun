@@ -113,8 +113,24 @@ impl From<Attempt> for AttemptListItemView {
     }
 }
 
-impl From<(Attempt, Vec<QuestionView>, QuizKind, String, Vec<SavedAnswerView>)> for AttemptView {
-    fn from(value: (Attempt, Vec<QuestionView>, QuizKind, String, Vec<SavedAnswerView>)) -> Self {
+impl
+    From<(
+        Attempt,
+        Vec<QuestionView>,
+        QuizKind,
+        String,
+        Vec<SavedAnswerView>,
+    )> for AttemptView
+{
+    fn from(
+        value: (
+            Attempt,
+            Vec<QuestionView>,
+            QuizKind,
+            String,
+            Vec<SavedAnswerView>,
+        ),
+    ) -> Self {
         let (attempt, questions, kind, title, answers) = value;
         Self {
             attempt_id: attempt.id,

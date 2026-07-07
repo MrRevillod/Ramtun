@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CircleStop, AlertCircle } from "lucide-svelte"
+	import { CircleStop, CircleAlert } from "lucide-svelte"
 
 	interface QuizStatusBadgeProps {
 		resultsPublishedAt: string | null
@@ -9,15 +9,13 @@
 </script>
 
 {#if resultsPublishedAt}
-	<span
-		class="inline-flex items-center gap-1 rounded-[4px] bg-zinc-900 px-2 py-1 text-xs text-white"
-	>
+	<span class="inline-flex items-center gap-1 rounded-sm bg-zinc-900 px-2 py-1 text-xs text-white">
 		<CircleStop size={12} aria-hidden="true" />
 		Cerrado
 	</span>
 {:else}
 	<span class="pill-outline">
-		<AlertCircle size={12} aria-hidden="true" />
+		<CircleAlert size={12} aria-hidden="true" />
 		Abierto
 	</span>
 {/if}

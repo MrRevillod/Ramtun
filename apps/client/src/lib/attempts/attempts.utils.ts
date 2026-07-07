@@ -1,8 +1,7 @@
 import type { AnswerState, AttemptQuestion } from "$lib/attempts/attempts.dtos"
 import type { QuizKind } from "$lib/quizzes/quizzes.dtos"
 
-export const isAnswered = (answer?: AnswerState | null) =>
-	answer?.answerIndex !== undefined
+export const isAnswered = (answer?: AnswerState | null) => answer?.answerIndex !== undefined
 
 export const isCertaintyComplete = (answer?: AnswerState | null) =>
 	!!answer && answer.certaintyLevel !== null

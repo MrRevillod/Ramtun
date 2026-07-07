@@ -34,11 +34,7 @@
 			return "border-emerald-700 bg-emerald-50 text-emerald-900"
 		}
 
-		if (
-			answerIndex !== null &&
-			optionIndex === answerIndex &&
-			answerIndex !== correctAnswerIndex
-		) {
+		if (answerIndex !== null && optionIndex === answerIndex && answerIndex !== correctAnswerIndex) {
 			return "border-red-700 bg-red-50 text-red-900"
 		}
 
@@ -77,9 +73,7 @@
 			</p>
 		</div>
 		<div class="panel-muted p-3 sm:p-4">
-			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
-				Enviado
-			</p>
+			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">Enviado</p>
 			<p class="mt-1 mb-0 text-lg font-semibold text-black">
 				{DateValue.format(result.submittedAt)}
 			</p>
@@ -100,9 +94,7 @@
 							<CheckCircle2 size={14} /> Correcta
 						</span>
 					{:else}
-						<span
-							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700"
-						>
+						<span class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700">
 							<CircleX size={14} /> Incorrecta
 						</span>
 					{/if}
@@ -152,9 +144,7 @@
 
 				{#if question.certaintyLevel}
 					<div class="mt-4 grid gap-2 border-t border-zinc-200 pt-4">
-						<p class="m-0 text-sm font-medium text-black">
-							Nivel de certeza marcado
-						</p>
+						<p class="m-0 text-sm font-medium text-black">Nivel de certeza marcado</p>
 						<div class="grid gap-2 sm:grid-cols-3">
 							{#each certaintyLevels as item (item.level)}
 								<div
@@ -174,9 +164,7 @@
 				{/if}
 
 				{#if question.answerIndex === null}
-					<p class="mt-4 mb-0 text-sm font-bold text-amber-700">
-						Sin respuesta en esta pregunta.
-					</p>
+					<p class="mt-4 mb-0 text-sm font-bold text-amber-700">Sin respuesta en esta pregunta.</p>
 				{/if}
 			</article>
 		{/each}

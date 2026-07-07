@@ -4,12 +4,9 @@
 	import { createQuery } from "@tanstack/svelte-query"
 	import { resolve } from "$app/paths"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import {
-		onAttemptWarning,
-		onAttemptsSubmit,
-	} from "$lib/shared/socket/attempts.socket"
-	import { getErrorMessage } from "$lib/shared/errors"
+	import { onAttemptWarning, onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
+	import { ApiResponse } from "$lib/shared/http/response"
 	import PageHeader from "$lib/shared/components/PageHeader.svelte"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 	import {
@@ -35,6 +32,8 @@
 		queryKey: ["attempt-result", "managed", data.attemptId],
 		queryFn: () => attemptsService.getAttemptResultsManaged(data.attemptId),
 	}))
+
+	const resultsErrorMessage = $derived(ApiResponse.messageOrDefault(resultsQuery.error))
 
 	$effect(() => {
 		const unsubWarning = onAttemptWarning(() => {
@@ -86,8 +85,7 @@
 		}
 	}
 
-	const warningTypeColor = (type: WarningType) =>
-		severityColor(WARNING_SEVERITY[type])
+	const warningTypeColor = (type: WarningType) => severityColor(WARNING_SEVERITY[type])
 
 	const severitySummary = $derived.by(() => {
 		const items = warningsQuery.data ?? []
@@ -149,13 +147,13 @@
 		{#if resultsQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando resultados...</p>
 		{:else if resultsQuery.error}
-			{#if getErrorMessage(resultsQuery.error).includes("no ha sido enviado")}
+			{#if resultsErrorMessage.includes("no ha sido enviado")}
 				<p class="m-0 text-zinc-600">
-					El estudiante aún no ha enviado el intento. Los resultados estarán
-					disponibles una vez que lo complete.
+					El estudiante aún no ha enviado el intento. Los resultados estarán disponibles una vez que
+					lo complete.
 				</p>
 			{:else}
-				<p class="m-0 text-red-700">{getErrorMessage(resultsQuery.error)}</p>
+				<p class="m-0 text-red-700">{resultsErrorMessage}</p>
 			{/if}
 		{:else if resultsQuery.data}
 			<AttemptResultReview result={resultsQuery.data} />
@@ -174,21 +172,15 @@
 		</div>
 
 		{#if showInfo}
-			<div
-				class="mb-2 gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm"
-			>
-				<p
-					class="m-0 mb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase"
-				>
+			<div class="mb-2 gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm">
+				<p class="m-0 mb-2 text-xs font-semibold tracking-wider text-zinc-500 uppercase">
 					Equivalencia de severidad
 				</p>
 				<div class="grid gap-2 sm:grid-cols-3">
 					{#each SEVERITY_GROUPS as severity (severity)}
 						{@const Icon = severityIcon(severity)}
 						<div class="rounded-sm border border-zinc-200 bg-white p-2.5">
-							<p
-								class="m-0 flex items-center gap-1.5 text-xs font-semibold text-zinc-700"
-							>
+							<p class="m-0 flex items-center gap-1.5 text-xs font-semibold text-zinc-700">
 								<Icon size={13} />
 								{severityLabel(severity)}
 							</p>
@@ -206,9 +198,7 @@
 		{#if warningsQuery.isLoading}
 			<p class="m-0 text-zinc-600">Cargando advertencias...</p>
 		{:else if !warningsQuery.data?.length}
-			<p class="m-0 text-zinc-600">
-				No se registraron advertencias en este intento.
-			</p>
+			<p class="m-0 text-zinc-600">No se registraron advertencias en este intento.</p>
 		{:else}
 			<div class="mb-2 grid gap-3 sm:grid-cols-3">
 				{#each SEVERITY_GROUPS as severity (severity)}

@@ -1,15 +1,14 @@
 <script lang="ts">
+	import type { JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 	import { Search } from "lucide-svelte"
 	import { createMutation } from "@tanstack/svelte-query"
 	import { quizzesService } from "$lib/quizzes/quizzes.service"
-	import { getErrorMessage } from "$lib/shared/errors"
-	import {
-		joinCodeFormSchema,
-		type JoinCodeFormData,
-	} from "$lib/attempts/attempts.dtos"
+	import { joinCodeFormSchema } from "$lib/attempts/attempts.dtos"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	const form = createForm({
 		schema: joinCodeFormSchema,
@@ -22,7 +21,10 @@
 			reset(form)
 			await goto(`/join/lobby?joinCode=${encodeURIComponent(code)}`)
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const handleSubmit = (input: JoinCodeFormData) => {
@@ -32,12 +34,8 @@
 
 <section class="flex flex-col gap-4">
 	<div>
-		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
-			Acceso rápido
-		</p>
-		<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
-			Unirse a un cuestionario
-		</h2>
+		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">Acceso rápido</p>
+		<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">Unirse a un cuestionario</h2>
 	</div>
 
 	<section>

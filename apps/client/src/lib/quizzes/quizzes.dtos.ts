@@ -11,10 +11,7 @@ export const createQuizSchema = v.object({
 	startsAt: v.pipe(
 		v.string(),
 		v.minLength(1, "La fecha de inicio es obligatoria."),
-		v.check(
-			value => new Date(value) > new Date(),
-			"La fecha de inicio debe estar en el futuro."
-		),
+		v.check(value => new Date(value) > new Date(), "La fecha de inicio debe estar en el futuro."),
 		v.transform(value => new Date(value).toISOString())
 	),
 	attemptDurationMinutes: v.pipe(

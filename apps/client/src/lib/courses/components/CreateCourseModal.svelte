@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { fade, scale } from "svelte/transition"
-	import {
-		createForm,
-		Field,
-		Form,
-		type SubmitEventHandler,
-		reset,
-	} from "@formisch/svelte"
-	import { Plus, RefreshCw, X } from "lucide-svelte"
-	import { createCourseSchema, type CourseView } from "$lib/courses/courses.dtos"
 	import type { CreateMutationResult } from "@tanstack/svelte-query"
+	import type { CourseView } from "$lib/courses/courses.dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
+
+	import { fade, scale } from "svelte/transition"
+	import { Plus, RefreshCw, X } from "lucide-svelte"
+	import { createCourseSchema } from "$lib/courses/courses.dtos"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	interface CreateCourseModalProps {
 		open: boolean
@@ -38,9 +35,7 @@
 		},
 	})
 
-	const handleSubmit: SubmitEventHandler<
-		typeof createCourseSchema
-	> = async output => {
+	const handleSubmit: SubmitEventHandler<typeof createCourseSchema> = async output => {
 		const created = await mutation.mutateAsync(output)
 		reset(form)
 		onsuccess(created)
@@ -128,9 +123,7 @@
 				</div>
 
 				<div class="flex justify-end gap-2">
-					<button class="btn-tertiary" type="button" onclick={onclose}
-						>Cancelar</button
-					>
+					<button class="btn-tertiary" type="button" onclick={onclose}>Cancelar</button>
 					<button class="btn-primary flex items-center gap-1.5" type="submit">
 						{#if mutation.isPending}
 							<RefreshCw size={16} class="animate-spin" aria-hidden="true" />

@@ -46,20 +46,10 @@
 			<h4 class="m-0 text-base text-black">{title}</h4>
 			<p class="mt-2 mb-0 text-sm text-zinc-700">{message}</p>
 			<div class="mt-4 flex justify-end gap-2">
-				<button
-					class="btn-tertiary"
-					type="button"
-					onclick={onCancel}
-					disabled={isPending}
-				>
+				<button class="btn-tertiary" type="button" onclick={onCancel} disabled={isPending}>
 					{cancelLabel}
 				</button>
-				<button
-					class="btn-primary"
-					type="button"
-					onclick={onConfirm}
-					disabled={isPending}
-				>
+				<button class="btn-primary" type="button" onclick={onConfirm} disabled={isPending}>
 					{isPending ? "Procesando..." : confirmLabel}
 				</button>
 			</div>

@@ -1,20 +1,16 @@
 <script lang="ts">
-	import {
-		createMutation,
-		createQuery,
-		useQueryClient,
-	} from "@tanstack/svelte-query"
+	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 	import { Plus, Trash2 } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
-	import { getErrorMessage } from "$lib/shared/errors"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
 
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
@@ -31,9 +27,13 @@
 	const uploadBankMutation = createMutation(() => ({
 		mutationFn: (input: CreateQuestionBankInput) => banksService.create(input),
 		onSuccess: () => {
+			toast.success("Banco de preguntas creado correctamente.")
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const deleteBankMutation = createMutation(() => ({
@@ -42,7 +42,10 @@
 			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 			bankToDelete = null
 		},
-		onError: error => toast.error(getErrorMessage(error)),
+		onError: error => {
+			console.error(error)
+			toast.error(ApiResponse.messageOrDefault(error))
+		},
 	}))
 
 	const confirmDeleteBank = () => {
@@ -56,9 +59,7 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Bancos de preguntas</h3>
-				<p class="m-0 mt-2 text-zinc-700">
-					Sube y gestiona bancos de preguntas en formato JSON.
-				</p>
+				<p class="m-0 mt-2 text-zinc-700">Sube y gestiona bancos de preguntas en formato JSON.</p>
 			</div>
 			<button
 				class="btn-primary flex items-center gap-1.5"
@@ -79,9 +80,7 @@
 		{:else if !banksQuery.data?.length}
 			<div class="panel-surface py-10 text-center">
 				<p class="mb-2 text-zinc-600">No hay bancos de preguntas.</p>
-				<p class="text-sm text-zinc-500">
-					Sube un archivo JSON para crear el primer banco.
-				</p>
+				<p class="text-sm text-zinc-500">Sube un archivo JSON para crear el primer banco.</p>
 			</div>
 		{:else}
 			<div class="overflow-x-auto">
@@ -98,8 +97,7 @@
 						{#each banksQuery.data as bank (bank.id)}
 							<tr
 								class="row-hover table-row cursor-pointer"
-								onclick={() =>
-									goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
+								onclick={() => goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
 							>
 								<td class="px-3 py-2 text-zinc-900">{bank.name}</td>
 								<td class="px-3 py-2 text-zinc-700">{bank.questions.length}</td>

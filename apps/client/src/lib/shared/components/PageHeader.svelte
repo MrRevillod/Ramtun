@@ -2,17 +2,14 @@
 	import type { Snippet } from "svelte"
 	import Title from "./Title.svelte"
 
-	let {
-		supra,
-		title,
-		tag,
-		children,
-	}: {
+	interface PageHeaderProps {
 		supra: string
 		title: string
 		tag?: "h1" | "h2" | "h3" | "h4"
 		children: Snippet
-	} = $props()
+	}
+
+	let { supra, title, tag, children }: PageHeaderProps = $props()
 </script>
 
 <div class="mb-4 flex flex-row items-center justify-center pt-2">
