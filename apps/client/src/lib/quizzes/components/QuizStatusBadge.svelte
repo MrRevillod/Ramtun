@@ -1,8 +1,9 @@
 <script lang="ts">
+	import type { DateValue } from "$lib/shared/value-objects/date.value"
 	import { CircleStop, CircleAlert } from "lucide-svelte"
 
 	interface QuizStatusBadgeProps {
-		resultsPublishedAt: string | null
+		resultsPublishedAt: DateValue | null
 	}
 
 	let { resultsPublishedAt }: QuizStatusBadgeProps = $props()

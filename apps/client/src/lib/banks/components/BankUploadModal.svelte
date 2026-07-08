@@ -2,6 +2,7 @@
 	import * as v from "valibot"
 	import type { CreateMutationResult } from "@tanstack/svelte-query"
 	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
+	import type { ApiResponse } from "$lib/shared/http/response"
 	import type { SubmitEventHandler } from "@formisch/svelte"
 	import type { QuestionInput } from "$lib/banks/banks.dtos"
 
@@ -19,7 +20,7 @@
 		courseId: string
 		onclose: () => void
 		onsuccess: () => void
-		mutation: CreateMutationResult<void, Error, CreateQuestionBankInput, unknown>
+		mutation: CreateMutationResult<void, ApiResponse<unknown>, CreateQuestionBankInput, unknown>
 	}
 
 	let { open, courseId, onclose, onsuccess, mutation }: BankUploadModalProps = $props()

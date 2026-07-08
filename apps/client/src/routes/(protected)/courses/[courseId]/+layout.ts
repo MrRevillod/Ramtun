@@ -1,16 +1,13 @@
 import { redirect } from "@sveltejs/kit"
-import { coursesService } from "$lib/courses/courses.service"
-
-import type { CourseView } from "$lib/courses/courses.dtos"
+import { coursesService } from "$lib/courses/service"
+import { inlineTryAsync } from "$lib/shared/try"
 
 export const load = async ({ params }) => {
-	let course: CourseView | null = null
+	const [course, err] = await inlineTryAsync(() => coursesService.findOne(params.courseId))
 
-	try {
-		course = await coursesService.get(params.courseId)
-	} catch {
+	if (err) {
 		throw redirect(307, "/courses")
 	}
 
-	return { courseId: params.courseId, course }
+	return { courseId: params.courseId, course: course! }
 }

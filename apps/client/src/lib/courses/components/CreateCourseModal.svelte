@@ -1,33 +1,37 @@
 <script lang="ts">
-	import type { CreateMutationResult } from "@tanstack/svelte-query"
-	import type { CourseView } from "$lib/courses/courses.dtos"
 	import type { SubmitEventHandler } from "@formisch/svelte"
+	import type { CreateCourseDTO, CreateCourseDTOSchema } from "$lib/courses/dtos"
 
+	import { toast } from "svelte-sonner"
 	import { fade, scale } from "svelte/transition"
+	import { coursesService } from "../service"
 	import { Plus, RefreshCw, X } from "lucide-svelte"
-	import { createCourseSchema } from "$lib/courses/courses.dtos"
+	import { createCourseDTOSchema } from "$lib/courses/dtos"
+	import { queryClient, useMutation } from "$lib/shared/http/tanstack"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	interface CreateCourseModalProps {
 		open: boolean
 		onclose: () => void
-		onsuccess: (created: { code: string }) => void
-		mutation: CreateMutationResult<
-			CourseView,
-			Error,
-			{
-				name: string
-				code: string
-				year: number
-			},
-			unknown
-		>
+		onsuccess: () => void
 	}
 
-	let { open, onclose, onsuccess, mutation }: CreateCourseModalProps = $props()
+	let { open, onclose, onsuccess }: CreateCourseModalProps = $props()
+
+	const mutation = useMutation(() => ({
+		mutationFn: (input: CreateCourseDTO) => coursesService.create(input),
+		onSuccess: (created) => {
+			toast.success(`Curso ${created.code} creado correctamente.`)
+			queryClient.invalidateQueries({ queryKey: ["courses"] })
+			onsuccess()
+		},
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
+		},
+	}))
 
 	const form = createForm({
-		schema: createCourseSchema,
+		schema: createCourseDTOSchema,
 		initialInput: {
 			name: "",
 			code: "",
@@ -35,10 +39,9 @@
 		},
 	})
 
-	const handleSubmit: SubmitEventHandler<typeof createCourseSchema> = async output => {
-		const created = await mutation.mutateAsync(output)
+	const handleSubmit: SubmitEventHandler<CreateCourseDTOSchema> = async (output) => {
+		await mutation.mutateAsync(output)
 		reset(form)
-		onsuccess(created)
 	}
 </script>
 
@@ -50,7 +53,7 @@
 		tabindex="-1"
 		transition:fade={{ duration: 180 }}
 		onclick={() => onclose()}
-		onkeydown={e => {
+		onkeydown={(e) => {
 			if (e.key === "Escape") onclose()
 		}}
 	>
@@ -59,7 +62,7 @@
 			role="presentation"
 			tabindex="-1"
 			transition:scale={{ duration: 190, start: 0.98 }}
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h3 class="m-0 text-lg text-black">Crear curso</h3>

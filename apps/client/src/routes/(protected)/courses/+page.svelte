@@ -1,59 +1,43 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import type { Course } from "$lib/courses/entity"
+
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
+	import { authStore } from "$lib/auth/store.svelte"
 	import { Plus, Users, Trash2 } from "lucide-svelte"
-	import type { CreateCourseFormValues } from "$lib/courses/courses.dtos"
-	import { coursesService } from "$lib/courses/courses.service"
-	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import { coursesService } from "$lib/courses/service"
+	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
+
 	import CreateCourseModal from "$lib/courses/components/CreateCourseModal.svelte"
-	import { ApiResponse } from "$lib/shared/http/response"
-	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
-	import { authStore } from "$lib/auth/auth.store.svelte"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+
+	let showCreateModal = $state(false)
+	let courseToDelete = $state<Course | null>(null)
+	const canCreateCourse = $derived(authStore.user?.isAdmin() || authStore.user?.isFunc())
 
 	const queryClient = useQueryClient()
-	const coursesKey = ["courses"]
 
-	const coursesQuery = createQuery(() => ({
-		queryKey: coursesKey,
+	const coursesQuery = useQuery(() => ({
+		queryKey: ["courses"],
 		queryFn: async () => await coursesService.list(),
 	}))
 
-	const createCourseMutation = createMutation(() => ({
-		mutationFn: (input: CreateCourseFormValues) => coursesService.create(input),
-		onSuccess: async created => {
-			toast.success(`Curso ${created.code} creado correctamente.`)
-			await queryClient.invalidateQueries({ queryKey: coursesKey })
-		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
-		},
-	}))
-
-	const deleteCourseMutation = createMutation(() => ({
+	const deleteCourseMutation = useMutation(() => ({
 		mutationFn: (courseId: string) => coursesService.remove(courseId),
 		onSuccess: async () => {
 			toast.success("Curso eliminado correctamente.")
-			courseToDelete = null
-			await queryClient.invalidateQueries({ queryKey: coursesKey })
+			await queryClient.invalidateQueries({ queryKey: ["courses"] })
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
+		},
+		onSettled: () => {
+			courseToDelete = null
 		},
 	}))
 
-	let showCreateModal = $state(false)
-	let courseToDelete = $state<{ id: string; name: string } | null>(null)
-
-	const role = $derived(authStore.user?.role)
-	const canCreateCourse = $derived(isFunc(role) || isAdmin(role))
-
 	const confirmDeleteCourse = async () => {
-		if (!courseToDelete) return
-		await deleteCourseMutation.mutateAsync(courseToDelete.id)
+		await deleteCourseMutation.mutateAsync(courseToDelete?.id ?? "")
 	}
 </script>
 
@@ -62,10 +46,10 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h2 class="mt-2 mb-0 text-2xl text-black">
-					{isAdmin(role) ? "Cursos del Sistema" : "Gestionar Mis Cursos"}
+					{authStore.user?.isAdmin() ? "Cursos del Sistema" : "Gestionar Mis Cursos"}
 				</h2>
 				<p class="mt-2 max-w-3xl text-zinc-700">
-					{isAdmin(role)
+					{authStore.user?.isAdmin()
 						? "Vista general de todos los cursos registrados en la plataforma."
 						: "Crea cursos, organiza participantes y prepara evaluaciones para cada sección."}
 				</p>
@@ -88,7 +72,7 @@
 			<p class="m-0 text-zinc-600">Cargando cursos...</p>
 		{:else if coursesQuery.error}
 			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(coursesQuery.error)}
+				{coursesQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if !coursesQuery.data?.length}
 			<p class="notice notice-warn m-0">Aún no tienes cursos creados.</p>
@@ -110,7 +94,7 @@
 						{#each coursesQuery.data as course (course.id)}
 							<tr
 								class="row-hover table-row cursor-pointer"
-								onclick={() => goto(resolve(`/courses/${course.id}/quizzes`))}
+								onclick={() => goto(`/courses/${course.id}/quizzes`)}
 							>
 								<td class="px-3 py-2 text-zinc-800">{course.name}</td>
 								<td class="px-3 py-2 font-medium text-zinc-900">{course.code}</td>
@@ -128,9 +112,9 @@
 												class="icon-btn icon-btn-danger cursor-pointer"
 												title="Eliminar curso"
 												type="button"
-												onclick={e => {
+												onclick={(e) => {
 													e.stopPropagation()
-													courseToDelete = { id: course.id, name: course.name }
+													courseToDelete = course
 												}}
 											>
 												<Trash2 size={15} aria-hidden="true" />
@@ -150,7 +134,6 @@
 		open={showCreateModal}
 		onclose={() => (showCreateModal = false)}
 		onsuccess={() => (showCreateModal = false)}
-		mutation={createCourseMutation}
 	/>
 
 	<ConfirmActionModal

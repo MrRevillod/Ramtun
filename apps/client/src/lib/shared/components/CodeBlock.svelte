@@ -11,8 +11,8 @@
 
 	let copied = $state(false)
 
-	const copyToClipboard = () => {
-		inlineTryAsync(async () => {
+	const copyToClipboard = async () => {
+		await inlineTryAsync(async () => {
 			await navigator.clipboard.writeText(code)
 			copied = true
 			setTimeout(() => {

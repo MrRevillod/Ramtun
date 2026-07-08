@@ -42,8 +42,11 @@ impl CoursesController {
         let input = req.body_validator::<CreateCourseDto>()?;
 
         let course = self.courses.create(current_user, input).await?;
+        let members = self.courses.list_members(current_user, &course.id).await?;
 
-        Ok(JsonResponse::Created().data(course))
+        let view = CourseView::from((&course, &members));
+
+        Ok(JsonResponse::Created().data(view))
     }
 
     #[delete("/{courseId}")]

@@ -1,19 +1,18 @@
 <script lang="ts">
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$lib/shared/http/tanstack"
 	import { ArrowLeft } from "lucide-svelte"
 	import { resolve } from "$app/paths"
 	import { banksService } from "$lib/banks/banks.service"
-	import { coursesService } from "$lib/courses/courses.service"
-	import { ApiResponse } from "$lib/shared/http/response"
+	import { coursesService } from "$lib/courses/service"
 
 	let { data } = $props()
 
-	const courseQuery = createQuery(() => ({
+	const courseQuery = useQuery(() => ({
 		queryKey: ["course", data.courseId],
-		queryFn: () => coursesService.get(data.courseId),
+		queryFn: () => coursesService.findOne(data.courseId),
 	}))
 
-	const bankQuery = createQuery(() => ({
+	const bankQuery = useQuery(() => ({
 		queryKey: ["bank", data.bankId],
 		queryFn: () => banksService.getById(data.bankId),
 	}))
@@ -46,7 +45,7 @@
 			<p class="m-0 text-zinc-600">Cargando banco...</p>
 		{:else if bankQuery.error}
 			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(bankQuery.error)}
+				{bankQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if bankQuery.data}
 			<div class="grid gap-4">

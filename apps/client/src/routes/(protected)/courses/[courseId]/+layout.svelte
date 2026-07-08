@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { page } from "$app/state"
 	import { Users, Library, FileText } from "lucide-svelte"
+
 	import PageHeader from "$lib/shared/components/PageHeader.svelte"
 
 	let { children, data } = $props()
 
 	const base = $derived(`/courses/${data.courseId}`)
-	const quizzesHref = $derived(`${base}/quizzes`)
 	const banksHref = $derived(`${base}/banks`)
+	const quizzesHref = $derived(`${base}/quizzes`)
 	const membersHref = $derived(`${base}/members`)
+
 	const isQuizzes = $derived(
 		page.url.pathname === base || page.url.pathname.startsWith(quizzesHref)
 	)
+
 	const isBanks = $derived(page.url.pathname.startsWith(banksHref))
 	const isMembers = $derived(page.url.pathname.startsWith(membersHref))
 </script>

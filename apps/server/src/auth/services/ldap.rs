@@ -25,21 +25,21 @@ impl LdapClient {
 
         tracing::debug!("Iniciando conexión inicial con INF-UCT ldap: {}", admin_dn);
 
-        let mut ldap = Self::ldap_connect(&config).await?;
+        // let mut ldap = Self::ldap_connect(&config).await?;
 
-        ldap.simple_bind(&admin_dn, &config.ldap_admin_password)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de conexión durante bind admin: {e}");
-            })
-            .map_err(AuthError::from)?
-            .success()
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
-            })
-            .map_err(AuthError::from)?;
+        // ldap.simple_bind(&admin_dn, &config.ldap_admin_password)
+        //     .await
+        //     .inspect_err(|e| {
+        //         tracing::error!("[!] Error de conexión durante bind admin: {e}");
+        //     })
+        //     .map_err(AuthError::from)?
+        //     .success()
+        //     .inspect_err(|e| {
+        //         tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
+        //     })
+        //     .map_err(AuthError::from)?;
 
-        tracing::info!("Conexión inicial con INF-UCT ldap exitosa: {}", admin_dn);
+        // tracing::info!("Conexión inicial con INF-UCT ldap exitosa: {}", admin_dn);
 
         Ok(LdapClient { config })
     }

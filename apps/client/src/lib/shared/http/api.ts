@@ -1,7 +1,7 @@
 import axios from "axios"
 import type { AxiosError, AxiosResponse } from "axios"
 
-import { authStore } from "$lib/auth/auth.store.svelte"
+import { authStore } from "$lib/auth/store.svelte"
 
 export const api = axios.create({
 	baseURL: "/api",

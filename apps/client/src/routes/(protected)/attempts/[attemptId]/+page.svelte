@@ -7,7 +7,7 @@
 	import { useAttempt } from "$lib/attempts/attempts.queries"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { createAntiCheat } from "$lib/attempts/services/anti-cheat.service.svelte"
-	import { createMutation, useQueryClient } from "@tanstack/svelte-query"
+	import { useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
 	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
@@ -44,7 +44,7 @@
 		answers = savedAnswers
 
 		const firstUnanswered = attempt.questions.findIndex(
-			q => savedAnswers[q.id]?.answerIndex === undefined
+			(q) => savedAnswers[q.id]?.answerIndex === undefined
 		)
 		currentIndex = firstUnanswered >= 0 ? firstUnanswered : 0
 	})
@@ -78,11 +78,11 @@
 	}
 	const firstUnansweredIndex = () => {
 		if (!attemptQuery.data) return -1
-		return attemptQuery.data.questions.findIndex(q => answers[q.id]?.answerIndex === undefined)
+		return attemptQuery.data.questions.findIndex((q) => answers[q.id]?.answerIndex === undefined)
 	}
 	const firstCertaintyGapIndex = () => {
 		if (!attemptQuery.data || !isCertaintyQuiz()) return -1
-		return attemptQuery.data.questions.findIndex(q => {
+		return attemptQuery.data.questions.findIndex((q) => {
 			const answer = answers[q.id]
 			return !!answer && answer.certaintyLevel === null
 		})
@@ -119,7 +119,7 @@
 
 	onDestroy(clearTimer)
 
-	const saveAnswerMutation = createMutation(() => ({
+	const saveAnswerMutation = useMutation(() => ({
 		mutationFn: (payload: {
 			attemptId: string
 			questionId: string
@@ -133,16 +133,16 @@
 			}),
 	}))
 
-	const submitMutation = createMutation(() => ({
+	const submitMutation = useMutation(() => ({
 		mutationFn: (attemptId: string) => attemptsService.submit(attemptId),
-		onSuccess: () => {
+		onSuccess: async () => {
 			queryClient.setQueryData(["attempts", "active"], null)
-			queryClient.invalidateQueries({ queryKey: ["attempts"] })
+			await queryClient.invalidateQueries({ queryKey: ["attempts"] })
 			clearTimer()
 			showSubmitModal = true
 			toast.success("Intento enviado correctamente.")
 		},
-		onError: error => {
+		onError: (error) => {
 			console.error("Error submitting attempt:", error)
 			toast.error("Error al enviar el intento. Por favor, inténtalo de nuevo.")
 		},
@@ -270,7 +270,7 @@
 			{#if attemptQuery.data.kind === "certainty"}
 				<CertaintySelector
 					selected={currentAnswer?.certaintyLevel ?? null}
-					onclick={level => selectCertainty(currentQuestion.id, level)}
+					onclick={(level) => selectCertainty(currentQuestion.id, level)}
 				/>
 			{/if}
 
@@ -280,7 +280,7 @@
 				isLast={currentIndex >= totalQuestions - 1}
 				isPending={submitMutation.isPending}
 				{autoSubmitting}
-				onnavigate={async index => {
+				onnavigate={async (index) => {
 					const currentQuestionId = attemptQuery.data!.questions[currentIndex].id
 					const currentAns = answers[currentQuestionId]
 					if (!isAnswered(currentAns)) {

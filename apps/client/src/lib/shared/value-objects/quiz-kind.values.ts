@@ -1,8 +1,11 @@
 export class QuizKindValue {
 	private constructor(private readonly value: string) {}
 
-	static from(value?: string): QuizKindValue | null {
-		if (typeof value !== "string" || value.trim() === "") return null
+	static from(value?: string): QuizKindValue {
+		if (typeof value !== "string" || value.trim() === "") {
+			throw new Error("Invalid value for QuizKindValue")
+		}
+
 		return new QuizKindValue(value.trim())
 	}
 
@@ -19,5 +22,13 @@ export class QuizKindValue {
 		}
 
 		return labels[this.value as keyof typeof labels] ?? "--"
+	}
+
+	public isTraditional(): boolean {
+		return this.value === "traditional"
+	}
+
+	public isCertainty(): boolean {
+		return this.value === "certainty"
 	}
 }

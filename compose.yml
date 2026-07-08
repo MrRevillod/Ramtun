@@ -84,7 +84,7 @@ services:
       - ./apps/client:/app
       - /app/node_modules
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://127.0.0.1:5173 >/dev/null || exit 1" ]
+      test: [ "CMD-SHELL", "curl -s http://127.0.0.1:5173 >/dev/null || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10

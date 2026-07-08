@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$lib/shared/http/tanstack"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import {
 		onAttemptNew,
@@ -10,11 +10,10 @@
 	} from "$lib/shared/socket/attempts.socket"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
-	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
-	const attemptsQuery = createQuery(() => ({
+	const attemptsQuery = useQuery(() => ({
 		queryKey: ["attempts", "managed", data.courseId, data.quizId],
 		queryFn: () => attemptsService.listAttempts(data.courseId, data.quizId),
 	}))
@@ -31,7 +30,7 @@
 	}
 
 	$effect(() => {
-		const unsubSubmit = onAttemptsSubmit(payload => {
+		const unsubSubmit = onAttemptsSubmit((payload) => {
 			if (payload.quizId !== data.quizId) return
 			void attemptsQuery.refetch()
 		})
@@ -65,7 +64,7 @@
 			<p class="m-0 text-zinc-600">Cargando intentos...</p>
 		{:else if attemptsQuery.error}
 			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(attemptsQuery.error)}
+				{attemptsQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if !attemptsQuery.data?.length}
 			<p class="notice notice-warn m-0">Aún no hay intentos registrados para este cuestionario.</p>

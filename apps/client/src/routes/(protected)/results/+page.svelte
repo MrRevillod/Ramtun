@@ -1,23 +1,22 @@
 <script lang="ts">
-	import type { JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+	import type { JoinCodeDTOSchema } from "$lib/quizzes/dtos"
 
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
 	import { Search } from "lucide-svelte"
 	import { onMount } from "svelte"
-	import { createMutation } from "@tanstack/svelte-query"
+	import { useMutation } from "$lib/shared/http/tanstack"
 	import { attemptsService } from "$lib/attempts/attempts.service"
-	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { joinCodeFormSchema } from "$lib/attempts/attempts.dtos"
-	import { ApiResponse } from "$lib/shared/http/response"
+	import { joinCodeDTOSchema } from "$lib/quizzes/dtos"
+	import { createForm, Field, Form, reset, type SubmitEventHandler } from "@formisch/svelte"
 
 	const form = createForm({
-		schema: joinCodeFormSchema,
+		schema: joinCodeDTOSchema,
 		validate: "blur",
 	})
 
-	const byJoinCodeMutation = createMutation(() => ({
+	const byJoinCodeMutation = useMutation(() => ({
 		mutationFn: (joinCode: string) => attemptsService.getResultsByJoinCode(joinCode),
 		onSuccess: async (results, joinCode) => {
 			reset(form)
@@ -25,15 +24,15 @@
 				state: { results },
 			})
 		},
-		onError: error => {
+		onError: (error) => {
 			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error), {
+			toast.error(error.messageOrDefault, {
 				duration: 4000,
 			})
 		},
 	}))
 
-	const handleSubmit = (input: JoinCodeFormData) => {
+	const handleSubmit: SubmitEventHandler<JoinCodeDTOSchema> = (input) => {
 		byJoinCodeMutation.mutate(input.joinCode)
 	}
 

@@ -1,15 +1,26 @@
-import { redirect } from "@sveltejs/kit"
-import { authService } from "$lib/auth/auth.service"
-import { authStore } from "$lib/auth/auth.store.svelte"
+import type { LayoutLoad } from "./$types"
 
-export const load = async () => {
-	try {
-		await authService.bootstrapSession()
-	} catch {
+import { redirect } from "@sveltejs/kit"
+import { inlineTryAsync } from "$lib/shared/try"
+
+import { authStore } from "$lib/auth/store.svelte"
+import { authService } from "$lib/auth/service"
+import { coursesService } from "$lib/courses/service"
+
+export const load: LayoutLoad = async () => {
+	const [_, err] = await inlineTryAsync(() => authService.bootstrapSession())
+
+	if (err) {
 		authStore.clearSession()
 	}
 
 	if (!authStore.isAuthenticated()) {
-		throw redirect(302, "/login")
+		redirect(302, "/login")
+	}
+
+	const hasCourses = await coursesService.list().then((courses) => courses.length > 0)
+
+	return {
+		hasCourses,
 	}
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$lib/shared/http/tanstack"
 	import { banksService } from "$lib/banks/banks.service"
 	import { ChevronDown, Search } from "lucide-svelte"
 
@@ -13,7 +13,7 @@
 	let open = $state(false)
 	let search = $state("")
 
-	const banksQuery = createQuery(() => ({
+	const banksQuery = useQuery(() => ({
 		queryKey: ["banks", courseId],
 		queryFn: () => banksService.listByCourse(courseId),
 	}))

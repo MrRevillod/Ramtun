@@ -1,54 +1,40 @@
 <script lang="ts">
-	import * as v from "valibot"
-	import type { LoginInput } from "$lib/auth/auth.dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
+	import type { LoginDTO, LoginDTOSchema } from "$lib/auth/dtos"
 
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 	import { LogIn } from "lucide-svelte"
-	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { authService } from "$lib/auth/auth.service"
-	import { loginSchema } from "$lib/auth/auth.dtos"
-	import { createMutation } from "@tanstack/svelte-query"
-	import { ApiResponse } from "$lib/shared/http/response"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { authService } from "$lib/auth/service"
+	import { useMutation } from "$lib/shared/http/tanstack"
+	import { loginDTOSchema } from "$lib/auth/dtos"
+	import { createForm, Field, Form } from "@formisch/svelte"
 
-	let username = $state("")
-	let password = $state("")
-	let errors = $state<Record<string, string>>({})
+	const form = createForm({
+		schema: loginDTOSchema,
+		initialInput: {
+			username: "",
+			password: "",
+		},
+	})
 
-	const loginMutation = createMutation(() => ({
-		mutationFn: (payload: LoginInput) => authService.login(payload),
-		onSuccess: async user => {
+	const mutation = useMutation(() => ({
+		mutationFn: (payload: LoginDTO) => authService.login(payload),
+		onSuccess: async (user) => {
 			authStore.setSession(user)
-			password = ""
 			await goto("/")
 		},
-		onError: error => {
+		onError: (error) => {
 			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error), {
+			toast.error(error.messageOrDefault, {
 				duration: 4000,
 			})
 		},
 	}))
 
-	const loading = $derived(loginMutation.isPending)
-
-	const handleSubmit = async (event: SubmitEvent) => {
-		event.preventDefault()
-		errors = {}
-
-		const result = v.safeParse(loginSchema, { username, password })
-
-		if (!result.success) {
-			const flat = v.flatten(result.issues)
-			if (flat.nested) {
-				for (const [key, msgs] of Object.entries(flat.nested)) {
-					if (msgs?.length) errors[key] = msgs[0]
-				}
-			}
-			return
-		}
-
-		await loginMutation.mutateAsync(result.output)
+	const handleSubmit: SubmitEventHandler<LoginDTOSchema> = async (data) => {
+		await mutation.mutateAsync(data)
 	}
 </script>
 
@@ -60,44 +46,54 @@
 				Usa tus credenciales Pillan/LDAP para ingresar.
 			</p>
 
-			<form class="grid gap-4" onsubmit={handleSubmit}>
-				<label class="grid gap-1.5">
-					<span class="text-sm text-zinc-800">Usuario</span>
-					<input
-						class="input-base"
-						class:border-red-500={errors.username}
-						type="text"
-						bind:value={username}
-						autocomplete="username"
-					/>
-					{#if errors.username}
-						<p class="text-xs text-red-600">{errors.username}</p>
-					{/if}
-				</label>
+			<Form of={form} onsubmit={handleSubmit} class="grid gap-4">
+				<Field of={form} path={["username"]}>
+					{#snippet children(field)}
+						<label class="grid gap-1.5">
+							<span class="text-sm text-zinc-800">Usuario</span>
+							<input
+								{...field.props}
+								class="input-base"
+								type="text"
+								value={field.input ?? ""}
+								autocomplete="username"
+								placeholder="fgutierrez"
+							/>
+							{#if field.errors?.[0]}
+								<span class="text-sm text-red-700">{field.errors[0]}</span>
+							{/if}
+						</label>
+					{/snippet}
+				</Field>
 
-				<label class="grid gap-1.5">
-					<span class="text-sm text-zinc-800">Contraseña</span>
-					<input
-						class="input-base"
-						class:border-red-500={errors.password}
-						type="password"
-						bind:value={password}
-						autocomplete="current-password"
-					/>
-					{#if errors.password}
-						<p class="text-xs text-red-600">{errors.password}</p>
-					{/if}
-				</label>
+				<Field of={form} path={["password"]}>
+					{#snippet children(field)}
+						<label class="grid gap-1.5">
+							<span class="text-sm text-zinc-800">Contraseña</span>
+							<input
+								{...field.props}
+								class="input-base"
+								type="password"
+								value={field.input ?? ""}
+								autocomplete="off"
+								placeholder="•••••••"
+							/>
+							{#if field.errors?.[0]}
+								<span class="text-sm text-red-700">{field.errors[0]}</span>
+							{/if}
+						</label>
+					{/snippet}
+				</Field>
 
 				<button
 					class="btn-primary mt-2 flex w-full items-center justify-center gap-1.5 text-base"
 					type="submit"
-					disabled={loading}
+					disabled={mutation.isPending}
 				>
 					<LogIn size={16} aria-hidden="true" />
-					{loading ? "Ingresando..." : "Ingresar"}
+					{mutation.isPending ? "Ingresando..." : "Ingresar"}
 				</button>
-			</form>
+			</Form>
 
 			<p class="mt-5 mb-0 text-sm text-zinc-700">
 				<a

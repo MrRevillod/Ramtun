@@ -1,16 +1,11 @@
 <script lang="ts">
 	import { Toaster } from "svelte-sonner"
-	import { queryClient } from "$lib/shared/http/query-client"
+	import { queryClient } from "$lib/shared/http/tanstack"
 	import { QueryClientProvider } from "@tanstack/svelte-query"
-	import { onMount } from "svelte"
 
 	import "./layout.css"
 
 	let { children } = $props()
-
-	onMount(() => {
-		localStorage.removeItem("ui-theme")
-	})
 </script>
 
 <svelte:head>

@@ -1,46 +1,29 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import type { CourseMember } from "$lib/courses/entity"
+
 	import { toast } from "svelte-sonner"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { RoleValue } from "$lib/shared/value-objects/role.value"
 	import { Plus, Trash2 } from "lucide-svelte"
-	import { coursesService } from "$lib/courses/courses.service"
-	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { usersService } from "$lib/users/users.service"
-	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import { coursesService } from "$lib/courses/service"
+	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
+
 	import AddMemberModal from "$lib/courses/components/AddMemberModal.svelte"
-	import { RoleValue } from "$lib/shared/value-objects/role.value.js"
-	import { ApiResponse } from "$lib/shared/http/response"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 
 	let { data } = $props()
 
-	const currentUserId = $derived(authStore.user?.id)
+	let showAddModal = $state(false)
+	let memberToRemove = $state<CourseMember | null>(null)
 
 	const queryClient = useQueryClient()
 
-	const membersQuery = createQuery(() => ({
+	const membersQuery = useQuery(() => ({
 		queryKey: ["course-members", data.courseId],
 		queryFn: () => coursesService.listMembers(data.courseId),
 	}))
 
-	const candidatesQuery = createQuery(() => ({
-		queryKey: ["collaborator-candidates", data.courseId],
-		queryFn: () => usersService.listCollaboratorCandidates(),
-	}))
-
-	const addMemberMutation = createMutation(() => ({
-		mutationFn: (input: { userId: string }) => coursesService.addMember(data.courseId, input),
-		onSuccess: async () => {
-			toast.success("Miembro agregado correctamente.")
-			await queryClient.invalidateQueries({
-				queryKey: ["course-members", data.courseId],
-			})
-		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
-		},
-	}))
-
-	const removeMemberMutation = createMutation(() => ({
+	const removeMemberMutation = useMutation(() => ({
 		mutationFn: (userId: string) => coursesService.removeMember(data.courseId, userId),
 		onSuccess: async () => {
 			toast.success("Miembro removido correctamente.")
@@ -48,14 +31,10 @@
 				queryKey: ["course-members", data.courseId],
 			})
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
-
-	let showAddModal = $state(false)
-	let memberToRemove = $state<{ userId: string; username: string } | null>(null)
 
 	const confirmRemoveMember = async () => {
 		if (!memberToRemove) return
@@ -87,7 +66,7 @@
 			<p class="m-0 text-zinc-600">Cargando miembros...</p>
 		{:else if membersQuery.error}
 			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(membersQuery.error)}
+				{membersQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if !membersQuery.data?.length}
 			<p class="notice notice-warn m-0">El curso aún no tiene miembros.</p>
@@ -109,17 +88,15 @@
 								<td class="px-3 py-2 text-zinc-800">{member.name}</td>
 								<td class="px-3 py-2 text-zinc-700">{RoleValue.format(member.role)}</td>
 								<td class="px-3 py-2">
-									{#if member.userId !== currentUserId}
+									{#if member.userId !== authStore.user?.id}
 										<button
 											class="icon-btn icon-btn-danger"
 											title="Quitar"
 											type="button"
-											onclick={() =>
-												(memberToRemove = {
-													userId: member.userId,
-													username: member.username,
-												})}
 											disabled={removeMemberMutation.isPending}
+											onclick={() => {
+												memberToRemove = member
+											}}
 										>
 											<Trash2 size={15} aria-hidden="true" />
 										</button>
@@ -135,9 +112,8 @@
 
 	<AddMemberModal
 		open={showAddModal}
-		candidates={candidatesQuery.data ?? []}
 		oncancel={() => (showAddModal = false)}
-		mutation={addMemberMutation}
+		courseId={data.courseId}
 	/>
 
 	<ConfirmActionModal

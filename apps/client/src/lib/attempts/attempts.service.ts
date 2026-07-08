@@ -8,7 +8,7 @@ import type {
 	WarningType,
 } from "$lib/attempts/attempts.dtos"
 
-import { http } from "$lib/shared/http/request"
+import { http } from "$lib/shared/http/client"
 
 class AttemptsService {
 	public listAttempts(courseId: string, quizId: string): Promise<AttemptListItem[]> {

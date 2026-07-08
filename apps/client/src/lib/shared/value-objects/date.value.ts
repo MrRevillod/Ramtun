@@ -1,5 +1,5 @@
 export class DateValue {
-	private constructor(private readonly value?: string) {}
+	private constructor(public readonly value: string) {}
 
 	static from(value?: string | null): DateValue | null {
 		if (typeof value !== "string") return null
@@ -15,10 +15,14 @@ export class DateValue {
 		return date.toDisplay(timeStyle)
 	}
 
+	static default(): DateValue {
+		return new DateValue(new Date().toISOString())
+	}
+
 	toDisplay(timeStyle: Intl.DateTimeFormatOptions["timeStyle"] = "short"): string {
-		const parsed = new Date(this.value!)
+		const parsed = new Date(this.value)
+
 		if (Number.isNaN(parsed.getTime())) {
-			console.warn("[banks] invalid createdAt", { value: this.value })
 			return "Fecha no disponible"
 		}
 

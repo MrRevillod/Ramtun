@@ -3,19 +3,16 @@
 	import { resolve } from "$app/paths"
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
-	import { DateValue } from "$lib/shared/value-objects/date.value"
-	import { quizzesService } from "$lib/quizzes/quizzes.service"
+	import { quizzesService } from "$lib/quizzes/service"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { Play, TimerReset } from "lucide-svelte"
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import CertaintyTableView from "$lib/quizzes/components/CertaintyTableView.svelte"
-	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values"
-	import { ApiResponse } from "$lib/shared/http/response"
 
 	const joinCode = $derived.by(() => page.url.searchParams.get("joinCode") ?? "")
 
-	const previewQuery = createQuery(() => ({
+	const previewQuery = useQuery(() => ({
 		queryKey: ["join-preview", joinCode],
 		queryFn: () => quizzesService.joinByCode(joinCode),
 		enabled: joinCode.length > 0,
@@ -23,20 +20,20 @@
 
 	const hasCertaintyTable = $derived.by(() => {
 		if (!previewQuery.data) return false
-		return previewQuery.data.kind === "certainty" && !!previewQuery.data.certaintyTable
+		return previewQuery.data.isCertaintyBased() && !!previewQuery.data.certaintyTable
 	})
 
 	const queryClient = useQueryClient()
 
-	const initializeAttemptMutation = createMutation(() => ({
-		mutationFn: () => attemptsService.initialize(previewQuery.data!.quizId),
-		onSuccess: async attempt => {
+	const initializeAttemptMutation = useMutation(() => ({
+		mutationFn: () => attemptsService.initialize(previewQuery.data?.id ?? ""),
+		onSuccess: async (attempt) => {
 			await queryClient.invalidateQueries({ queryKey: ["attempts"] })
 			await goto(`/attempts/${attempt.attemptId}?code=${joinCode}`)
 		},
-		onError: error => {
+		onError: (error) => {
 			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
@@ -69,7 +66,7 @@
 			return
 		}
 
-		startPreAttemptCountdown(previewQuery.data.startsAt)
+		startPreAttemptCountdown(previewQuery.data.startsAt.value)
 
 		return () => {
 			if (preAttemptTimerId) clearInterval(preAttemptTimerId)
@@ -101,17 +98,17 @@
 
 	{#if previewQuery.isLoading}
 		<p class="m-0 text-zinc-600">Cargando información del cuestionario...</p>
-		{:else if previewQuery.isError}
-			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(previewQuery.error)}
-			</p>
+	{:else if previewQuery.isError}
+		<p class="m-0 text-red-700">
+			{previewQuery.error?.messageOrDefault ?? ""}
+		</p>
 	{:else if previewQuery.data}
 		<section class="flex flex-col gap-3">
 			<div class="grid gap-2 sm:grid-cols-3">
 				<div class="panel-muted p-3">
 					<p class="m-0 text-xs text-zinc-600">Tipo</p>
 					<p class="mt-1 mb-0 text-lg font-semibold text-black">
-						{QuizKindValue.format(previewQuery.data.kind)}
+						{previewQuery.data.kind.toDisplay()}
 					</p>
 				</div>
 				<div class="panel-muted p-3">
@@ -132,7 +129,7 @@
 				<div class="panel-muted space-y-1 p-3 text-sm leading-relaxed text-zinc-700">
 					<p class="m-0 text-sm font-medium text-black">Antes de comenzar</p>
 					<p class="m-0">
-						Inicio programado: {DateValue.format(previewQuery.data.startsAt)}
+						Inicio programado: {previewQuery.data.startsAt.toDisplay()}
 					</p>
 					<p class="m-0">
 						Solo tienes un intento. Se entrega automáticamente al agotarse el tiempo.

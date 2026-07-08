@@ -1,5 +1,5 @@
 import type { CreateQuestionBankInput, QuestionBank } from "$lib/banks/banks.dtos"
-import { http } from "$lib/shared/http/request"
+import { http } from "$lib/shared/http/client"
 
 class BanksService {
 	public listByCourse(courseId: string): Promise<QuestionBank[]> {

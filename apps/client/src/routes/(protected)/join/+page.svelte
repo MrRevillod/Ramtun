@@ -1,34 +1,33 @@
 <script lang="ts">
-	import type { JoinCodeFormData } from "$lib/attempts/attempts.dtos"
+	import type { JoinCodeDTOSchema } from "$lib/quizzes/dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
 
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 	import { Search } from "lucide-svelte"
-	import { createMutation } from "@tanstack/svelte-query"
-	import { quizzesService } from "$lib/quizzes/quizzes.service"
-	import { joinCodeFormSchema } from "$lib/attempts/attempts.dtos"
+	import { useMutation } from "$lib/shared/http/tanstack"
+	import { quizzesService } from "$lib/quizzes/service"
+	import { joinCodeDTOSchema } from "$lib/quizzes/dtos"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { ApiResponse } from "$lib/shared/http/response"
 
 	const form = createForm({
-		schema: joinCodeFormSchema,
+		schema: joinCodeDTOSchema,
 		validate: "blur",
 	})
 
-	const joinMutation = createMutation(() => ({
+	const mutation = useMutation(() => ({
 		mutationFn: (code: string) => quizzesService.joinByCode(code),
 		onSuccess: async (_, code) => {
 			reset(form)
 			await goto(`/join/lobby?joinCode=${encodeURIComponent(code)}`)
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
-	const handleSubmit = (input: JoinCodeFormData) => {
-		joinMutation.mutateAsync(input.joinCode)
+	const handleSubmit: SubmitEventHandler<JoinCodeDTOSchema> = async (input) => {
+		await mutation.mutateAsync(input.joinCode)
 	}
 </script>
 
@@ -68,10 +67,10 @@
 				<button
 					class="btn-primary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
 					type="submit"
-					disabled={joinMutation.isPending}
+					disabled={mutation.isPending}
 				>
 					<Search size={16} aria-hidden="true" />
-					{joinMutation.isPending ? "Validando..." : "Entrar"}
+					{mutation.isPending ? "Validando..." : "Entrar"}
 				</button>
 			</div>
 		</Form>

@@ -44,12 +44,6 @@ export class ApiResponse<T = unknown> {
 	get messageOrDefault(): string {
 		return this.message ?? DEFAULT_ERROR_MESSAGE
 	}
-
-	static messageOrDefault(error: unknown): string {
-		if (ApiResponse.is(error)) return error.messageOrDefault
-		if (error instanceof Error) return error.message
-		return DEFAULT_ERROR_MESSAGE
-	}
 }
 
 export type ValidationErrors = Record<string, { code: string; message: string }[]>

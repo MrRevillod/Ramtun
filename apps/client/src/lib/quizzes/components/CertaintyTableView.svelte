@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CertaintyTable } from "$lib/quizzes/quizzes.dtos"
+	import type { CertaintyTable } from "../entity"
 
 	interface CertaintyTableViewProps {
 		table: CertaintyTable
@@ -19,9 +19,7 @@
 		<tr>
 			<th class="border border-zinc-300 px-2 py-1.5 text-left">Nivel</th>
 			<th class="border border-zinc-300 px-2 py-1.5 text-left"> Correcta </th>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left">
-				Incorrecta
-			</th>
+			<th class="border border-zinc-300 px-2 py-1.5 text-left"> Incorrecta </th>
 		</tr>
 	</thead>
 	<tbody>
@@ -31,10 +29,10 @@
 					{level.label}
 				</td>
 				<td class="border border-zinc-300 px-2 py-1.5">
-					{table[level.key].correct}
+					{table.get(level.key).correct}
 				</td>
 				<td class="border border-zinc-300 px-2 py-1.5">
-					{table[level.key].incorrect}
+					{table.get(level.key).incorrect}
 				</td>
 			</tr>
 		{/each}

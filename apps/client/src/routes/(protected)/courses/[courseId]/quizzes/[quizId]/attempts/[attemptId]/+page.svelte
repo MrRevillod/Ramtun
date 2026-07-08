@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { ArrowLeft, FileText, Shield } from "lucide-svelte"
 	import { AlertTriangle, AlertOctagon, ShieldOff, Info } from "lucide-svelte"
-	import { createQuery } from "@tanstack/svelte-query"
+	import { useQuery } from "$lib/shared/http/tanstack"
 	import { resolve } from "$app/paths"
 	import { attemptsService } from "$lib/attempts/attempts.service"
 	import { onAttemptWarning, onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
-	import { ApiResponse } from "$lib/shared/http/response"
 	import PageHeader from "$lib/shared/components/PageHeader.svelte"
 	import AttemptResultReview from "$lib/attempts/components/AttemptResultReview.svelte"
 	import {
@@ -21,25 +20,25 @@
 
 	let activeTab = $state<"results" | "supervision">("results")
 
-	const warningsQuery = createQuery(() => ({
+	const warningsQuery = useQuery(() => ({
 		queryKey: ["attempt-warnings", data.attemptId],
 		queryFn: () => attemptsService.getAttemptWarnings(data.attemptId),
 	}))
 
 	const warningBadge = $derived(warningsQuery.data?.length ?? 0)
 
-	const resultsQuery = createQuery(() => ({
+	const resultsQuery = useQuery(() => ({
 		queryKey: ["attempt-result", "managed", data.attemptId],
 		queryFn: () => attemptsService.getAttemptResultsManaged(data.attemptId),
 	}))
 
-	const resultsErrorMessage = $derived(ApiResponse.messageOrDefault(resultsQuery.error))
+	const resultsErrorMessage = $derived(resultsQuery.error?.messageOrDefault ?? "")
 
 	$effect(() => {
 		const unsubWarning = onAttemptWarning(() => {
 			void warningsQuery.refetch()
 		})
-		const unsubSubmit = onAttemptsSubmit(payload => {
+		const unsubSubmit = onAttemptsSubmit((payload) => {
 			if (payload.attemptId === data.attemptId) {
 				void resultsQuery.refetch()
 			}

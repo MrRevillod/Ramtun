@@ -1,24 +1,51 @@
 <script lang="ts">
-	import { createMutation } from "@tanstack/svelte-query"
+	import type { LayoutProps } from "./$types"
+
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
 	import { toast } from "svelte-sonner"
+	import { onMount } from "svelte"
+	import { authStore } from "$lib/auth/store.svelte"
+	import { useMutation, useQuery } from "$lib/shared/http/tanstack"
+	import { authService } from "$lib/auth/service"
 	import { DoorOpen, Layers, ClipboardList, LogOut } from "lucide-svelte"
-	import { authService } from "$lib/auth/auth.service"
-	import { authStore } from "$lib/auth/auth.store.svelte"
-	import { isAdmin, isFunc } from "$lib/shared/auth/permissions"
-	import { coursesService } from "$lib/courses/courses.service"
 	import {
 		connectAttemptsSocket,
 		disconnectAttemptsSocket,
 	} from "$lib/shared/socket/attempts.socket"
-	import { RoleValue } from "$lib/shared/value-objects/role.value"
-	import { onMount } from "svelte"
-	import { useActiveAttempt } from "$lib/attempts/attempts.queries"
+	import { attemptsService } from "$lib/attempts/attempts.service"
 
-	let { children } = $props()
+	let { data, children }: LayoutProps = $props()
 
-	const logoutMutation = createMutation(() => ({
+	const user = authStore.user
+	const showCoursesNav = $derived(user?.isAdmin() || user?.isFunc() || data.hasCourses)
+
+	$effect(() => {
+		if (user?.isStudent() && !data.hasCourses && !page.url.pathname.startsWith("/join")) {
+			void goto("/join")
+		}
+	})
+
+	const activeAttemptQuery = useQuery(() => ({
+		queryKey: ["attempts", "active"] as const,
+		queryFn: () => attemptsService.getActive(),
+		retry: false,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+	}))
+
+	$effect(() => {
+		const active = activeAttemptQuery.data
+		if (!active) return
+
+		const attemptPath = `/attempts/${active.attemptId}`
+
+		if (!page.url.pathname.startsWith(attemptPath)) {
+			void goto(attemptPath)
+		}
+	})
+
+	const logoutMutation = useMutation(() => ({
 		mutationFn: () => authService.logout(),
 		onSettled: async () => {
 			authStore.clearSession()
@@ -31,44 +58,12 @@
 		await logoutMutation.mutateAsync()
 	}
 
-	const role = $derived(authStore.user?.role)
-	const displayRole = $derived(role ? RoleValue.format(role) : "")
-
-	let studentHasCourses = $state(false)
-
-	$effect(() => {
-		if (role !== "student") {
-			studentHasCourses = false
-			return
-		}
-
-		coursesService
-			.list()
-			.then(courses => {
-				studentHasCourses = courses.length > 0
-			})
-			.catch(() => {
-				studentHasCourses = false
-			})
-	})
-
-	const showCoursesNav = $derived(isFunc(role) || isAdmin(role) || studentHasCourses)
-	const isActive = (href: string) => page.url.pathname.startsWith(href)
-	const isAuthenticated = $derived(authStore.isAuthenticated())
-
-	const activeAttemptQuery = useActiveAttempt()
-
-	$effect(() => {
-		const active = activeAttemptQuery.data
-		if (!active) return
-		const attemptPath = `/attempts/${active.attemptId}`
-		if (!page.url.pathname.startsWith(attemptPath)) {
-			void goto(attemptPath)
-		}
-	})
+	const isActive = (href: string) => {
+		return page.url.pathname.startsWith(href)
+	}
 
 	onMount(() => {
-		if (isAuthenticated) {
+		if (authStore.isAuthenticated()) {
 			connectAttemptsSocket()
 		}
 
@@ -111,7 +106,7 @@
 						<p class="truncate text-sm font-semibold text-zinc-800">
 							{authStore.user?.name}
 						</p>
-						<p class="text-xs text-zinc-600">{displayRole}</p>
+						<p class="text-xs text-zinc-600">{authStore.user?.role.toDisplay()}</p>
 					</div>
 					<button
 						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"

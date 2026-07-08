@@ -1,22 +1,22 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
+	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
+
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
+	import { resolve } from "$app/paths"
+	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import { Plus, Trash2 } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
-	import { DateValue } from "$lib/shared/value-objects/date.value"
-	import type { CreateQuestionBankInput } from "$lib/banks/banks.dtos"
+	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
 	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
-	import { ApiResponse } from "$lib/shared/http/response"
 
 	let { data } = $props()
 
 	const queryClient = useQueryClient()
 
-	const banksQuery = createQuery(() => ({
+	const banksQuery = useQuery(() => ({
 		queryKey: ["banks", data.courseId],
 		queryFn: () => banksService.listByCourse(data.courseId),
 	}))
@@ -24,27 +24,25 @@
 	let showCreateModal = $state(false)
 	let bankToDelete = $state<{ id: string; name: string } | null>(null)
 
-	const uploadBankMutation = createMutation(() => ({
+	const uploadBankMutation = useMutation(() => ({
 		mutationFn: (input: CreateQuestionBankInput) => banksService.create(input),
-		onSuccess: () => {
+		onSuccess: async () => {
 			toast.success("Banco de preguntas creado correctamente.")
-			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
+			await queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
-	const deleteBankMutation = createMutation(() => ({
+	const deleteBankMutation = useMutation(() => ({
 		mutationFn: (bankId: string) => banksService.softDelete(bankId),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
+		onSuccess: async () => {
 			bankToDelete = null
+			await queryClient.invalidateQueries({ queryKey: ["banks", data.courseId] })
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
@@ -109,7 +107,7 @@
 										class="icon-btn icon-btn-danger"
 										title="Eliminar"
 										type="button"
-										onclick={e => {
+										onclick={(e) => {
 											e.stopPropagation()
 											bankToDelete = { id: bank.id, name: bank.name }
 										}}

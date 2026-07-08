@@ -1,42 +1,26 @@
 <script lang="ts">
-	import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query"
 	import { goto } from "$app/navigation"
-	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
-	import { Plus, Trash2, Eye } from "lucide-svelte"
+	import { resolve } from "$app/paths"
 	import { CircleStop } from "lucide-svelte"
-	import { quizzesService } from "$lib/quizzes/quizzes.service"
-	import type { CreateQuizInput } from "$lib/quizzes/quizzes.dtos"
-	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
+	import { quizzesService } from "$lib/quizzes/service"
+	import { Plus, Trash2, Eye } from "lucide-svelte"
+	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
+
 	import CreateQuizModal from "$lib/quizzes/components/CreateQuizModal.svelte"
 	import QuizStatusBadge from "$lib/quizzes/components/QuizStatusBadge.svelte"
-	import { QuizKindValue } from "$lib/shared/value-objects/quiz-kind.values.js"
-	import { ApiResponse } from "$lib/shared/http/response"
+	import ConfirmActionModal from "$lib/shared/components/ConfirmActionModal.svelte"
 
 	let { data } = $props()
 
 	const queryClient = useQueryClient()
 
-	const quizzesQuery = createQuery(() => ({
+	const quizzesQuery = useQuery(() => ({
 		queryKey: ["quizzes", "course", data.courseId],
-		queryFn: () => quizzesService.listByCourse(data.courseId),
+		queryFn: () => quizzesService.list(data.courseId),
 	}))
 
-	const createQuizMutation = createMutation(() => ({
-		mutationFn: (input: CreateQuizInput) => quizzesService.create(input),
-		onSuccess: async created => {
-			toast.success(`Cuestionario ${created.title} creado.`)
-			await queryClient.invalidateQueries({
-				queryKey: ["quizzes", "course", data.courseId],
-			})
-		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
-		},
-	}))
-
-	const deleteQuizMutation = createMutation(() => ({
+	const deleteQuizMutation = useMutation(() => ({
 		mutationFn: (quizId: string) => quizzesService.remove(quizId),
 		onSuccess: async () => {
 			toast.success("Cuestionario eliminado correctamente.")
@@ -44,13 +28,12 @@
 				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
-	const closeAndPublishMutation = createMutation(() => ({
+	const closeAndPublishMutation = useMutation(() => ({
 		mutationFn: (quizId: string) => quizzesService.closeAndPublish(quizId),
 		onSuccess: async () => {
 			toast.success("Cuestionario finalizado y resultados publicados.")
@@ -58,9 +41,8 @@
 				queryKey: ["quizzes", "course", data.courseId],
 			})
 		},
-		onError: error => {
-			console.error(error)
-			toast.error(ApiResponse.messageOrDefault(error))
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
 		},
 	}))
 
@@ -113,7 +95,7 @@
 			<p class="m-0 text-zinc-600">Cargando cuestionarios...</p>
 		{:else if quizzesQuery.error}
 			<p class="m-0 text-red-700">
-				{ApiResponse.messageOrDefault(quizzesQuery.error)}
+				{quizzesQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if !quizzesQuery.data?.length}
 			<p class="m-0 text-zinc-600">Aún no existen cuestionarios para este curso.</p>
@@ -137,7 +119,7 @@
 									goto(resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`))}
 							>
 								<td class="px-3 py-2 text-zinc-900">{quiz.title}</td>
-								<td class="px-3 py-2 text-zinc-700">{QuizKindValue.format(quiz.kind)}</td>
+								<td class="px-3 py-2 text-zinc-700">{quiz.kind.toDisplay()}</td>
 								<td class="px-3 py-2 text-zinc-700">
 									<QuizStatusBadge resultsPublishedAt={quiz.resultsPublishedAt} />
 								</td>
@@ -146,7 +128,7 @@
 										type="button"
 										class="code-chip cursor-pointer"
 										title="Copiar código"
-										onclick={e => {
+										onclick={(e) => {
 											e.stopPropagation()
 											void copyJoinCode(quiz.joinCode)
 										}}
@@ -159,7 +141,7 @@
 										<a
 											class="icon-btn cursor-pointer"
 											title="Ver intentos"
-											onclick={e => e.stopPropagation()}
+											onclick={(e) => e.stopPropagation()}
 											href={resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)}
 										>
 											<Eye size={15} aria-hidden="true" /></a
@@ -169,7 +151,7 @@
 												class="icon-btn cursor-pointer border-amber-300 text-amber-800 hover:bg-amber-50"
 												title="Finalizar y publicar"
 												type="button"
-												onclick={e => {
+												onclick={(e) => {
 													e.stopPropagation()
 													closeAndPublishMutation.mutate(quiz.id)
 												}}
@@ -182,7 +164,7 @@
 											class="icon-btn icon-btn-danger cursor-pointer"
 											title="Eliminar"
 											type="button"
-											onclick={e => {
+											onclick={(e) => {
 												e.stopPropagation()
 												quizToDelete = { id: quiz.id, title: quiz.title }
 											}}
@@ -205,7 +187,6 @@
 		courseId={data.courseId}
 		onclose={() => (showCreateModal = false)}
 		onsuccess={() => (showCreateModal = false)}
-		mutation={createQuizMutation}
 	/>
 
 	<ConfirmActionModal

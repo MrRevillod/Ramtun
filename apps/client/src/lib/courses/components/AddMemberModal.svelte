@@ -1,31 +1,49 @@
 <script lang="ts">
-	import type { ManagedUser } from "$lib/users/users.dtos"
 	import type { SubmitEventHandler } from "@formisch/svelte"
+	import type { AddCourseMemberDTO, AddCourseMemberDTOSchema } from "$lib/courses/dtos"
 
+	import { toast } from "svelte-sonner"
 	import { Plus, X } from "lucide-svelte"
 	import { fade, scale } from "svelte/transition"
-	import { addCourseMemberSchema } from "$lib/courses/courses.dtos"
+	import { usersService } from "$lib/users/service"
+	import { coursesService } from "../service"
+	import { addCourseMemberDTOSchema } from "$lib/courses/dtos"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
+	import { queryClient, useMutation, useQuery } from "$lib/shared/http/tanstack"
 
 	interface AddMemberModalProps {
 		open: boolean
 		oncancel: () => void
-		candidates: ManagedUser[]
-		mutation: {
-			isPending: boolean
-			mutateAsync: (input: { userId: string }) => Promise<void>
-		}
+		courseId: string
 	}
 
-	let { open, oncancel, candidates, mutation }: AddMemberModalProps = $props()
+	let { open, oncancel, courseId }: AddMemberModalProps = $props()
+
+	const candidatesQuery = useQuery(() => ({
+		queryKey: ["collaborator-candidates", courseId],
+		queryFn: () => usersService.listCollaboratorCandidates(),
+	}))
+
+	const mutation = useMutation(() => ({
+		mutationFn: (data: AddCourseMemberDTO) => coursesService.addMember(courseId, data),
+		onSuccess: async () => {
+			toast.success("Miembro agregado correctamente.")
+			await queryClient.invalidateQueries({
+				queryKey: ["course-members", courseId],
+			})
+		},
+		onError: (error) => {
+			toast.error(error.messageOrDefault)
+		},
+	}))
 
 	const form = createForm({
-		schema: addCourseMemberSchema,
+		schema: addCourseMemberDTOSchema,
 		initialInput: { userId: "" },
 	})
 
-	const handleSubmit: SubmitEventHandler<typeof addCourseMemberSchema> = async output => {
-		await mutation.mutateAsync(output)
+	const handleSubmit: SubmitEventHandler<AddCourseMemberDTOSchema> = async (data) => {
+		await mutation.mutateAsync(data)
 		reset(form)
 		oncancel()
 	}
@@ -39,7 +57,7 @@
 		tabindex="-1"
 		transition:fade={{ duration: 180 }}
 		onclick={oncancel}
-		onkeydown={e => {
+		onkeydown={(e) => {
 			if (e.key === "Escape") oncancel()
 		}}
 	>
@@ -48,7 +66,7 @@
 			role="presentation"
 			tabindex="-1"
 			transition:scale={{ duration: 190, start: 0.98 }}
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h4 class="m-0 text-base text-black">Agregar miembro</h4>
@@ -64,7 +82,7 @@
 							<span class="text-sm text-zinc-800">Usuario</span>
 							<select {...field.props} class="input-base" value={field.input ?? ""}>
 								<option value="">Selecciona un usuario</option>
-								{#each candidates as candidate (candidate.id)}
+								{#each candidatesQuery.data as candidate (candidate.id)}
 									<option value={candidate.id}>
 										{candidate.username} · {candidate.name}
 									</option>

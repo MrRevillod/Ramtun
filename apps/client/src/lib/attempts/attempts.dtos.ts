@@ -1,21 +1,3 @@
-import * as v from "valibot"
-
-export const joinCodeFormSchema = v.object({
-	joinCode: v.nonOptional(
-		v.pipe(
-			v.string(),
-			v.trim(),
-			v.minLength(4, info =>
-				info.input === "" ? "Ingresa un código." : "El código es demasiado corto."
-			),
-			v.maxLength(32, "El código es demasiado largo.")
-		),
-		"El código es obligatorio."
-	),
-})
-
-export type JoinCodeFormData = v.InferInput<typeof joinCodeFormSchema>
-
 export type CertaintyLevel = "low" | "medium" | "high"
 
 export type AttemptQuestion = {

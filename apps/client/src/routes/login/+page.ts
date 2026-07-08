@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit"
-import { authService } from "$lib/auth/auth.service"
-import { authStore } from "$lib/auth/auth.store.svelte"
+import { authStore } from "$lib/auth/store.svelte"
+import { authService } from "$lib/auth/service"
 
 export const load = async () => {
 	await authService.bootstrapSession()
