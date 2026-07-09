@@ -6,12 +6,12 @@ import type {
 	AttemptWarning,
 	SaveAnswerInput,
 	WarningType,
-} from "$lib/attempts/attempts.dtos"
+} from "$lib/attempts/dtos"
 
 import { http } from "$lib/shared/http/client"
 
 class AttemptsService {
-	public listAttempts(courseId: string, quizId: string): Promise<AttemptListItem[]> {
+	public list(courseId: string, quizId: string): Promise<AttemptListItem[]> {
 		return http.request<AttemptListItem[]>({
 			method: "GET",
 			url: `/attempts/course/${courseId}/quiz/${quizId}`,

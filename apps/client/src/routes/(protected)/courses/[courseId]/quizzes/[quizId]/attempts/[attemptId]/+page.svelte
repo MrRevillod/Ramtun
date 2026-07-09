@@ -3,7 +3,7 @@
 	import { AlertTriangle, AlertOctagon, ShieldOff, Info } from "lucide-svelte"
 	import { useQuery } from "$lib/shared/http/tanstack"
 	import { resolve } from "$app/paths"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 	import { onAttemptWarning, onAttemptsSubmit } from "$lib/shared/socket/attempts.socket"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import PageHeader from "$lib/shared/components/PageHeader.svelte"
@@ -14,7 +14,7 @@
 		SEVERITY_GROUPS,
 		type WarningType,
 		type SeverityLevel,
-	} from "$lib/attempts/attempts.dtos"
+	} from "$lib/attempts/dtos"
 
 	let { data } = $props()
 

@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation"
 	import { resolve } from "$app/paths"
 	import { useQuery } from "$lib/shared/http/tanstack"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 	import {
 		onAttemptNew,
 		onAttemptsSubmit,
@@ -15,7 +15,7 @@
 
 	const attemptsQuery = useQuery(() => ({
 		queryKey: ["attempts", "managed", data.courseId, data.quizId],
-		queryFn: () => attemptsService.listAttempts(data.courseId, data.quizId),
+		queryFn: () => attemptsService.list(data.courseId, data.quizId),
 	}))
 
 	const viewAttempt = (attemptId: string) => {

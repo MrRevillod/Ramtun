@@ -41,7 +41,7 @@ impl From<(Quiz, Course)> for QuizView {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinQuizPreviewView {
-    pub quiz_id: QuizId,
+    pub id: QuizId,
     pub title: String,
     pub kind: QuizKind,
     pub question_count: i16,
@@ -53,7 +53,7 @@ pub struct JoinQuizPreviewView {
 impl From<&Quiz> for JoinQuizPreviewView {
     fn from(quiz: &Quiz) -> Self {
         Self {
-            quiz_id: quiz.id,
+            id: quiz.id,
             title: quiz.title.clone(),
             kind: quiz.kind,
             question_count: quiz.question_count,

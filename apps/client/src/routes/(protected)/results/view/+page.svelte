@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AttemptResult } from "$lib/attempts/attempts.dtos"
+	import type { AttemptResult } from "$lib/attempts/dtos"
 
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"

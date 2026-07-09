@@ -25,6 +25,7 @@ export const certaintyScoreDTOSchema = v.object({
 	correct: v.number(),
 	incorrect: v.number(),
 })
+
 export type CertaintyScoreDTO = v.InferOutput<typeof certaintyScoreDTOSchema>
 
 export const certaintyTableDTOSchema = v.object({
@@ -32,6 +33,7 @@ export const certaintyTableDTOSchema = v.object({
 	medium: certaintyScoreDTOSchema,
 	high: certaintyScoreDTOSchema,
 })
+
 export type CertaintyTableDTO = v.InferOutput<typeof certaintyTableDTOSchema>
 
 // Create Quiz DTO ------------------------------------------------------

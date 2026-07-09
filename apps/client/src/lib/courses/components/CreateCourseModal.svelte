@@ -30,18 +30,20 @@
 		},
 	}))
 
+	const formInitialInput = {
+		name: "",
+		code: "",
+		year: new Date().getFullYear(),
+	}
+
 	const form = createForm({
 		schema: createCourseDTOSchema,
-		initialInput: {
-			name: "",
-			code: "",
-			year: new Date().getFullYear(),
-		},
+		initialInput: formInitialInput,
 	})
 
 	const handleSubmit: SubmitEventHandler<CreateCourseDTOSchema> = async (output) => {
 		await mutation.mutateAsync(output)
-		reset(form)
+		reset(form, { initialInput: formInitialInput })
 	}
 </script>
 
@@ -54,7 +56,10 @@
 		transition:fade={{ duration: 180 }}
 		onclick={() => onclose()}
 		onkeydown={(e) => {
-			if (e.key === "Escape") onclose()
+			if (e.key === "Escape") {
+				onclose()
+				reset(form, { initialInput: formInitialInput })
+			}
 		}}
 	>
 		<section

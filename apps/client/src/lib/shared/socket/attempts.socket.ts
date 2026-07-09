@@ -1,5 +1,5 @@
 import { io, type Socket } from "socket.io-client"
-import type { AttemptSubmitView, AttemptWarning } from "$lib/attempts/attempts.dtos"
+import type { AttemptSubmitView, AttemptWarning } from "$lib/attempts/dtos"
 
 type AttemptsSocket = Socket
 

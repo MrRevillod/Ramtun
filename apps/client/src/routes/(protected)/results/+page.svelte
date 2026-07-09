@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { JoinCodeDTOSchema } from "$lib/quizzes/dtos"
+	import type { SubmitEventHandler } from "@formisch/svelte"
 
 	import { goto } from "$app/navigation"
 	import { page } from "$app/state"
@@ -7,9 +8,9 @@
 	import { Search } from "lucide-svelte"
 	import { onMount } from "svelte"
 	import { useMutation } from "$lib/shared/http/tanstack"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 	import { joinCodeDTOSchema } from "$lib/quizzes/dtos"
-	import { createForm, Field, Form, reset, type SubmitEventHandler } from "@formisch/svelte"
+	import { createForm, Field, Form, reset } from "@formisch/svelte"
 
 	const form = createForm({
 		schema: joinCodeDTOSchema,
@@ -25,7 +26,6 @@
 			})
 		},
 		onError: (error) => {
-			console.error(error)
 			toast.error(error.messageOrDefault, {
 				duration: 4000,
 			})

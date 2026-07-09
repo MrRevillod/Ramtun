@@ -1,4 +1,4 @@
-import type { AnswerState, AttemptQuestion } from "$lib/attempts/attempts.dtos"
+import type { AnswerState, AttemptQuestion } from "$lib/attempts/dtos"
 import type { QuizKindDTO } from "$lib/quizzes/dtos"
 
 export const isAnswered = (answer?: AnswerState | null) => answer?.answerIndex !== undefined

@@ -1,23 +1,21 @@
 <script lang="ts">
-	import { getInput, setInput, type SubmitEventHandler } from "@formisch/svelte"
+	import type * as v from "valibot"
+	import type { SubmitEventHandler } from "@formisch/svelte"
+	import type { CertaintyTableDTO, CreateQuizDTO, CreateQuizDTOSchema } from "$lib/quizzes/dtos"
+
 	import { toast } from "svelte-sonner"
 	import { Plus, X } from "lucide-svelte"
-	import { fade, scale } from "svelte/transition"
 	import { untrack } from "svelte"
+	import { fade, scale } from "svelte/transition"
+	import { getInput, setInput } from "@formisch/svelte"
 	import { queryClient, useMutation } from "$lib/shared/http/tanstack"
 	import { createForm, Field, Form, reset } from "@formisch/svelte"
-	import { CertaintyValue } from "$lib/shared/value-objects/certainty.value"
-	import type * as v from "valibot"
 
-	import DateInput from "$lib/shared/components/DateInput.svelte"
-	import BankSelector from "$lib/quizzes/components/BankSelector.svelte"
 	import { quizzesService } from "../service"
-	import {
-		createQuizDTOSchema,
-		type CertaintyTableDTO,
-		type CreateQuizDTO,
-		type CreateQuizDTOSchema,
-	} from "$lib/quizzes/dtos"
+	import { CertaintyValue } from "$lib/shared/value-objects/certainty.value"
+	import { createQuizDTOSchema } from "$lib/quizzes/dtos"
+
+	import BankSelector from "$lib/quizzes/components/BankSelector.svelte"
 
 	interface CreateQuizModalProps {
 		open: boolean
@@ -29,7 +27,10 @@
 	let { open, courseId, onclose, onsuccess }: CreateQuizModalProps = $props()
 
 	const mutation = useMutation(() => ({
-		mutationFn: (data: CreateQuizDTO) => quizzesService.create(data),
+		mutationFn: (data: CreateQuizDTO) => {
+			const startsAtUtc = new Date(data.startsAt).toISOString()
+			return quizzesService.create({ ...data, startsAt: startsAtUtc })
+		},
 		onSuccess: async (created) => {
 			toast.success(`Cuestionario ${created.title} creado.`)
 			await queryClient.invalidateQueries({
@@ -47,21 +48,34 @@
 		high: { correct: 3, incorrect: -4 },
 	}
 
-	const initialInput = untrack(
-		() =>
-			({
-				courseId,
-				title: "",
-				kind: "traditional" as const,
-				startsAt: new Date(new Date().getFullYear() + 1, 0, 1).toISOString(),
-				attemptDurationMinutes: "30",
-				questionCount: "10",
-				bankIds: [] as string[],
-				certaintyConfig: null,
-			}) satisfies v.InferInput<typeof createQuizDTOSchema>
-	)
+	const initialInput = untrack(() => {
+		const now = new Date()
+		const roundedUp5 = (m: number) => (Math.floor(m / 5) + 1) * 5
+		const initialStart = new Date(
+			now.getFullYear(),
+			now.getMonth(),
+			now.getDate(),
+			now.getHours(),
+			roundedUp5(now.getMinutes())
+		)
+		const pad = (n: number) => String(n).padStart(2, "0")
+		const localString =
+			`${initialStart.getFullYear()}-${pad(initialStart.getMonth() + 1)}-${pad(initialStart.getDate())}` +
+			`T${pad(initialStart.getHours())}:${pad(initialStart.getMinutes())}`
 
-	const form = createForm({ schema: createQuizDTOSchema, initialInput })
+		return {
+			courseId,
+			title: "",
+			kind: "traditional" as const,
+			startsAt: localString,
+			attemptDurationMinutes: "30",
+			questionCount: "10",
+			bankIds: [] as string[],
+			certaintyConfig: null,
+		} satisfies v.InferInput<typeof createQuizDTOSchema>
+	})
+
+	const form = createForm({ schema: createQuizDTOSchema, initialInput, validate: "blur" })
 
 	const kind = $derived(
 		(getInput(form, { path: ["kind"] as any }) ?? "traditional") as "traditional" | "certainty"
@@ -74,18 +88,13 @@
 		if (kind === "traditional" && certaintyConfigValue !== null) {
 			setInput(form, { path: ["certaintyConfig"] as any, input: null } as never)
 		} else if (kind === "certainty" && !certaintyConfigValue) {
-			setInput(
-				form,
-				{ path: ["certaintyConfig"] as any, input: defaultCertainty } as never
-			)
+			setInput(form, { path: ["certaintyConfig"] as any, input: defaultCertainty } as never)
 		}
 	})
 
 	const toggleBank = (bankId: string, selected: boolean) => {
 		const current = (getInput(form, { path: ["bankIds"] as any }) ?? []) as string[]
-		const next = selected
-			? [...current, bankId]
-			: current.filter((id) => id !== bankId)
+		const next = selected ? [...current, bankId] : current.filter((id) => id !== bankId)
 		setInput(form, { path: ["bankIds"] as any, input: next } as never)
 	}
 
@@ -109,6 +118,11 @@
 		reset(form, { initialInput })
 		onsuccess()
 	}
+
+	const modalOnClose = () => {
+		onclose()
+		reset(form, { initialInput })
+	}
 </script>
 
 {#if open}
@@ -118,9 +132,9 @@
 		aria-modal="true"
 		tabindex="-1"
 		transition:fade={{ duration: 180 }}
-		onclick={() => onclose()}
+		onclick={() => modalOnClose()}
 		onkeydown={(e) => {
-			if (e.key === "Escape") onclose()
+			if (e.key === "Escape") modalOnClose()
 		}}
 	>
 		<section
@@ -132,7 +146,7 @@
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h4 class="m-0 text-base text-black">Crear cuestionario</h4>
-				<button class="btn-tertiary p-1" type="button" onclick={onclose}>
+				<button class="btn-tertiary p-1" type="button" onclick={modalOnClose}>
 					<X size={18} aria-hidden="true" />
 				</button>
 			</div>
@@ -143,9 +157,13 @@
 						<label class="grid gap-1.5">
 							<span class="text-sm text-zinc-800">Título</span>
 							<input {...field.props} class="input-base" value={field.input ?? ""} />
-							{#if field.errors?.[0]}
-								<span class="text-sm text-red-700">{field.errors[0]}</span>
-							{/if}
+							<span
+								class="text-sm text-red-700"
+								class:invisible={!field.errors?.[0]}
+								aria-live="polite"
+							>
+								{field.errors?.[0] ?? " "}
+							</span>
 						</label>
 					{/snippet}
 				</Field>
@@ -159,6 +177,13 @@
 									<option value="traditional">Tradicional</option>
 									<option value="certainty">Certeza</option>
 								</select>
+								<span
+									class="text-sm text-red-700"
+									class:invisible={!field.errors?.[0]}
+									aria-live="polite"
+								>
+									{field.errors?.[0] ?? " "}
+								</span>
 							</label>
 						{/snippet}
 					</Field>
@@ -170,19 +195,44 @@
 								<input
 									{...field.props}
 									type="number"
+									min="1"
+									max="100"
 									class="input-base"
 									value={field.input ?? 10}
 								/>
+								<span
+									class="text-sm text-red-700"
+									class:invisible={!field.errors?.[0]}
+									aria-live="polite"
+								>
+									{field.errors?.[0] ?? " "}
+								</span>
 							</label>
 						{/snippet}
 					</Field>
 				</div>
 
 				<div class="form-grid-2 grid-cols-2">
-					<label class="grid gap-1.5">
-						<span class="text-sm text-zinc-800">Inicio</span>
-						<DateInput {form} path={["startsAt"]} />
-					</label>
+					<Field of={form} path={["startsAt"]}>
+						{#snippet children(field)}
+							<label class="grid gap-1.5">
+								<span class="text-sm text-zinc-800">Inicio</span>
+								<input
+									{...field.props}
+									type="datetime-local"
+									class="input-base h-11"
+									value={field.input ?? ""}
+								/>
+								<span
+									class="text-sm text-red-700"
+									class:invisible={!field.errors?.[0]}
+									aria-live="polite"
+								>
+									{field.errors?.[0] ?? " "}
+								</span>
+							</label>
+						{/snippet}
+					</Field>
 
 					<Field of={form} path={["attemptDurationMinutes"]}>
 						{#snippet children(field)}
@@ -191,9 +241,18 @@
 								<input
 									{...field.props}
 									type="number"
+									min="1"
+									max="240"
 									class="input-base"
 									value={field.input ?? 30}
 								/>
+								<span
+									class="text-sm text-red-700"
+									class:invisible={!field.errors?.[0]}
+									aria-live="polite"
+								>
+									{field.errors?.[0] ?? " "}
+								</span>
 							</label>
 						{/snippet}
 					</Field>
@@ -203,11 +262,7 @@
 					{#snippet children(field)}
 						<div class="grid gap-2">
 							<span class="text-sm text-zinc-800">Bancos fuente</span>
-							<BankSelector
-								{courseId}
-								selectedBankIds={field.input ?? []}
-								onchange={toggleBank}
-							/>
+							<BankSelector {courseId} selectedBankIds={field.input ?? []} onchange={toggleBank} />
 							{#if field.errors?.[0]}
 								<span class="text-sm text-red-700">{field.errors[0]}</span>
 							{/if}
@@ -231,7 +286,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									{#each (["low", "medium", "high"] as const) as level (level)}
+									{#each ["low", "medium", "high"] as const as level (level)}
 										<tr>
 											<td class="border border-zinc-300 bg-white px-2 py-1.5">
 												{CertaintyValue.format(level)}
@@ -263,7 +318,7 @@
 				{/if}
 
 				<div class="flex justify-end gap-2">
-					<button class="btn-tertiary" type="button" onclick={onclose}>Cancelar</button>
+					<button class="btn-tertiary" type="button" onclick={modalOnClose}>Cancelar</button>
 					<button
 						class="btn-primary flex items-center gap-1.5"
 						type="submit"

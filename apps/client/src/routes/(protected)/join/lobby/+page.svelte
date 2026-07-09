@@ -4,7 +4,7 @@
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 	import { quizzesService } from "$lib/quizzes/service"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 	import { Play, TimerReset } from "lucide-svelte"
 	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 

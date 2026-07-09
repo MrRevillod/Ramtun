@@ -26,10 +26,7 @@
 			await goto("/")
 		},
 		onError: (error) => {
-			console.error(error)
-			toast.error(error.messageOrDefault, {
-				duration: 4000,
-			})
+			toast.error(error.messageOrDefault)
 		},
 	}))
 

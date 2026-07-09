@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { User, BarChart3, CheckCircle2, CircleX, Trophy } from "lucide-svelte"
-	import type { AttemptResult, CertaintyLevel } from "$lib/attempts/attempts.dtos"
-	import { GradeValue } from "$lib/shared/value-objects/grade.value"
+	import type { AttemptResult, CertaintyLevel } from "$lib/attempts/dtos"
+
 	import { DateValue } from "$lib/shared/value-objects/date.value"
+	import { GradeValue } from "$lib/shared/value-objects/grade.value"
+	import { User, ChartColumn, CircleCheck, CircleX, Trophy } from "lucide-svelte"
 
 	let { result }: { result: AttemptResult } = $props()
 
@@ -66,7 +67,7 @@
 		</div>
 		<div class="panel-muted p-3 sm:p-4">
 			<p class="m-0 flex items-center gap-2 text-xs font-medium text-zinc-700">
-				<BarChart3 size={13} /> Puntaje
+				<ChartColumn size={13} /> Puntaje
 			</p>
 			<p class="mt-1 mb-0 text-lg font-semibold text-black">
 				{result.score} / {result.maxScore}
@@ -91,7 +92,7 @@
 						<span
 							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-emerald-700"
 						>
-							<CheckCircle2 size={14} /> Correcta
+							<CircleCheck size={14} /> Correcta
 						</span>
 					{:else}
 						<span class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700">

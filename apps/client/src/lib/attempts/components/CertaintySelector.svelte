@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CertaintyLevel } from "$lib/attempts/attempts.dtos"
+	import type { CertaintyLevel } from "$lib/attempts/dtos"
 	import { CertaintyValue } from "$lib/shared/value-objects/certainty.value"
 
 	interface CertaintySelectorProps {

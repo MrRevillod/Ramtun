@@ -1,13 +1,12 @@
 <script lang="ts">
-	import type { AnswerState, CertaintyLevel, WarningType } from "$lib/attempts/attempts.dtos"
+	import type { AnswerState, CertaintyLevel, WarningType } from "$lib/attempts/dtos"
 
 	import { goto } from "$app/navigation"
 	import { toast } from "svelte-sonner"
 	import { onDestroy } from "svelte"
-	import { useAttempt } from "$lib/attempts/attempts.queries"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 	import { createAntiCheat } from "$lib/attempts/services/anti-cheat.service.svelte"
-	import { useMutation, useQueryClient } from "$lib/shared/http/tanstack"
+	import { useMutation, useQuery, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import ProgressBar from "$lib/attempts/components/ProgressBar.svelte"
 	import QuizTimer from "$lib/attempts/components/QuizTimer.svelte"
@@ -18,9 +17,13 @@
 
 	let { data } = $props()
 
-	const attemptId = $derived(data.attemptId)
+	const attemptQuery = useQuery(() => ({
+		queryKey: ["attempts", "detail", data.attemptId] as const,
+		queryFn: () => attemptsService.getById(data.attemptId),
+		retry: false,
+		enabled: !!data.attemptId,
+	}))
 
-	const attemptQuery = useAttempt(() => attemptId)
 	const queryClient = useQueryClient()
 
 	let currentIndex = $state(0)

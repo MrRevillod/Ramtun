@@ -1,5 +1,5 @@
-import type { WarningType } from "$lib/attempts/attempts.dtos"
-import { attemptsService } from "$lib/attempts/attempts.service"
+import type { WarningType } from "$lib/attempts/dtos"
+import { attemptsService } from "$lib/attempts/service"
 
 type WarningHandler = (type: WarningType, details: string) => void
 

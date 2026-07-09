@@ -1,4 +1,7 @@
-export type CertaintyLevel = "low" | "medium" | "high"
+import * as v from "valibot"
+
+export const certaintyLevelDTOSchema = v.picklist(["low", "medium", "high"])
+export type CertaintyLevel = v.InferOutput<typeof certaintyLevelDTOSchema>
 
 export type AttemptQuestion = {
 	id: string

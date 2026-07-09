@@ -13,7 +13,7 @@
 		connectAttemptsSocket,
 		disconnectAttemptsSocket,
 	} from "$lib/shared/socket/attempts.socket"
-	import { attemptsService } from "$lib/attempts/attempts.service"
+	import { attemptsService } from "$lib/attempts/service"
 
 	let { data, children }: LayoutProps = $props()
 
@@ -21,7 +21,11 @@
 	const showCoursesNav = $derived(user?.isAdmin() || user?.isFunc() || data.hasCourses)
 
 	$effect(() => {
-		if (user?.isStudent() && !data.hasCourses && !page.url.pathname.startsWith("/join")) {
+		if (
+			user?.isStudent() &&
+			!data.hasCourses &&
+			page.url.pathname.startsWith("/courses")
+		) {
 			void goto("/join")
 		}
 	})
