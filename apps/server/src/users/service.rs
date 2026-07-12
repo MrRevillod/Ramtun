@@ -33,7 +33,7 @@ impl UsersService {
         if let Some(roles) = &filter.roles
             && roles.contains(&UserRole::Student)
         {
-            return Err(UsersError::InvalidUserRole)?;
+            Err(UsersError::InvalidUserRole)?;
         }
 
         let mut candidates = self.users.list_users(filter).await?;

@@ -80,7 +80,7 @@ impl QuestionService {
         let questions = self.snapshots.list_questions_for_quiz(quiz_id).await?;
 
         if questions.len() < question_number {
-            return Err(QuizError::InvalidQuestionCount)?;
+            Err(QuizError::InvalidQuestionCount)?;
         }
 
         let mut question_ids = questions.into_iter().map(|q| q.id).collect::<Vec<_>>();
@@ -102,7 +102,7 @@ impl QuestionService {
         question_id: &QuestionId,
     ) -> AppResult<()> {
         if !question_order.contains(question_id) {
-            return Err(AttemptError::QuestionNotInAttempt(*question_id))?;
+            Err(AttemptError::QuestionNotInAttempt(*question_id))?;
         }
 
         Ok(())
@@ -117,7 +117,7 @@ impl QuestionService {
         let max = question.options.len() as i16;
 
         if answer_index < 0 || answer_index >= max {
-            return Err(AttemptError::InvalidAnswerIndex)?;
+            Err(AttemptError::InvalidAnswerIndex)?;
         }
 
         Ok(())

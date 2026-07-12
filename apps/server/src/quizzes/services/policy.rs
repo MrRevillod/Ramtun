@@ -24,7 +24,7 @@ impl QuizPolicy {
         }
 
         if !self.courses.is_member(course_id, &current_user.id).await? {
-            return Err(QuizError::Forbidden)?;
+            Err(QuizError::Forbidden)?;
         }
 
         Ok(true)
@@ -48,7 +48,7 @@ impl QuizPolicy {
             .is_member(&quiz.course_id, &current_user.id)
             .await?
         {
-            return Err(QuizError::Forbidden)?;
+            Err(QuizError::Forbidden)?;
         }
 
         Ok(quiz)

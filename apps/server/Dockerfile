@@ -2,7 +2,8 @@
 # Development Stage
 # ==============================================================================
 
-FROM rust:1.95-alpine AS dev
+ARG RUST_VERSION
+FROM rust:${RUST_VERSION}-alpine AS dev
 
 RUN apk add --no-cache \
 	wireguard-tools \
@@ -31,7 +32,8 @@ CMD ["/bin/bash", "/app/apps/server/config/scripts/entrypoint.sh"]
 # Build Stage
 # ==============================================================================
 
-FROM rust:1.95-alpine AS builder
+ARG RUST_VERSION
+FROM rust:${RUST_VERSION}-alpine AS builder
 
 RUN apk add --no-cache \
 	build-base \

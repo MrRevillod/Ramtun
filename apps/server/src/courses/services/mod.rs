@@ -53,7 +53,7 @@ impl CoursesService {
 
     pub async fn create(&self, current_user: &User, input: CreateCourseDto) -> AppResult<Course> {
         if self.repository.find_by_code(&input.code).await?.is_some() {
-            return Err(CoursesError::CodeAlreadyExists)?;
+            Err(CoursesError::CodeAlreadyExists)?;
         }
 
         let course = Course::builder()
@@ -87,7 +87,7 @@ impl CoursesService {
             .await?;
 
         if !self.repository.soft_delete(course_id).await? {
-            return Err(CoursesError::NotFound(course_id.to_string()))?;
+            Err(CoursesError::NotFound(course_id.to_string()))?;
         }
 
         Ok(())
@@ -122,17 +122,17 @@ impl CoursesService {
             .ok_or(CoursesError::MemberNotFound)?;
 
         if !matches!(target.role, UserRole::Func | UserRole::Student) {
-            return Err(CoursesError::InvalidMemberRole)?;
+            Err(CoursesError::InvalidMemberRole)?;
         }
 
         if self.repository.is_member(course_id, &target.id).await? {
-            return Err(CoursesError::MemberAlreadyExists)?;
+            Err(CoursesError::MemberAlreadyExists)?;
         }
 
         let course_role = match target.role {
             UserRole::Func => CourseMemberRole::Func,
             UserRole::Student => CourseMemberRole::Assistant,
-            _ => return Err(CoursesError::InvalidMemberRole)?,
+            _ => Err(CoursesError::InvalidMemberRole)?,
         };
 
         let course_member = CourseMember::builder()
@@ -167,13 +167,13 @@ impl CoursesService {
             .ok_or(CoursesError::MemberNotFound)?;
 
         if member.user_id == current_user.id {
-            return Err(CoursesError::CannotRemoveSelf)?;
+            Err(CoursesError::CannotRemoveSelf)?;
         }
 
         let member_count = self.repository.count_members(course_id).await?;
 
         if member_count <= 1 && member.user_id == current_user.id {
-            return Err(CoursesError::CannotRemoveLastMember)?;
+            Err(CoursesError::CannotRemoveLastMember)?;
         }
 
         let role_member_count = self
@@ -182,11 +182,11 @@ impl CoursesService {
             .await?;
 
         if member.role == CourseMemberRole::Func && role_member_count <= 1 {
-            return Err(CoursesError::CannotRemoveLastFuncMember)?;
+            Err(CoursesError::CannotRemoveLastFuncMember)?;
         }
 
         if !self.repository.remove_member(course_id, user_id).await? {
-            return Err(CoursesError::MemberNotFound)?;
+            Err(CoursesError::MemberNotFound)?;
         }
 
         Ok(())

@@ -89,7 +89,7 @@ impl AuthService {
             .decode::<SessionClaims>(token, self.config.jwt_secret.as_ref())?;
 
         if claims.typ != "refresh" {
-            return Err(AuthError::InvalidToken)?;
+            Err(AuthError::InvalidToken)?;
         }
 
         let session = self

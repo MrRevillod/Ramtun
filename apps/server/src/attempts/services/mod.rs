@@ -59,7 +59,7 @@ impl AttemptsService {
         };
 
         if attempt.student_id != user_id {
-            return Err(AttemptError::Forbidden)?;
+            Err(AttemptError::Forbidden)?;
         }
 
         Ok(attempt)
@@ -101,11 +101,11 @@ impl AttemptsService {
         let now = Utc::now();
 
         if quiz.starts_at > now {
-            return Err(AttemptError::QuizNotStarted)?;
+            Err(AttemptError::QuizNotStarted)?;
         }
 
         if quiz.results_published_at.is_some() {
-            return Err(AttemptError::QuizEnded)?;
+            Err(AttemptError::QuizEnded)?;
         }
 
         let filter = AttemptFilter {
@@ -117,7 +117,7 @@ impl AttemptsService {
         let attempts = self.repository.list_attempts(filter).await?;
 
         if !attempts.is_empty() {
-            return Err(AttemptError::AlreadyAttempted)?;
+            Err(AttemptError::AlreadyAttempted)?;
         }
 
         let question_order = self
@@ -225,10 +225,10 @@ impl AttemptsService {
 
         match quiz.kind {
             QuizKind::Certainty if input.certainty_level.is_none() => {
-                return Err(AttemptError::CertaintyLevelRequired)?;
+                Err(AttemptError::CertaintyLevelRequired)?;
             }
             QuizKind::Traditional if input.certainty_level.is_some() => {
-                return Err(AttemptError::CertaintyLevelNotAllowed)?;
+                Err(AttemptError::CertaintyLevelNotAllowed)?;
             }
             _ => {}
         }
@@ -323,7 +323,7 @@ impl AttemptsService {
         };
 
         if quiz.results_published_at.is_none() {
-            return Err(QuizError::ResultsNotPublished)?;
+            Err(QuizError::ResultsNotPublished)?;
         }
 
         let score_points = attempt.score.ok_or(AttemptError::ResultsNotAvailable)?;
@@ -359,7 +359,7 @@ impl AttemptsService {
         };
 
         if quiz.results_published_at.is_none() {
-            return Err(QuizError::ResultsNotPublished)?;
+            Err(QuizError::ResultsNotPublished)?;
         }
 
         let attempt = self
@@ -369,7 +369,7 @@ impl AttemptsService {
             .ok_or(AttemptError::NoActiveAttempts)?;
 
         if attempt.results_viewed_at.is_some() {
-            return Err(AttemptError::ResultsAlreadyViewed)?;
+            Err(AttemptError::ResultsAlreadyViewed)?;
         }
 
         self.view_results(attempt.id, user).await
@@ -511,11 +511,11 @@ impl AttemptsService {
         let now = Utc::now();
 
         if attempt.expires_at + Duration::minutes(1) < now {
-            return Err(AttemptError::Expired)?;
+            Err(AttemptError::Expired)?;
         }
 
         if attempt.submitted_at.is_some() {
-            return Err(AttemptError::AlreadySubmitted)?;
+            Err(AttemptError::AlreadySubmitted)?;
         }
 
         Ok(attempt)

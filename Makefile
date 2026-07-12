@@ -3,6 +3,9 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
+RUST_VERSION := $(shell grep 'channel' rust-toolchain.toml | head -1 | sed 's/.*"//;s/"//')
+export RUST_VERSION
+
 SERVER=apps/server
 CLIENT=apps/client
 app ?= "server"

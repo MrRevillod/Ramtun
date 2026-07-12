@@ -118,7 +118,7 @@ impl LdapClient {
 
         if results.is_empty() {
             tracing::error!("[!] Usuario no encontrado en LDAP: {}", username);
-            return Err(AuthError::LdapUsernameNotFound(username.into()))?;
+            Err(AuthError::LdapUsernameNotFound(username.into()))?;
         }
 
         let dn = results

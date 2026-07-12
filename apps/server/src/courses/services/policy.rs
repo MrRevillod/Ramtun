@@ -30,7 +30,7 @@ impl CoursePolicy {
             .is_member(&course.id, &current_user.id)
             .await?
         {
-            return Err(CoursesError::Forbidden)?;
+            Err(CoursesError::Forbidden)?;
         }
 
         Ok(course)
@@ -54,7 +54,7 @@ impl CoursePolicy {
             .is_manager_member(course_id, &current_user.id)
             .await?
         {
-            return Err(CoursesError::OnlyFuncCanManageMembers)?;
+            Err(CoursesError::OnlyFuncCanManageMembers)?;
         }
 
         Ok(course)

@@ -28,7 +28,7 @@ impl WarningService {
             .ok_or(AttemptError::NotFound(attempt_id))?;
 
         if attempt.submitted_at.is_some() {
-            return Err(AttemptError::AlreadySubmitted)?;
+            Err(AttemptError::AlreadySubmitted)?;
         }
 
         let sequence_number = self

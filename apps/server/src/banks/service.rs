@@ -122,7 +122,7 @@ impl QuestionBankService {
         let mut tx = self.tx.begin().await?;
 
         if !self.repository.soft_delete(&mut tx, &bank.id).await? {
-            return Err(QuestionBankError::NotFound(bank.id.to_string()))?;
+            Err(QuestionBankError::NotFound(bank.id.to_string()))?;
         }
 
         self.sync_not_started_snapshots(&mut tx, &linked_quizzes)
@@ -140,7 +140,7 @@ impl QuestionBankService {
             .iter()
             .any(|quiz| quiz.results_published_at.is_none() && quiz.starts_at <= now)
         {
-            return Err(QuestionBankError::LockedByRunningQuiz)?;
+            Err(QuestionBankError::LockedByRunningQuiz)?;
         }
 
         Ok(())
@@ -160,7 +160,7 @@ impl QuestionBankService {
                 .await?;
 
             if quiz.question_count as usize > questions.len() {
-                return Err(QuestionBankError::InvalidQuestionCountAfterBankUpdate)?;
+                Err(QuestionBankError::InvalidQuestionCountAfterBankUpdate)?;
             }
 
             if !self
@@ -168,7 +168,7 @@ impl QuestionBankService {
                 .update_questions(tx, quiz.snapshot_id, &questions)
                 .await?
             {
-                return Err(QuestionBankError::SnapshotNotFound)?;
+                Err(QuestionBankError::SnapshotNotFound)?;
             }
         }
 

@@ -19,7 +19,7 @@ impl QuestionBankPolicy {
         course_id: &CourseId,
     ) -> AppResult<()> {
         if self.courses.find_by_id(course_id).await?.is_none() {
-            return Err(QuestionBankError::NotFound(course_id.to_string()))?;
+            Err(QuestionBankError::NotFound(course_id.to_string()))?;
         }
 
         if current_user.role == UserRole::Admin {
@@ -27,7 +27,7 @@ impl QuestionBankPolicy {
         }
 
         if !self.courses.is_member(course_id, &current_user.id).await? {
-            return Err(QuestionBankError::Forbidden)?;
+            Err(QuestionBankError::Forbidden)?;
         }
 
         Ok(())

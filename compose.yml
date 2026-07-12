@@ -5,6 +5,8 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
       target: dev
+      args:
+        RUST_VERSION: ${RUST_VERSION:-1.97.0}
     env_file:
       - .env
     cap_add:

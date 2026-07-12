@@ -52,7 +52,7 @@ impl QuizService {
         if current_user.role != UserRole::Admin
             && !self.courses.is_member(course_id, &current_user.id).await?
         {
-            return Err(QuizError::Forbidden)?;
+            Err(QuizError::Forbidden)?;
         }
 
         let quizzes = self.repository.list_by_course(course_id).await?;
@@ -77,7 +77,7 @@ impl QuizService {
         };
 
         if quiz.results_published_at.is_some() {
-            return Err(QuizError::Closed)?;
+            Err(QuizError::Closed)?;
         }
 
         Ok(JoinQuizPreviewView::from(&quiz))
@@ -94,11 +94,11 @@ impl QuizService {
             .await?;
 
         if quiz.results_published_at.is_some() {
-            return Err(QuizError::Closed)?;
+            Err(QuizError::Closed)?;
         }
 
         if !self.repository.publish_results(&quiz.id).await? {
-            return Err(QuizError::Closed)?;
+            Err(QuizError::Closed)?;
         }
 
         Ok(())
@@ -114,7 +114,7 @@ impl QuizService {
             .are_banks_in_course(&input.bank_ids, &input.course_id)
             .await?
         {
-            return Err(QuizError::InvalidBanksForCourse)?;
+            Err(QuizError::InvalidBanksForCourse)?;
         }
 
         let questions = self
@@ -123,7 +123,7 @@ impl QuizService {
             .await?;
 
         if input.question_count as usize > questions.len() {
-            return Err(QuizError::InvalidQuestionCount)?;
+            Err(QuizError::InvalidQuestionCount)?;
         }
 
         let starts_at = DateTime::parse_from_rfc3339(&input.starts_at)
@@ -185,7 +185,7 @@ impl QuizService {
             .await?;
 
         if !self.repository.delete_by_id(&quiz.id).await? {
-            return Err(QuizError::NotFound(*quiz_id))?;
+            Err(QuizError::NotFound(*quiz_id))?;
         }
 
         Ok(())

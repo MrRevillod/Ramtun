@@ -19,7 +19,7 @@ impl AuthzService {
 
         if !allowed {
             tracing::warn!(role = ?role, action = ?action, "AuthzService denied action for role");
-            return Err(AuthzError::Forbidden(action))?;
+            Err(AuthzError::Forbidden(action))?;
         }
 
         tracing::debug!(role = ?role, action = ?action, "AuthzService allowed action for role");
