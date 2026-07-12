@@ -7,6 +7,7 @@ on:
       - "apps/server/**"
       - "Cargo.toml"
       - "Cargo.lock"
+      - "rust-toolchain.toml"
       - ".github/workflows/rust-ci.yml"
   pull_request:
     branches: [ main ]
@@ -14,6 +15,7 @@ on:
       - "apps/server/**"
       - "Cargo.toml"
       - "Cargo.lock"
+      - "rust-toolchain.toml"
       - ".github/workflows/rust-ci.yml"
 
 jobs:
@@ -22,9 +24,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain-file: rust-toolchain.toml
+      - run: rustup show active-toolchain
       - run: cargo fmt --check
       - run: cargo clippy -- -D warnings
       - run: cargo test
