@@ -2,7 +2,7 @@
 # Development Stage
 # ==============================================================================
 
-ARG RUST_VERSION
+ARG RUST_VERSION=1.97
 FROM rust:${RUST_VERSION}-alpine AS dev
 
 RUN apk add --no-cache \
@@ -32,7 +32,7 @@ CMD ["/bin/bash", "/app/apps/server/config/scripts/entrypoint.sh"]
 # Build Stage
 # ==============================================================================
 
-ARG RUST_VERSION
+ARG RUST_VERSION=1.97
 FROM rust:${RUST_VERSION}-alpine AS builder
 
 RUN apk add --no-cache \
