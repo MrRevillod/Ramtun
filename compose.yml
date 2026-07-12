@@ -15,7 +15,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "nc -z localhost 8000 || exit 1" ]
+      test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,7 +48,7 @@ services:
     container_name: ramtun-postgres
     command: postgres -c log_min_messages=ERROR -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1 -c log_checkpoints=off
     ports:
-      - "5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
@@ -56,7 +56,11 @@ services:
     networks:
       - ramtun-network
     healthcheck:
-      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -84,13 +88,36 @@ services:
       - ./apps/client:/app
       - /app/node_modules
     healthcheck:
-      test: [ "CMD-SHELL", "curl -s http://127.0.0.1:5173 >/dev/null || exit 1" ]
+      test: ["CMD-SHELL", "curl -s http://127.0.0.1:5173 >/dev/null || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 40s
     networks:
       - ramtun-network
+
+  ldap:
+    container_name: ramtun-ldap
+    image: ghcr.io/inf-uct/ldap:latest
+    ports:
+      - "389:389"
+    volumes:
+      - ./config/seeds/ldap/users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/30-users.ldif
+    command: "--copy-service"
+    networks:
+      - ramtun-network
+
+  ldap-ui:
+    image: dnknth/ldap-ui:latest
+    ports:
+      - "8080:5000"
+    networks:
+      - ramtun-network
+    environment:
+      LDAP_URL: "ldap://ldap/"
+      BASE_DN: "dc=inf,dc=uct,dc=cl"
+      BIND_DN: "cn=admin,dc=inf,dc=uct,dc=cl"
+      BIND_PASSWORD: "${LDAP_ADMIN_PASSWORD}"
 
 networks:
   ramtun-network:

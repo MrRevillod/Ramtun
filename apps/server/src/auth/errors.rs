@@ -31,7 +31,7 @@ pub enum AuthError {
 
     #[http(
         code = 401,
-        message = "Tu cuenta no tiene permisos para acceder a esta aplicación. Contacta a soporte."
+        message = "Credenciales inválidas. Verifica tu usuario y contraseña."
     )]
     #[error("LDAP username not found: {0}")]
     LdapUsernameNotFound(String),

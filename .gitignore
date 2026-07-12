@@ -19,6 +19,8 @@ apps/client/.svelte-kit
 /build
 **/build
 
+config/seeds/ldap/users*
+
 # OS
 .DS_Store
 Thumbs.db
