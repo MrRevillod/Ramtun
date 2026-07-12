@@ -5,6 +5,9 @@
 	"packageManager": "pnpm@11.7.0",
 	"type": "module",
 	"license": "MIT",
+	"engines": {
+		"node": ">=22"
+	},
 	"authors": [
 		"Luciano Revillod"
 	],
