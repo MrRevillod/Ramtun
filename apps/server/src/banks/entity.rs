@@ -1,6 +1,6 @@
 use crate::{
-    courses::CourseId,
-    shared::{Entity, Id},
+	courses::CourseId,
+	shared::{Entity, Id},
 };
 
 use bon::Builder;
@@ -13,53 +13,53 @@ pub type QuestionBankId = Id<QuestionBank>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
 pub struct QuestionBank {
-    #[builder(default = QuestionBankId::new())]
-    pub id: QuestionBankId,
-    pub course_id: CourseId,
-    pub name: String,
-    pub questions: Vec<Question>,
-    pub created_at: DateTime<Utc>,
-    pub deleted_at: Option<DateTime<Utc>>,
+	#[builder(default = QuestionBankId::new())]
+	pub id: QuestionBankId,
+	pub course_id: CourseId,
+	pub name: String,
+	pub questions: Vec<Question>,
+	pub created_at: DateTime<Utc>,
+	pub deleted_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for QuestionBank {
-    fn key_name() -> &'static str {
-        "question_bank"
-    }
+	fn key_name() -> &'static str {
+		"question_bank"
+	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Type, Builder, PartialEq, Hash, Eq)]
 #[sqlx(type_name = "question")]
 pub struct Question {
-    #[builder(default = QuestionId::new())]
-    pub id: QuestionId,
-    pub prompt: String,
-    pub options: Vec<String>,
-    pub answer_index: i16,
-    pub images: Vec<String>,
+	#[builder(default = QuestionId::new())]
+	pub id: QuestionId,
+	pub prompt: String,
+	pub options: Vec<String>,
+	pub answer_index: i16,
+	pub images: Vec<String>,
 }
 
 impl Entity for Question {
-    fn key_name() -> &'static str {
-        "question"
-    }
+	fn key_name() -> &'static str {
+		"question"
+	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 pub struct QuestionView {
-    pub id: QuestionId,
-    pub prompt: String,
-    pub options: Vec<String>,
-    pub images: Vec<String>,
+	pub id: QuestionId,
+	pub prompt: String,
+	pub options: Vec<String>,
+	pub images: Vec<String>,
 }
 
 impl From<Question> for QuestionView {
-    fn from(question: Question) -> Self {
-        Self {
-            id: question.id,
-            prompt: question.prompt,
-            options: question.options,
-            images: question.images,
-        }
-    }
+	fn from(question: Question) -> Self {
+		Self {
+			id: question.id,
+			prompt: question.prompt,
+			options: question.options,
+			images: question.images,
+		}
+	}
 }

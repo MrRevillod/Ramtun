@@ -11,76 +11,76 @@ use sword::web::*;
 #[controller(kind = Controller::Web, path = "/quizzes")]
 #[interceptor(SessionCheck)]
 pub struct QuizController {
-    service: Arc<QuizService>,
+	service: Arc<QuizService>,
 }
 
 impl QuizController {
-    #[get("/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizReadManaged)]
-    pub async fn get_one(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/{quizId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizReadManaged)]
+	pub async fn get_one(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let quiz = self.service.get_one(current_user, &quiz_id).await?;
+		let quiz = self.service.get_one(current_user, &quiz_id).await?;
 
-        Ok(JsonResponse::Ok().data(quiz))
-    }
+		Ok(JsonResponse::Ok().data(quiz))
+	}
 
-    #[get("/course/{courseId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizListManaged)]
-    pub async fn list_by_course(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/course/{courseId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizListManaged)]
+	pub async fn list_by_course(&self, req: Request) -> WebResult {
+		let course_id = req.param::<CourseId>("courseId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let quizzes = self
-            .service
-            .list_by_course(current_user, &course_id)
-            .await?;
+		let quizzes = self
+			.service
+			.list_by_course(current_user, &course_id)
+			.await?;
 
-        Ok(JsonResponse::Ok().data(quizzes))
-    }
+		Ok(JsonResponse::Ok().data(quizzes))
+	}
 
-    #[post("/")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizCreate)]
-    pub async fn create(&self, req: Request) -> WebResult {
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-        let input = req.body_validator::<CreateQuizDto>()?;
+	#[post("/")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizCreate)]
+	pub async fn create(&self, req: Request) -> WebResult {
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+		let input = req.body_validator::<CreateQuizDto>()?;
 
-        let quiz = self.service.create(current_user, input).await?;
+		let quiz = self.service.create(current_user, input).await?;
 
-        Ok(JsonResponse::Created().data(quiz))
-    }
+		Ok(JsonResponse::Created().data(quiz))
+	}
 
-    #[delete("/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizDeleteManaged)]
-    pub async fn delete(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[delete("/{quizId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizDeleteManaged)]
+	pub async fn delete(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        self.service.delete_quiz(current_user, &quiz_id).await?;
+		self.service.delete_quiz(current_user, &quiz_id).await?;
 
-        Ok(JsonResponse::Ok().message("Quiz eliminado correctamente"))
-    }
+		Ok(JsonResponse::Ok().message("Quiz eliminado correctamente"))
+	}
 
-    #[post("/{quizId}/close-and-publish")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizCloseAndPublishManaged)]
-    pub async fn close_and_publish(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[post("/{quizId}/close-and-publish")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizCloseAndPublishManaged)]
+	pub async fn close_and_publish(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        self.service
-            .close_and_publish_results(current_user, &quiz_id)
-            .await?;
+		self.service
+			.close_and_publish_results(current_user, &quiz_id)
+			.await?;
 
-        Ok(JsonResponse::Ok().message("Quiz finalizado y resultados publicados"))
-    }
+		Ok(JsonResponse::Ok().message("Quiz finalizado y resultados publicados"))
+	}
 
-    #[post("/join/{joinCode}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizJoinByCode)]
-    pub async fn join_by_code(&self, req: Request) -> WebResult {
-        let code = req.param::<String>("joinCode")?;
-        let preview = self.service.get_join_preview(&code).await?;
+	#[post("/join/{joinCode}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizJoinByCode)]
+	pub async fn join_by_code(&self, req: Request) -> WebResult {
+		let code = req.param::<String>("joinCode")?;
+		let preview = self.service.get_join_preview(&code).await?;
 
-        Ok(JsonResponse::Ok().data(preview))
-    }
+		Ok(JsonResponse::Ok().data(preview))
+	}
 }

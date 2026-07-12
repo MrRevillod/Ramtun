@@ -19,13 +19,13 @@ use sword::prelude::*;
 pub struct CoursesModule;
 
 impl Module for CoursesModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<CoursesController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<CoursesController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<CoursePolicy>();
-        components.register::<CourseRepository>();
-        components.register::<CoursesService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<CoursePolicy>();
+		components.register::<CourseRepository>();
+		components.register::<CoursesService>();
+	}
 }

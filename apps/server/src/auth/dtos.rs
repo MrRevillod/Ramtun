@@ -1,6 +1,6 @@
 use crate::{
-    shared::{Entity, Id},
-    users::{UserId, UserView},
+	shared::{Entity, Id},
+	users::{UserId, UserView},
 };
 
 use chrono::{DateTime, Utc};
@@ -9,50 +9,50 @@ use sqlx::FromRow;
 
 #[derive(Debug, Deserialize)]
 pub struct LoginDto {
-    pub username: String,
-    pub password: String,
+	pub username: String,
+	pub password: String,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResponse {
-    pub user: UserView,
-    pub access_token: String,
-    pub access_token_exp: DateTime<Utc>,
-    pub refresh_token: String,
-    pub refresh_token_exp: DateTime<Utc>,
+	pub user: UserView,
+	pub access_token: String,
+	pub access_token_exp: DateTime<Utc>,
+	pub refresh_token: String,
+	pub refresh_token_exp: DateTime<Utc>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RefreshResponse {
-    pub access_token: String,
-    pub access_token_exp: DateTime<Utc>,
+	pub access_token: String,
+	pub access_token_exp: DateTime<Utc>,
 }
 
 pub type SessionId = Id<Session>;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct Session {
-    pub id: SessionId,
-    pub user_id: UserId,
-    pub refresh_token_hash: String,
-    pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-    pub refresh_expires_at: DateTime<Utc>,
-    pub revoked_at: Option<DateTime<Utc>>,
+	pub id: SessionId,
+	pub user_id: UserId,
+	pub refresh_token_hash: String,
+	pub created_at: DateTime<Utc>,
+	pub expires_at: DateTime<Utc>,
+	pub refresh_expires_at: DateTime<Utc>,
+	pub revoked_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for Session {
-    fn key_name() -> &'static str {
-        "session"
-    }
+	fn key_name() -> &'static str {
+		"session"
+	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SessionClaims {
-    pub session_id: SessionId,
-    pub user_id: UserId,
-    pub exp: i64,
-    pub typ: String,
+	pub session_id: SessionId,
+	pub user_id: UserId,
+	pub exp: i64,
+	pub typ: String,
 }

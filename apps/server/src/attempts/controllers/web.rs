@@ -13,194 +13,194 @@ use sword::web::*;
 #[controller(kind = Controller::Web, path = "/attempts")]
 #[interceptor(SessionCheck)]
 pub struct AttemptsController {
-    socket_io: SocketIo,
-    attempts: Arc<AttemptsService>,
-    warnings: Arc<WarningService>,
-    cookie_manager: Arc<CookieManager>,
+	socket_io: SocketIo,
+	attempts: Arc<AttemptsService>,
+	warnings: Arc<WarningService>,
+	cookie_manager: Arc<CookieManager>,
 }
 
 impl AttemptsController {
-    #[get("/course/{courseId}/quiz/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptList)]
-    async fn list_quiz_attempts(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let course_id = req.param::<CourseId>("courseId")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[get("/course/{courseId}/quiz/{quizId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptList)]
+	async fn list_quiz_attempts(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let course_id = req.param::<CourseId>("courseId")?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let filter = AttemptFilter {
-            course_id,
-            quiz_id,
-            student_id: None,
-        };
+		let filter = AttemptFilter {
+			course_id,
+			quiz_id,
+			student_id: None,
+		};
 
-        let attempts = self.attempts.list_attempts(user, filter).await?;
+		let attempts = self.attempts.list_attempts(user, filter).await?;
 
-        Ok(JsonResponse::Ok().data(attempts))
-    }
+		Ok(JsonResponse::Ok().data(attempts))
+	}
 
-    #[post("/quiz/{quizId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptInitialize)]
-    async fn initialize_attempt(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[post("/quiz/{quizId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptInitialize)]
+	async fn initialize_attempt(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let attempt = self.attempts.initialize_attempt(quiz_id, user.id).await?;
+		let attempt = self.attempts.initialize_attempt(quiz_id, user.id).await?;
 
-        let cookie = self
-            .cookie_manager
-            .build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
+		let cookie = self
+			.cookie_manager
+			.build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
 
-        req.cookies()?.add(cookie);
+		req.cookies()?.add(cookie);
 
-        if let Some(namespace) = self.socket_io.of("/attempts") {
-            namespace
-                .broadcast()
-                .emit("attempts:new-attempt", "")
-                .await
-                .ok();
-        }
+		if let Some(namespace) = self.socket_io.of("/attempts") {
+			namespace
+				.broadcast()
+				.emit("attempts:new-attempt", "")
+				.await
+				.ok();
+		}
 
-        Ok(JsonResponse::Created().data(attempt))
-    }
+		Ok(JsonResponse::Created().data(attempt))
+	}
 
-    #[get("/me/active-attempt")]
-    async fn get_active_attempt(&self, req: Request) -> WebResult {
-        let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/me/active-attempt")]
+	async fn get_active_attempt(&self, req: Request) -> WebResult {
+		let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let Some(attempt) = self.attempts.get_active_attempt(&claims.user_id).await? else {
-            return Err(JsonResponse::NotFound());
-        };
+		let Some(attempt) = self.attempts.get_active_attempt(&claims.user_id).await? else {
+			return Err(JsonResponse::NotFound());
+		};
 
-        let cookie = self
-            .cookie_manager
-            .build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
+		let cookie = self
+			.cookie_manager
+			.build_active_attempt_cookie(&attempt.attempt_id.to_string(), attempt.expires_at)?;
 
-        req.cookies()?.add(cookie);
+		req.cookies()?.add(cookie);
 
-        Ok(JsonResponse::Ok().data(attempt))
-    }
+		Ok(JsonResponse::Ok().data(attempt))
+	}
 
-    #[get("/{attemptId}")]
-    async fn get_attempt(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/{attemptId}")]
+	async fn get_attempt(&self, req: Request) -> WebResult {
+		let attempt_id = req.param::<AttemptId>("attemptId")?;
+		let claims = req.claims().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let view = self
-            .attempts
-            .get_attempt_view(attempt_id, claims.user_id)
-            .await?;
+		let view = self
+			.attempts
+			.get_attempt_view(attempt_id, claims.user_id)
+			.await?;
 
-        Ok(JsonResponse::Ok().data(view))
-    }
+		Ok(JsonResponse::Ok().data(view))
+	}
 
-    #[put("/{attemptId}/answers/{questionId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptSubmit)]
-    async fn save_answer(&self, req: Request) -> WebResult {
-        let input = req.body_validator::<SaveAttemptAnswerDto>()?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[put("/{attemptId}/answers/{questionId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptSubmit)]
+	async fn save_answer(&self, req: Request) -> WebResult {
+		let input = req.body_validator::<SaveAttemptAnswerDto>()?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        tracing::info!(
-            "Saving answer for attempt {}, question {}, user {}",
-            input.attempt_id,
-            input.question_id,
-            user.id
-        );
+		tracing::info!(
+			"Saving answer for attempt {}, question {}, user {}",
+			input.attempt_id,
+			input.question_id,
+			user.id
+		);
 
-        self.attempts
-            .save_answer(user.id, input)
-            .await
-            .inspect_err(|e| tracing::error!("Failed to save attempt answer: {:?}", e))?;
+		self.attempts
+			.save_answer(user.id, input)
+			.await
+			.inspect_err(|e| tracing::error!("Failed to save attempt answer: {:?}", e))?;
 
-        Ok(JsonResponse::Ok())
-    }
+		Ok(JsonResponse::Ok())
+	}
 
-    #[post("/{attemptId}/submit")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptSubmit)]
-    async fn submit_attempt(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[post("/{attemptId}/submit")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptSubmit)]
+	async fn submit_attempt(&self, req: Request) -> WebResult {
+		let attempt_id = req.param::<AttemptId>("attemptId")?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
-        let clear = self.cookie_manager.clear_active_attempt_cookie()?;
+		let attempt = self.attempts.submit_attempt(attempt_id, user.id).await?;
+		let clear = self.cookie_manager.clear_active_attempt_cookie()?;
 
-        req.cookies()?.add(clear);
+		req.cookies()?.add(clear);
 
-        if let Some(attempts_socketio_namespace) = self.socket_io.of("/attempts") {
-            attempts_socketio_namespace
-                .broadcast()
-                .emit("attempts:new-submit", &attempt)
-                .await
-                .ok();
-        }
+		if let Some(attempts_socketio_namespace) = self.socket_io.of("/attempts") {
+			attempts_socketio_namespace
+				.broadcast()
+				.emit("attempts:new-submit", &attempt)
+				.await
+				.ok();
+		}
 
-        Ok(JsonResponse::Ok().data(attempt))
-    }
+		Ok(JsonResponse::Ok().data(attempt))
+	}
 
-    #[get("/join/{joinCode}/results/me")]
-    #[interceptor(AuthzGuard, config = AuthzAction::QuizViewAttemptResultByCode)]
-    async fn view_results_by_join_code(&self, req: Request) -> WebResult {
-        let join_code = req.param::<String>("joinCode")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[get("/join/{joinCode}/results/me")]
+	#[interceptor(AuthzGuard, config = AuthzAction::QuizViewAttemptResultByCode)]
+	async fn view_results_by_join_code(&self, req: Request) -> WebResult {
+		let join_code = req.param::<String>("joinCode")?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let results = self
-            .attempts
-            .view_results_by_join_code(&join_code, user)
-            .await?;
+		let results = self
+			.attempts
+			.view_results_by_join_code(&join_code, user)
+			.await?;
 
-        Ok(JsonResponse::Ok().data(results))
-    }
+		Ok(JsonResponse::Ok().data(results))
+	}
 
-    #[get("/{attemptId}/results/managed")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewResultsManaged)]
-    async fn view_attempt_results_managed(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let user = req.user().ok_or(JsonResponse::Unauthorized())?;
+	#[get("/{attemptId}/results/managed")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptViewResultsManaged)]
+	async fn view_attempt_results_managed(&self, req: Request) -> WebResult {
+		let attempt_id = req.param::<AttemptId>("attemptId")?;
+		let user = req.user().ok_or(JsonResponse::Unauthorized())?;
 
-        let results = self
-            .attempts
-            .view_attempt_results_managed(user, attempt_id)
-            .await?;
+		let results = self
+			.attempts
+			.view_attempt_results_managed(user, attempt_id)
+			.await?;
 
-        Ok(JsonResponse::Ok().data(results))
-    }
+		Ok(JsonResponse::Ok().data(results))
+	}
 
-    #[post("/{attemptId}/warnings")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptRecordWarning)]
-    async fn record_warning(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let input = req.body_validator::<CreateWarningDto>()?;
+	#[post("/{attemptId}/warnings")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptRecordWarning)]
+	async fn record_warning(&self, req: Request) -> WebResult {
+		let attempt_id = req.param::<AttemptId>("attemptId")?;
+		let input = req.body_validator::<CreateWarningDto>()?;
 
-        let warning = self
-            .warnings
-            .record_warning(attempt_id, input.warning_type, &input.details)
-            .await?;
+		let warning = self
+			.warnings
+			.record_warning(attempt_id, input.warning_type, &input.details)
+			.await?;
 
-        if let Some(namespace) = self.socket_io.of("/attempts") {
-            namespace
-                .broadcast()
-                .emit("attempts:warning", &warning)
-                .await
-                .ok();
-        }
+		if let Some(namespace) = self.socket_io.of("/attempts") {
+			namespace
+				.broadcast()
+				.emit("attempts:warning", &warning)
+				.await
+				.ok();
+		}
 
-        Ok(JsonResponse::Created().data(warning))
-    }
+		Ok(JsonResponse::Created().data(warning))
+	}
 
-    #[get("/{attemptId}/warnings")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
-    async fn get_attempt_warnings(&self, req: Request) -> WebResult {
-        let attempt_id = req.param::<AttemptId>("attemptId")?;
-        let warnings = self.warnings.get_warnings_for_attempt(attempt_id).await?;
+	#[get("/{attemptId}/warnings")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
+	async fn get_attempt_warnings(&self, req: Request) -> WebResult {
+		let attempt_id = req.param::<AttemptId>("attemptId")?;
+		let warnings = self.warnings.get_warnings_for_attempt(attempt_id).await?;
 
-        Ok(JsonResponse::Ok().data(warnings))
-    }
+		Ok(JsonResponse::Ok().data(warnings))
+	}
 
-    #[get("/quiz/{quizId}/warnings")]
-    #[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
-    async fn get_quiz_warnings(&self, req: Request) -> WebResult {
-        let quiz_id = req.param::<QuizId>("quizId")?;
-        let warnings = self.warnings.get_warnings_for_quiz(quiz_id).await?;
+	#[get("/quiz/{quizId}/warnings")]
+	#[interceptor(AuthzGuard, config = AuthzAction::AttemptViewWarnings)]
+	async fn get_quiz_warnings(&self, req: Request) -> WebResult {
+		let quiz_id = req.param::<QuizId>("quizId")?;
+		let warnings = self.warnings.get_warnings_for_quiz(quiz_id).await?;
 
-        Ok(JsonResponse::Ok().data(warnings))
-    }
+		Ok(JsonResponse::Ok().data(warnings))
+	}
 }

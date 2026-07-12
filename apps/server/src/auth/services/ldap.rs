@@ -1,7 +1,7 @@
 use crate::{
-    auth::{AuthConfig, AuthError},
-    shared::AppResult,
-    users::UserRole,
+	auth::{AuthConfig, AuthError},
+	shared::AppResult,
+	users::UserRole,
 };
 
 use ldap3::{Ldap, LdapConnAsync as LdapConn, LdapConnSettings, Scope, SearchEntry};
@@ -10,238 +10,238 @@ use sword::prelude::*;
 
 #[injectable(provider)]
 pub struct LdapClient {
-    config: AuthConfig,
+	config: AuthConfig,
 }
 
 pub struct LdapUserInfo {
-    pub email: String,
-    pub name: String,
-    pub role: UserRole,
+	pub email: String,
+	pub name: String,
+	pub role: UserRole,
 }
 
 impl LdapClient {
-    pub async fn new(config: AuthConfig) -> AppResult<Self> {
-        let admin_dn = format!("{},{}", config.ldap_admin_user, config.ldap_base_dn);
+	pub async fn new(config: AuthConfig) -> AppResult<Self> {
+		let admin_dn = format!("{},{}", config.ldap_admin_user, config.ldap_base_dn);
 
-        tracing::debug!("Iniciando conexión inicial con INF-UCT ldap: {}", admin_dn);
+		tracing::debug!("Iniciando conexión inicial con INF-UCT ldap: {}", admin_dn);
 
-        // let mut ldap = Self::ldap_connect(&config).await?;
+		// let mut ldap = Self::ldap_connect(&config).await?;
 
-        // ldap.simple_bind(&admin_dn, &config.ldap_admin_password)
-        //     .await
-        //     .inspect_err(|e| {
-        //         tracing::error!("[!] Error de conexión durante bind admin: {e}");
-        //     })
-        //     .map_err(AuthError::from)?
-        //     .success()
-        //     .inspect_err(|e| {
-        //         tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
-        //     })
-        //     .map_err(AuthError::from)?;
+		// ldap.simple_bind(&admin_dn, &config.ldap_admin_password)
+		//     .await
+		//     .inspect_err(|e| {
+		//         tracing::error!("[!] Error de conexión durante bind admin: {e}");
+		//     })
+		//     .map_err(AuthError::from)?
+		//     .success()
+		//     .inspect_err(|e| {
+		//         tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
+		//     })
+		//     .map_err(AuthError::from)?;
 
-        // tracing::info!("Conexión inicial con INF-UCT ldap exitosa: {}", admin_dn);
+		// tracing::info!("Conexión inicial con INF-UCT ldap exitosa: {}", admin_dn);
 
-        Ok(LdapClient { config })
-    }
+		Ok(LdapClient { config })
+	}
 
-    pub async fn authenticate(&self, username: &str, password: &str) -> AppResult<LdapUserInfo> {
-        let mut ldap = Self::ldap_connect(&self.config).await?;
+	pub async fn authenticate(&self, username: &str, password: &str) -> AppResult<LdapUserInfo> {
+		let mut ldap = Self::ldap_connect(&self.config).await?;
 
-        let admin_dn = format!(
-            "{},{}",
-            self.config.ldap_admin_user, self.config.ldap_base_dn
-        );
+		let admin_dn = format!(
+			"{},{}",
+			self.config.ldap_admin_user, self.config.ldap_base_dn
+		);
 
-        ldap.simple_bind(&admin_dn, &self.config.ldap_admin_password)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de conexión durante bind admin: {e}");
-            })
-            .map_err(AuthError::from)?
-            .success()
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
-            })
-            .map_err(AuthError::from)?;
+		ldap.simple_bind(&admin_dn, &self.config.ldap_admin_password)
+			.await
+			.inspect_err(|e| {
+				tracing::error!("[!] Error de conexión durante bind admin: {e}");
+			})
+			.map_err(AuthError::from)?
+			.success()
+			.inspect_err(|e| {
+				tracing::error!("[!] Error de autenticación como admin LDAP: {e}");
+			})
+			.map_err(AuthError::from)?;
 
-        let user_dn = self
-            .find_user_dn(&mut ldap, username)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("[!] No se pudo encontrar usuario {}: {}", username, e);
-            })?;
+		let user_dn = self
+			.find_user_dn(&mut ldap, username)
+			.await
+			.inspect_err(|e| {
+				tracing::error!("[!] No se pudo encontrar usuario {}: {}", username, e);
+			})?;
 
-        ldap.unbind()
-            .await
-            .inspect_err(|e| {
-                tracing::warn!("[!] Error al desautenticar admin: {e}");
-            })
-            .ok();
+		ldap.unbind()
+			.await
+			.inspect_err(|e| {
+				tracing::warn!("[!] Error al desautenticar admin: {e}");
+			})
+			.ok();
 
-        let mut ldap = Self::ldap_connect(&self.config).await?;
+		let mut ldap = Self::ldap_connect(&self.config).await?;
 
-        ldap.simple_bind(&user_dn, password)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de conexión durante bind de usuario: {e}");
-            })
-            .map_err(AuthError::from)?
-            .success()
-            .inspect_err(|e| {
-                tracing::warn!("[!] Autenticación fallida para usuario {}: {e}", username);
-            })
-            .map_err(|_| AuthError::LdapUsernameNotFound(username.into()))?;
+		ldap.simple_bind(&user_dn, password)
+			.await
+			.inspect_err(|e| {
+				tracing::error!("[!] Error de conexión durante bind de usuario: {e}");
+			})
+			.map_err(AuthError::from)?
+			.success()
+			.inspect_err(|e| {
+				tracing::warn!("[!] Autenticación fallida para usuario {}: {e}", username);
+			})
+			.map_err(|_| AuthError::LdapUsernameNotFound(username.into()))?;
 
-        tracing::info!("[✓] Usuario {} autenticado exitosamente", username);
+		tracing::info!("[✓] Usuario {} autenticado exitosamente", username);
 
-        let user_info = self.find_user_info(&mut ldap, &user_dn, username).await?;
+		let user_info = self.find_user_info(&mut ldap, &user_dn, username).await?;
 
-        self.ldap_unbind(&mut ldap).await;
+		self.ldap_unbind(&mut ldap).await;
 
-        Ok(user_info)
-    }
+		Ok(user_info)
+	}
 
-    async fn find_user_dn(&self, conn: &mut Ldap, username: &str) -> AppResult<String> {
-        let filter = format!("(uid={username})");
+	async fn find_user_dn(&self, conn: &mut Ldap, username: &str) -> AppResult<String> {
+		let filter = format!("(uid={username})");
 
-        let (results, _) = conn
-            .search(
-                &self.config.ldap_base_dn,
-                Scope::Subtree,
-                &filter,
-                vec!["dn"],
-            )
-            .await
-            .map_err(AuthError::from)?
-            .success()
-            .map_err(AuthError::from)?;
+		let (results, _) = conn
+			.search(
+				&self.config.ldap_base_dn,
+				Scope::Subtree,
+				&filter,
+				vec!["dn"],
+			)
+			.await
+			.map_err(AuthError::from)?
+			.success()
+			.map_err(AuthError::from)?;
 
-        if results.is_empty() {
-            tracing::error!("[!] Usuario no encontrado en LDAP: {}", username);
-            Err(AuthError::LdapUsernameNotFound(username.into()))?;
-        }
+		if results.is_empty() {
+			tracing::error!("[!] Usuario no encontrado en LDAP: {}", username);
+			Err(AuthError::LdapUsernameNotFound(username.into()))?;
+		}
 
-        let dn = results
-            .iter()
-            .map(|entry| SearchEntry::construct(entry.clone()).dn)
-            .collect::<Vec<String>>()
-            .first()
-            .ok_or_else(|| {
-                tracing::error!("[!] No se pudo extraer DN para el usuario: {}", username);
-                AuthError::LdapUsernameNotFound(username.into())
-            })?
-            .to_owned();
+		let dn = results
+			.iter()
+			.map(|entry| SearchEntry::construct(entry.clone()).dn)
+			.collect::<Vec<String>>()
+			.first()
+			.ok_or_else(|| {
+				tracing::error!("[!] No se pudo extraer DN para el usuario: {}", username);
+				AuthError::LdapUsernameNotFound(username.into())
+			})?
+			.to_owned();
 
-        tracing::debug!("[✓] DN encontrado: {}", dn);
+		tracing::debug!("[✓] DN encontrado: {}", dn);
 
-        Ok(dn)
-    }
+		Ok(dn)
+	}
 
-    async fn find_user_info(
-        &self,
-        conn: &mut Ldap,
-        user_dn: &str,
-        username: &str,
-    ) -> AppResult<LdapUserInfo> {
-        let filter = "(|(objectClass=inetOrgPerson)(objectClass=posixAccount))";
+	async fn find_user_info(
+		&self,
+		conn: &mut Ldap,
+		user_dn: &str,
+		username: &str,
+	) -> AppResult<LdapUserInfo> {
+		let filter = "(|(objectClass=inetOrgPerson)(objectClass=posixAccount))";
 
-        tracing::debug!("[*] Buscando atributos del usuario: {}", user_dn);
+		tracing::debug!("[*] Buscando atributos del usuario: {}", user_dn);
 
-        let (results, _) = conn
-            .search(
-                user_dn,
-                Scope::Base,
-                filter,
-                vec!["mail", "cn", "gidNumber"],
-            )
-            .await
-            .map_err(AuthError::from)?
-            .success()
-            .map_err(AuthError::from)?;
+		let (results, _) = conn
+			.search(
+				user_dn,
+				Scope::Base,
+				filter,
+				vec!["mail", "cn", "gidNumber"],
+			)
+			.await
+			.map_err(AuthError::from)?
+			.success()
+			.map_err(AuthError::from)?;
 
-        let entry = results.into_iter().next().ok_or_else(|| {
-            tracing::error!("[!] no se encontró correo electrónico para el usuario: {username}");
-            AuthError::LdapEmailNotFound
-        })?;
+		let entry = results.into_iter().next().ok_or_else(|| {
+			tracing::error!("[!] no se encontró correo electrónico para el usuario: {username}");
+			AuthError::LdapEmailNotFound
+		})?;
 
-        let entry = SearchEntry::construct(entry);
+		let entry = SearchEntry::construct(entry);
 
-        let email = entry
-            .attrs
-            .get("mail")
-            .and_then(|mail| mail.first().cloned())
-            .ok_or_else(|| {
-                tracing::error!(
-                    "[!] no se encontró correo electrónico para el usuario: {username}"
-                );
+		let email = entry
+			.attrs
+			.get("mail")
+			.and_then(|mail| mail.first().cloned())
+			.ok_or_else(|| {
+				tracing::error!(
+					"[!] no se encontró correo electrónico para el usuario: {username}"
+				);
 
-                AuthError::LdapEmailNotFound
-            })?;
+				AuthError::LdapEmailNotFound
+			})?;
 
-        let name = entry
-            .attrs
-            .get("cn")
-            .and_then(|full_name| full_name.first().cloned())
-            .unwrap_or_else(|| username.to_string());
+		let name = entry
+			.attrs
+			.get("cn")
+			.and_then(|full_name| full_name.first().cloned())
+			.unwrap_or_else(|| username.to_string());
 
-        let role = match entry.attrs.get("gidNumber").and_then(|g| g.first()) {
-            Some(gid) if gid == "600" => {
-                tracing::debug!("[*] Usuario {} es Func (gid=600)", username);
-                UserRole::Func
-            }
-            Some(gid) if gid == "500" => {
-                tracing::debug!("[*] Usuario {} es Student (gid=500)", username);
-                UserRole::Student
-            }
-            Some(gid) => {
-                tracing::warn!(
-                    "[LDAP] gidNumber desconocido para {}: {}, se asigna Student",
-                    username,
-                    gid
-                );
-                UserRole::Student
-            }
-            None => {
-                tracing::warn!(
-                    "[LDAP] usuario sin gidNumber: {}, se asigna Student",
-                    username
-                );
-                UserRole::Student
-            }
-        };
+		let role = match entry.attrs.get("gidNumber").and_then(|g| g.first()) {
+			Some(gid) if gid == "600" => {
+				tracing::debug!("[*] Usuario {} es Func (gid=600)", username);
+				UserRole::Func
+			}
+			Some(gid) if gid == "500" => {
+				tracing::debug!("[*] Usuario {} es Student (gid=500)", username);
+				UserRole::Student
+			}
+			Some(gid) => {
+				tracing::warn!(
+					"[LDAP] gidNumber desconocido para {}: {}, se asigna Student",
+					username,
+					gid
+				);
+				UserRole::Student
+			}
+			None => {
+				tracing::warn!(
+					"[LDAP] usuario sin gidNumber: {}, se asigna Student",
+					username
+				);
+				UserRole::Student
+			}
+		};
 
-        let user_info = LdapUserInfo { email, name, role };
+		let user_info = LdapUserInfo { email, name, role };
 
-        tracing::info!(
-            "[✓] Información obtenida para {}: email={}, role={:?}",
-            username,
-            user_info.email,
-            user_info.role
-        );
+		tracing::info!(
+			"[✓] Información obtenida para {}: email={}, role={:?}",
+			username,
+			user_info.email,
+			user_info.role
+		);
 
-        Ok(user_info)
-    }
+		Ok(user_info)
+	}
 
-    async fn ldap_connect(config: &AuthConfig) -> AppResult<Ldap> {
-        let settings = LdapConnSettings::new()
-            .set_conn_timeout(Duration::from_secs(5))
-            .set_no_tls_verify(true);
+	async fn ldap_connect(config: &AuthConfig) -> AppResult<Ldap> {
+		let settings = LdapConnSettings::new()
+			.set_conn_timeout(Duration::from_secs(5))
+			.set_no_tls_verify(true);
 
-        let (conn, ldap) = LdapConn::with_settings(settings, &config.ldap_url)
-            .await
-            .inspect_err(|e| {
-                tracing::error!("[!] Error de conexión LDAP: {e}");
-            })
-            .map_err(AuthError::from)?;
+		let (conn, ldap) = LdapConn::with_settings(settings, &config.ldap_url)
+			.await
+			.inspect_err(|e| {
+				tracing::error!("[!] Error de conexión LDAP: {e}");
+			})
+			.map_err(AuthError::from)?;
 
-        ldap3::drive!(conn);
+		ldap3::drive!(conn);
 
-        Ok(ldap)
-    }
+		Ok(ldap)
+	}
 
-    async fn ldap_unbind(&self, conn: &mut Ldap) {
-        if let Err(e) = conn.unbind().await {
-            tracing::warn!("[!] Error al desautenticar LDAP: {e}");
-        }
-    }
+	async fn ldap_unbind(&self, conn: &mut Ldap) {
+		if let Err(e) = conn.unbind().await {
+			tracing::warn!("[!] Error al desautenticar LDAP: {e}");
+		}
+	}
 }

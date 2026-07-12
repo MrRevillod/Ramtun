@@ -12,166 +12,166 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct QuestionBankService {
-    policy: Arc<QuestionBankPolicy>,
-    repository: Arc<QuestionBankRepository>,
-    snapshots: Arc<SnapshotService>,
-    tx: Arc<TransactionManager>,
+	policy: Arc<QuestionBankPolicy>,
+	repository: Arc<QuestionBankRepository>,
+	snapshots: Arc<SnapshotService>,
+	tx: Arc<TransactionManager>,
 }
 
 impl QuestionBankService {
-    pub async fn list_for_course(
-        &self,
-        current_user: &User,
-        course_id: &CourseId,
-    ) -> AppResult<Vec<QuestionBank>> {
-        self.policy
-            .require_accessible_course(current_user, course_id)
-            .await?;
+	pub async fn list_for_course(
+		&self,
+		current_user: &User,
+		course_id: &CourseId,
+	) -> AppResult<Vec<QuestionBank>> {
+		self.policy
+			.require_accessible_course(current_user, course_id)
+			.await?;
 
-        let banks = self.repository.list_by_course(course_id).await?;
+		let banks = self.repository.list_by_course(course_id).await?;
 
-        Ok(banks)
-    }
+		Ok(banks)
+	}
 
-    pub async fn get_one(
-        &self,
-        current_user: &User,
-        bank_id: &QuestionBankId,
-    ) -> AppResult<QuestionBank> {
-        let bank = self
-            .policy
-            .require_accessible_bank(current_user, bank_id)
-            .await?;
+	pub async fn get_one(
+		&self,
+		current_user: &User,
+		bank_id: &QuestionBankId,
+	) -> AppResult<QuestionBank> {
+		let bank = self
+			.policy
+			.require_accessible_bank(current_user, bank_id)
+			.await?;
 
-        Ok(bank)
-    }
+		Ok(bank)
+	}
 
-    pub async fn create(&self, current_user: &User, input: CreateQuestionBankDto) -> AppResult<()> {
-        self.policy
-            .require_accessible_course(current_user, &input.course_id)
-            .await?;
+	pub async fn create(&self, current_user: &User, input: CreateQuestionBankDto) -> AppResult<()> {
+		self.policy
+			.require_accessible_course(current_user, &input.course_id)
+			.await?;
 
-        let questions = input
-            .questions
-            .iter()
-            .map(Question::from)
-            .collect::<Vec<_>>();
+		let questions = input
+			.questions
+			.iter()
+			.map(Question::from)
+			.collect::<Vec<_>>();
 
-        let bank = QuestionBank::builder()
-            .course_id(input.course_id)
-            .name(input.name)
-            .questions(questions)
-            .created_at(Utc::now())
-            .build();
+		let bank = QuestionBank::builder()
+			.course_id(input.course_id)
+			.name(input.name)
+			.questions(questions)
+			.created_at(Utc::now())
+			.build();
 
-        let mut tx = self.tx.begin().await?;
+		let mut tx = self.tx.begin().await?;
 
-        self.repository.save(&mut tx, &bank).await?;
+		self.repository.save(&mut tx, &bank).await?;
 
-        tx.commit().await?;
+		tx.commit().await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn update(
-        &self,
-        current_user: &User,
-        bank_id: &QuestionBankId,
-        input: UpdateQuestionBankDto,
-    ) -> AppResult<()> {
-        let mut bank = self
-            .policy
-            .require_accessible_bank(current_user, bank_id)
-            .await?;
+	pub async fn update(
+		&self,
+		current_user: &User,
+		bank_id: &QuestionBankId,
+		input: UpdateQuestionBankDto,
+	) -> AppResult<()> {
+		let mut bank = self
+			.policy
+			.require_accessible_bank(current_user, bank_id)
+			.await?;
 
-        if let Some(name) = input.name {
-            bank.name = name;
-        }
+		if let Some(name) = input.name {
+			bank.name = name;
+		}
 
-        if let Some(questions) = input.questions {
-            bank.questions = questions.iter().map(Question::from).collect();
-        }
+		if let Some(questions) = input.questions {
+			bank.questions = questions.iter().map(Question::from).collect();
+		}
 
-        let linked_quizzes = self.snapshots.list_linked_quizzes(&bank.id).await?;
-        self.ensure_not_linked_to_running_quiz(&linked_quizzes)?;
+		let linked_quizzes = self.snapshots.list_linked_quizzes(&bank.id).await?;
+		self.ensure_not_linked_to_running_quiz(&linked_quizzes)?;
 
-        let mut tx = self.tx.begin().await?;
+		let mut tx = self.tx.begin().await?;
 
-        self.repository.save(&mut tx, &bank).await?;
-        self.sync_not_started_snapshots(&mut tx, &linked_quizzes)
-            .await?;
+		self.repository.save(&mut tx, &bank).await?;
+		self.sync_not_started_snapshots(&mut tx, &linked_quizzes)
+			.await?;
 
-        tx.commit().await?;
+		tx.commit().await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn soft_delete(
-        &self,
-        current_user: &User,
-        bank_id: &QuestionBankId,
-    ) -> AppResult<()> {
-        let bank = self
-            .policy
-            .require_accessible_bank(current_user, bank_id)
-            .await?;
+	pub async fn soft_delete(
+		&self,
+		current_user: &User,
+		bank_id: &QuestionBankId,
+	) -> AppResult<()> {
+		let bank = self
+			.policy
+			.require_accessible_bank(current_user, bank_id)
+			.await?;
 
-        let linked_quizzes = self.snapshots.list_linked_quizzes(&bank.id).await?;
-        self.ensure_not_linked_to_running_quiz(&linked_quizzes)?;
+		let linked_quizzes = self.snapshots.list_linked_quizzes(&bank.id).await?;
+		self.ensure_not_linked_to_running_quiz(&linked_quizzes)?;
 
-        let mut tx = self.tx.begin().await?;
+		let mut tx = self.tx.begin().await?;
 
-        if !self.repository.soft_delete(&mut tx, &bank.id).await? {
-            Err(QuestionBankError::NotFound(bank.id.to_string()))?;
-        }
+		if !self.repository.soft_delete(&mut tx, &bank.id).await? {
+			Err(QuestionBankError::NotFound(bank.id.to_string()))?;
+		}
 
-        self.sync_not_started_snapshots(&mut tx, &linked_quizzes)
-            .await?;
+		self.sync_not_started_snapshots(&mut tx, &linked_quizzes)
+			.await?;
 
-        tx.commit().await?;
+		tx.commit().await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    fn ensure_not_linked_to_running_quiz(&self, quizzes: &[Quiz]) -> AppResult<()> {
-        let now = Utc::now();
+	fn ensure_not_linked_to_running_quiz(&self, quizzes: &[Quiz]) -> AppResult<()> {
+		let now = Utc::now();
 
-        if quizzes
-            .iter()
-            .any(|quiz| quiz.results_published_at.is_none() && quiz.starts_at <= now)
-        {
-            Err(QuestionBankError::LockedByRunningQuiz)?;
-        }
+		if quizzes
+			.iter()
+			.any(|quiz| quiz.results_published_at.is_none() && quiz.starts_at <= now)
+		{
+			Err(QuestionBankError::LockedByRunningQuiz)?;
+		}
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    async fn sync_not_started_snapshots(&self, tx: &mut Tx<'_>, quizzes: &[Quiz]) -> AppResult<()> {
-        let now = Utc::now();
+	async fn sync_not_started_snapshots(&self, tx: &mut Tx<'_>, quizzes: &[Quiz]) -> AppResult<()> {
+		let now = Utc::now();
 
-        for quiz in quizzes {
-            if quiz.results_published_at.is_some() || quiz.starts_at <= now {
-                continue;
-            }
+		for quiz in quizzes {
+			if quiz.results_published_at.is_some() || quiz.starts_at <= now {
+				continue;
+			}
 
-            let questions = self
-                .snapshots
-                .list_questions_for_linked_banks(&quiz.id)
-                .await?;
+			let questions = self
+				.snapshots
+				.list_questions_for_linked_banks(&quiz.id)
+				.await?;
 
-            if quiz.question_count as usize > questions.len() {
-                Err(QuestionBankError::InvalidQuestionCountAfterBankUpdate)?;
-            }
+			if quiz.question_count as usize > questions.len() {
+				Err(QuestionBankError::InvalidQuestionCountAfterBankUpdate)?;
+			}
 
-            if !self
-                .snapshots
-                .update_questions(tx, quiz.snapshot_id, &questions)
-                .await?
-            {
-                Err(QuestionBankError::SnapshotNotFound)?;
-            }
-        }
+			if !self
+				.snapshots
+				.update_questions(tx, quiz.snapshot_id, &questions)
+				.await?
+			{
+				Err(QuestionBankError::SnapshotNotFound)?;
+			}
+		}
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

@@ -5,11 +5,11 @@ use sqlx::Type;
 use sqlx::prelude::FromRow;
 
 use crate::{
-    banks::QuestionId,
-    courses::CourseId,
-    quizzes::{CertaintyLevel, QuizId},
-    shared::{Entity, Id},
-    users::UserId,
+	banks::QuestionId,
+	courses::CourseId,
+	quizzes::{CertaintyLevel, QuizId},
+	shared::{Entity, Id},
+	users::UserId,
 };
 
 pub type AttemptId = Id<Attempt>;
@@ -17,67 +17,67 @@ pub type AttemptWarningId = Id<AttemptWarning>;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, FromRow)]
 pub struct Attempt {
-    #[builder(default = AttemptId::new())]
-    pub id: AttemptId,
-    pub student_id: UserId,
-    pub quiz_id: QuizId,
-    pub question_order: Vec<QuestionId>,
-    pub score: Option<i16>,
-    pub grade: Option<f64>,
-    pub started_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-    pub submitted_at: Option<DateTime<Utc>>,
-    pub results_viewed_at: Option<DateTime<Utc>>,
-    pub deleted_at: Option<DateTime<Utc>>,
+	#[builder(default = AttemptId::new())]
+	pub id: AttemptId,
+	pub student_id: UserId,
+	pub quiz_id: QuizId,
+	pub question_order: Vec<QuestionId>,
+	pub score: Option<i16>,
+	pub grade: Option<f64>,
+	pub started_at: DateTime<Utc>,
+	pub expires_at: DateTime<Utc>,
+	pub submitted_at: Option<DateTime<Utc>>,
+	pub results_viewed_at: Option<DateTime<Utc>>,
+	pub deleted_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Builder, FromRow)]
 pub struct AttemptAnswer {
-    pub attempt_id: AttemptId,
-    pub question_id: QuestionId,
-    pub answer_index: i16,
-    pub certainty_level: Option<CertaintyLevel>,
-    pub is_correct: Option<bool>,
-    pub awarded_points: Option<i16>,
+	pub attempt_id: AttemptId,
+	pub question_id: QuestionId,
+	pub answer_index: i16,
+	pub certainty_level: Option<CertaintyLevel>,
+	pub is_correct: Option<bool>,
+	pub awarded_points: Option<i16>,
 }
 
 impl Entity for Attempt {
-    fn key_name() -> &'static str {
-        "attempt"
-    }
+	fn key_name() -> &'static str {
+		"attempt"
+	}
 }
 
 impl Entity for AttemptWarning {
-    fn key_name() -> &'static str {
-        "attempt_warning"
-    }
+	fn key_name() -> &'static str {
+		"attempt_warning"
+	}
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Copy)]
 #[sqlx(type_name = "warning_type", rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum WarningType {
-    ContextMenu,
-    CopyAttempt,
-    SearchAttempt,
-    Screenshot,
-    AltTab,
+	ContextMenu,
+	CopyAttempt,
+	SearchAttempt,
+	Screenshot,
+	AltTab,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct AttemptWarning {
-    pub id: AttemptWarningId,
-    pub attempt_id: AttemptId,
-    pub warning_type: WarningType,
-    pub details: String,
-    pub sequence_number: i16,
-    pub created_at: DateTime<Utc>,
+	pub id: AttemptWarningId,
+	pub attempt_id: AttemptId,
+	pub warning_type: WarningType,
+	pub details: String,
+	pub sequence_number: i16,
+	pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct AttemptFilter {
-    pub course_id: CourseId,
-    pub quiz_id: QuizId,
-    pub student_id: Option<UserId>,
+	pub course_id: CourseId,
+	pub quiz_id: QuizId,
+	pub student_id: Option<UserId>,
 }

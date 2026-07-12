@@ -6,67 +6,67 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct UsersService {
-    policy: Arc<UserPolicy>,
-    users: Arc<UserRepository>,
-    hasher: Arc<Hasher>,
+	policy: Arc<UserPolicy>,
+	users: Arc<UserRepository>,
+	hasher: Arc<Hasher>,
 }
 
 impl UsersService {
-    pub async fn list_users(&self, query: SearchUsersQuery) -> AppResult<Vec<UserView>> {
-        self.users.list_users(UserFilter::from(query)).await
-    }
+	pub async fn list_users(&self, query: SearchUsersQuery) -> AppResult<Vec<UserView>> {
+		self.users.list_users(UserFilter::from(query)).await
+	}
 
-    pub async fn find_by_id(&self, user_id: &UserId) -> AppResult<UserView> {
-        let Some(user) = self.users.find_by_id(user_id).await? else {
-            return Err(UsersError::NotFound(*user_id))?;
-        };
+	pub async fn find_by_id(&self, user_id: &UserId) -> AppResult<UserView> {
+		let Some(user) = self.users.find_by_id(user_id).await? else {
+			return Err(UsersError::NotFound(*user_id))?;
+		};
 
-        Ok(user.into())
-    }
+		Ok(user.into())
+	}
 
-    pub async fn list_collaborator_candidates(
-        &self,
-        query: SearchUsersQuery,
-    ) -> AppResult<Vec<UserView>> {
-        let filter = UserFilter::from(query);
+	pub async fn list_collaborator_candidates(
+		&self,
+		query: SearchUsersQuery,
+	) -> AppResult<Vec<UserView>> {
+		let filter = UserFilter::from(query);
 
-        if let Some(roles) = &filter.roles
-            && roles.contains(&UserRole::Student)
-        {
-            Err(UsersError::InvalidUserRole)?;
-        }
+		if let Some(roles) = &filter.roles
+			&& roles.contains(&UserRole::Student)
+		{
+			Err(UsersError::InvalidUserRole)?;
+		}
 
-        let mut candidates = self.users.list_users(filter).await?;
-        candidates.retain(|u| u.role != UserRole::Admin);
+		let mut candidates = self.users.list_users(filter).await?;
+		candidates.retain(|u| u.role != UserRole::Admin);
 
-        Ok(candidates)
-    }
+		Ok(candidates)
+	}
 
-    pub async fn update_role(&self, user_id: &UserId, input: UpdateUserRoleDto) -> AppResult<()> {
-        let mut target = self
-            .users
-            .find_by_id(user_id)
-            .await?
-            .ok_or(UsersError::NotFound(*user_id))?;
+	pub async fn update_role(&self, user_id: &UserId, input: UpdateUserRoleDto) -> AppResult<()> {
+		let mut target = self
+			.users
+			.find_by_id(user_id)
+			.await?
+			.ok_or(UsersError::NotFound(*user_id))?;
 
-        target.role = UserRole::from(input.role);
+		target.role = UserRole::from(input.role);
 
-        self.users.save(&target).await?;
+		self.users.save(&target).await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    pub async fn update_password(&self, input: UpdatePasswordDto) -> AppResult<()> {
-        let mut target = self
-            .users
-            .find_by_email(&input.email)
-            .await?
-            .ok_or(UsersError::UserNotFound)?;
+	pub async fn update_password(&self, input: UpdatePasswordDto) -> AppResult<()> {
+		let mut target = self
+			.users
+			.find_by_email(&input.email)
+			.await?
+			.ok_or(UsersError::UserNotFound)?;
 
-        target.password_hash = self.hasher.hash(&input.password).await?;
+		target.password_hash = self.hasher.hash(&input.password).await?;
 
-        self.users.save(&target).await?;
+		self.users.save(&target).await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

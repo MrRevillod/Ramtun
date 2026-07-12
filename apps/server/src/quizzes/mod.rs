@@ -19,14 +19,14 @@ use sword::prelude::*;
 pub struct QuizzesModule;
 
 impl Module for QuizzesModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<QuizController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<QuizController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<QuizPolicy>();
-        components.register::<QuizRepository>();
-        components.register::<QuizService>();
-        components.register::<QuizCodeGenerator>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<QuizPolicy>();
+		components.register::<QuizRepository>();
+		components.register::<QuizService>();
+		components.register::<QuizCodeGenerator>();
+	}
 }

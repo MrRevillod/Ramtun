@@ -8,55 +8,55 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct CoursePolicy {
-    repository: Arc<CourseRepository>,
+	repository: Arc<CourseRepository>,
 }
 
 impl CoursePolicy {
-    pub async fn require_accessible_course(
-        &self,
-        current_user: &User,
-        course_id: &CourseId,
-    ) -> AppResult<Course> {
-        let Some(course) = self.repository.find_by_id(course_id).await? else {
-            return Err(CoursesError::NotFound(course_id.to_string()))?;
-        };
+	pub async fn require_accessible_course(
+		&self,
+		current_user: &User,
+		course_id: &CourseId,
+	) -> AppResult<Course> {
+		let Some(course) = self.repository.find_by_id(course_id).await? else {
+			return Err(CoursesError::NotFound(course_id.to_string()))?;
+		};
 
-        if current_user.role == UserRole::Admin {
-            return Ok(course);
-        }
+		if current_user.role == UserRole::Admin {
+			return Ok(course);
+		}
 
-        if !self
-            .repository
-            .is_member(&course.id, &current_user.id)
-            .await?
-        {
-            Err(CoursesError::Forbidden)?;
-        }
+		if !self
+			.repository
+			.is_member(&course.id, &current_user.id)
+			.await?
+		{
+			Err(CoursesError::Forbidden)?;
+		}
 
-        Ok(course)
-    }
+		Ok(course)
+	}
 
-    pub async fn require_manager_member(
-        &self,
-        current_user: &User,
-        course_id: &CourseId,
-    ) -> AppResult<Course> {
-        let course = self
-            .require_accessible_course(current_user, course_id)
-            .await?;
+	pub async fn require_manager_member(
+		&self,
+		current_user: &User,
+		course_id: &CourseId,
+	) -> AppResult<Course> {
+		let course = self
+			.require_accessible_course(current_user, course_id)
+			.await?;
 
-        if current_user.role == UserRole::Admin {
-            return Ok(course);
-        }
+		if current_user.role == UserRole::Admin {
+			return Ok(course);
+		}
 
-        if !self
-            .repository
-            .is_manager_member(course_id, &current_user.id)
-            .await?
-        {
-            Err(CoursesError::OnlyFuncCanManageMembers)?;
-        }
+		if !self
+			.repository
+			.is_manager_member(course_id, &current_user.id)
+			.await?
+		{
+			Err(CoursesError::OnlyFuncCanManageMembers)?;
+		}
 
-        Ok(course)
-    }
+		Ok(course)
+	}
 }

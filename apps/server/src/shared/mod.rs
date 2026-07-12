@@ -20,20 +20,20 @@ pub use jsonwebtoken::JsonWebTokenService;
 pub struct SharedModule;
 
 impl Module for SharedModule {
-    async fn register_providers(config: &Config, providers: &ProviderRegistry) {
-        let db_config = config.expect::<DatabaseConfig>();
-        let database = Database::new(db_config).await;
+	async fn register_providers(config: &Config, providers: &ProviderRegistry) {
+		let db_config = config.expect::<DatabaseConfig>();
+		let database = Database::new(db_config).await;
 
-        providers.register(database);
+		providers.register(database);
 
-        let hasher_config = config.expect::<HasherConfig>();
-        let hasher = Hasher::new(&hasher_config);
+		let hasher_config = config.expect::<HasherConfig>();
+		let hasher = Hasher::new(&hasher_config);
 
-        providers.register(hasher);
-    }
+		providers.register(hasher);
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<JsonWebTokenService>();
-        components.register::<TransactionManager>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<JsonWebTokenService>();
+		components.register::<TransactionManager>();
+	}
 }

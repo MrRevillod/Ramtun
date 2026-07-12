@@ -11,92 +11,92 @@ use sword::web::*;
 #[controller(kind = Controller::Web, path = "/courses")]
 #[interceptor(SessionCheck)]
 pub struct CoursesController {
-    courses: Arc<CoursesService>,
+	courses: Arc<CoursesService>,
 }
 
 impl CoursesController {
-    #[get("/")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseList)]
-    pub async fn get_courses(&self, req: Request) -> WebResult {
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-        let courses = self.courses.list_for_user(current_user).await?;
+	#[get("/")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseList)]
+	pub async fn get_courses(&self, req: Request) -> WebResult {
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+		let courses = self.courses.list_for_user(current_user).await?;
 
-        Ok(JsonResponse::Ok().data(courses))
-    }
+		Ok(JsonResponse::Ok().data(courses))
+	}
 
-    #[get("/{courseId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseRead)]
-    pub async fn get_course(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/{courseId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseRead)]
+	pub async fn get_course(&self, req: Request) -> WebResult {
+		let course_id = req.param::<CourseId>("courseId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let course = self.courses.get_one(current_user, &course_id).await?;
+		let course = self.courses.get_one(current_user, &course_id).await?;
 
-        Ok(JsonResponse::Ok().data(course))
-    }
+		Ok(JsonResponse::Ok().data(course))
+	}
 
-    #[post("/")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseCreate)]
-    pub async fn create_course(&self, req: Request) -> WebResult {
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-        let input = req.body_validator::<CreateCourseDto>()?;
+	#[post("/")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseCreate)]
+	pub async fn create_course(&self, req: Request) -> WebResult {
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+		let input = req.body_validator::<CreateCourseDto>()?;
 
-        let course = self.courses.create(current_user, input).await?;
-        let members = self.courses.list_members(current_user, &course.id).await?;
+		let course = self.courses.create(current_user, input).await?;
+		let members = self.courses.list_members(current_user, &course.id).await?;
 
-        let view = CourseView::from((&course, &members));
+		let view = CourseView::from((&course, &members));
 
-        Ok(JsonResponse::Created().data(view))
-    }
+		Ok(JsonResponse::Created().data(view))
+	}
 
-    #[delete("/{courseId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseDelete)]
-    pub async fn delete_course(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[delete("/{courseId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseDelete)]
+	pub async fn delete_course(&self, req: Request) -> WebResult {
+		let course_id = req.param::<CourseId>("courseId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        self.courses.soft_delete(current_user, &course_id).await?;
+		self.courses.soft_delete(current_user, &course_id).await?;
 
-        Ok(JsonResponse::Ok().message("Curso eliminado correctamente"))
-    }
+		Ok(JsonResponse::Ok().message("Curso eliminado correctamente"))
+	}
 
-    #[get("/{courseId}/members")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseRead)]
-    pub async fn list_members(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+	#[get("/{courseId}/members")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseRead)]
+	pub async fn list_members(&self, req: Request) -> WebResult {
+		let course_id = req.param::<CourseId>("courseId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        let members = self.courses.list_members(current_user, &course_id).await?;
+		let members = self.courses.list_members(current_user, &course_id).await?;
 
-        Ok(JsonResponse::Ok().data(members))
-    }
+		Ok(JsonResponse::Ok().data(members))
+	}
 
-    #[post("/{courseId}/members")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseManageMembers)]
-    pub async fn add_member(&self, req: Request) -> WebResult {
-        let course_id = req.param::<CourseId>("courseId")?;
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
-        let input = req.body_validator::<AddCourseMemberDto>()?;
+	#[post("/{courseId}/members")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseManageMembers)]
+	pub async fn add_member(&self, req: Request) -> WebResult {
+		let course_id = req.param::<CourseId>("courseId")?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+		let input = req.body_validator::<AddCourseMemberDto>()?;
 
-        self.courses
-            .add_member(current_user, &course_id, input)
-            .await?;
+		self.courses
+			.add_member(current_user, &course_id, input)
+			.await?;
 
-        Ok(JsonResponse::Ok().message("Miembro agregado al curso correctamente"))
-    }
+		Ok(JsonResponse::Ok().message("Miembro agregado al curso correctamente"))
+	}
 
-    #[delete("/{courseId}/members/{userId}")]
-    #[interceptor(AuthzGuard, config = AuthzAction::CourseManageMembers)]
-    pub async fn remove_member(&self, req: Request) -> WebResult {
-        let user_id = req.param::<UserId>("userId")?;
-        let course_id = req.param::<CourseId>("courseId")?;
+	#[delete("/{courseId}/members/{userId}")]
+	#[interceptor(AuthzGuard, config = AuthzAction::CourseManageMembers)]
+	pub async fn remove_member(&self, req: Request) -> WebResult {
+		let user_id = req.param::<UserId>("userId")?;
+		let course_id = req.param::<CourseId>("courseId")?;
 
-        let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
+		let current_user = req.user().ok_or_else(JsonResponse::Unauthorized)?;
 
-        self.courses
-            .remove_member(current_user, &course_id, &user_id)
-            .await?;
+		self.courses
+			.remove_member(current_user, &course_id, &user_id)
+			.await?;
 
-        Ok(JsonResponse::Ok().message("Miembro eliminado del curso correctamente"))
-    }
+		Ok(JsonResponse::Ok().message("Miembro eliminado del curso correctamente"))
+	}
 }

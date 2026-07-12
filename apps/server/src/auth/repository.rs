@@ -1,6 +1,6 @@
 use crate::{
-    auth::{Session, SessionId},
-    shared::{AppResult, Database},
+	auth::{Session, SessionId},
+	shared::{AppResult, Database},
 };
 use chrono::{DateTime, Utc};
 use std::sync::Arc;
@@ -8,13 +8,13 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct SessionRepository {
-    database: Arc<Database>,
+	database: Arc<Database>,
 }
 
 impl SessionRepository {
-    pub async fn save(&self, session: &Session) -> AppResult<Session> {
-        let session = sqlx::query_as::<_, Session>(
-            "INSERT INTO sessions (
+	pub async fn save(&self, session: &Session) -> AppResult<Session> {
+		let session = sqlx::query_as::<_, Session>(
+			"INSERT INTO sessions (
                 id,
                 user_id,
                 refresh_token_hash,
@@ -32,67 +32,67 @@ impl SessionRepository {
                 refresh_expires_at = EXCLUDED.refresh_expires_at,
                 revoked_at = EXCLUDED.revoked_at
             RETURNING *",
-        )
-        .bind(session.id)
-        .bind(session.user_id)
-        .bind(session.refresh_token_hash.clone())
-        .bind(session.created_at)
-        .bind(session.expires_at)
-        .bind(session.refresh_expires_at)
-        .bind(session.revoked_at)
-        .fetch_one(self.database.get_pool())
-        .await?;
+		)
+		.bind(session.id)
+		.bind(session.user_id)
+		.bind(session.refresh_token_hash.clone())
+		.bind(session.created_at)
+		.bind(session.expires_at)
+		.bind(session.refresh_expires_at)
+		.bind(session.revoked_at)
+		.fetch_one(self.database.get_pool())
+		.await?;
 
-        Ok(session)
-    }
+		Ok(session)
+	}
 
-    pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
-        let res = sqlx::query_as::<_, Session>(
-            "SELECT * FROM sessions
+	pub async fn is_active(&self, id: &SessionId) -> AppResult<bool> {
+		let res = sqlx::query_as::<_, Session>(
+			"SELECT * FROM sessions
              WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-        )
-        .bind(id)
-        .fetch_optional(self.database.get_pool())
-        .await?;
+		)
+		.bind(id)
+		.fetch_optional(self.database.get_pool())
+		.await?;
 
-        Ok(res.is_some())
-    }
+		Ok(res.is_some())
+	}
 
-    pub async fn find_active_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
-        let res = sqlx::query_as::<_, Session>(
-            "SELECT * FROM sessions
+	pub async fn find_active_by_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
+		let res = sqlx::query_as::<_, Session>(
+			"SELECT * FROM sessions
              WHERE id = $1 AND revoked_at IS NULL AND expires_at > NOW()",
-        )
-        .bind(id)
-        .fetch_optional(self.database.get_pool())
-        .await?;
+		)
+		.bind(id)
+		.fetch_optional(self.database.get_pool())
+		.await?;
 
-        Ok(res)
-    }
+		Ok(res)
+	}
 
-    pub async fn find_active_by_refresh_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
-        let res = sqlx::query_as::<_, Session>(
-            "SELECT * FROM sessions
+	pub async fn find_active_by_refresh_id(&self, id: &SessionId) -> AppResult<Option<Session>> {
+		let res = sqlx::query_as::<_, Session>(
+			"SELECT * FROM sessions
              WHERE id = $1 AND revoked_at IS NULL AND refresh_expires_at > NOW()",
-        )
-        .bind(id)
-        .fetch_optional(self.database.get_pool())
-        .await?;
+		)
+		.bind(id)
+		.fetch_optional(self.database.get_pool())
+		.await?;
 
-        Ok(res)
-    }
+		Ok(res)
+	}
 
-    pub async fn update_expires_at(
-        &self,
-        id: &SessionId,
-        expires_at: DateTime<Utc>,
-    ) -> AppResult<()> {
-        sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
-            .bind(expires_at)
-            .bind(id)
-            .execute(self.database.get_pool())
-            .await?;
+	pub async fn update_expires_at(
+		&self,
+		id: &SessionId,
+		expires_at: DateTime<Utc>,
+	) -> AppResult<()> {
+		sqlx::query("UPDATE sessions SET expires_at = $1 WHERE id = $2")
+			.bind(expires_at)
+			.bind(id)
+			.execute(self.database.get_pool())
+			.await?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

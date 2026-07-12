@@ -1,6 +1,6 @@
 use crate::{
-    shared::{Entity, Id},
-    users::UserId,
+	shared::{Entity, Id},
+	users::UserId,
 };
 
 use bon::Builder;
@@ -13,34 +13,34 @@ use uuid::Uuid;
 #[sqlx(type_name = "course_member_role", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum CourseMemberRole {
-    Assistant,
-    Func,
+	Assistant,
+	Func,
 }
 
 pub type CourseId = Id<Course>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder, Hash, PartialEq, Eq, Default)]
 pub struct Course {
-    #[builder(default = CourseId::new())]
-    pub id: CourseId,
-    pub name: String,
-    pub code: String,
-    pub year: i16,
-    pub deleted_at: Option<DateTime<Utc>>,
+	#[builder(default = CourseId::new())]
+	pub id: CourseId,
+	pub name: String,
+	pub code: String,
+	pub year: i16,
+	pub deleted_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for Course {
-    fn key_name() -> &'static str {
-        "course"
-    }
+	fn key_name() -> &'static str {
+		"course"
+	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
 #[serde(rename_all = "camelCase")]
 pub struct CourseMember {
-    #[builder(default = Uuid::new_v4())]
-    pub id: Uuid,
-    pub course_id: CourseId,
-    pub user_id: UserId,
-    pub role: CourseMemberRole,
+	#[builder(default = Uuid::new_v4())]
+	pub id: Uuid,
+	pub course_id: CourseId,
+	pub user_id: UserId,
+	pub role: CourseMemberRole,
 }

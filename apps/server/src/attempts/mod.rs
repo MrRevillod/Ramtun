@@ -1,6 +1,6 @@
 mod controllers {
-    pub mod socketio;
-    pub mod web;
+	pub mod socketio;
+	pub mod web;
 }
 
 mod dtos;
@@ -27,17 +27,17 @@ pub use self::services::warnings::WarningService;
 pub struct AttemptsModule;
 
 impl Module for AttemptsModule {
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<AttemptRepository>();
-        components.register::<AttemptsService>();
-        components.register::<QuestionService>();
-        components.register::<GradingService>();
-        components.register::<AnswerService>();
-        components.register::<WarningService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<AttemptRepository>();
+		components.register::<AttemptsService>();
+		components.register::<QuestionService>();
+		components.register::<GradingService>();
+		components.register::<AnswerService>();
+		components.register::<WarningService>();
+	}
 
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<AttemptsController>();
-        controllers.register::<AttemptsSocketIoController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<AttemptsController>();
+		controllers.register::<AttemptsSocketIoController>();
+	}
 }

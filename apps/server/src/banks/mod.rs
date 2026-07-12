@@ -19,13 +19,13 @@ pub use service::*;
 pub struct QuestionBankModule;
 
 impl Module for QuestionBankModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<QuestionBankController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<QuestionBankController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<QuestionBankPolicy>();
-        components.register::<QuestionBankRepository>();
-        components.register::<QuestionBankService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<QuestionBankPolicy>();
+		components.register::<QuestionBankRepository>();
+		components.register::<QuestionBankService>();
+	}
 }

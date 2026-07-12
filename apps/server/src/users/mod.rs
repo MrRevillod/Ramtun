@@ -19,13 +19,13 @@ pub use service::UsersService;
 pub struct UsersModule;
 
 impl Module for UsersModule {
-    fn register_controllers(controllers: &ControllerRegistry) {
-        controllers.register::<UsersController>();
-    }
+	fn register_controllers(controllers: &ControllerRegistry) {
+		controllers.register::<UsersController>();
+	}
 
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<UserPolicy>();
-        components.register::<UserRepository>();
-        components.register::<UsersService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<UserPolicy>();
+		components.register::<UserRepository>();
+		components.register::<UsersService>();
+	}
 }

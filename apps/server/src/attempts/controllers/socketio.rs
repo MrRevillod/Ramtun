@@ -8,14 +8,14 @@ use sword::socketio::*;
 pub struct AttemptsSocketIoController;
 
 impl AttemptsSocketIoController {
-    #[on("connection")]
-    async fn on_connect(&self, socket: SocketContext) {
-        tracing::info!("New socket /attempts connection: {}", socket.id());
-        socket.emit("attempts:connected", "OK").ok();
-    }
+	#[on("connection")]
+	async fn on_connect(&self, socket: SocketContext) {
+		tracing::info!("New socket /attempts connection: {}", socket.id());
+		socket.emit("attempts:connected", "OK").ok();
+	}
 
-    #[on("disconnection")]
-    async fn on_disconnect(&self, socket: SocketContext) {
-        tracing::info!("Socket /attempts disconnected: {}", socket.id());
-    }
+	#[on("disconnection")]
+	async fn on_disconnect(&self, socket: SocketContext) {
+		tracing::info!("Socket /attempts disconnected: {}", socket.id());
+	}
 }

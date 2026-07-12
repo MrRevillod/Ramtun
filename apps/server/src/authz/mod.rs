@@ -10,46 +10,46 @@ pub use service::AuthzService;
 
 #[derive(Clone, Copy, Debug)]
 pub enum AuthzAction {
-    CourseList,
-    CourseRead,
-    CourseCreate,
-    CourseDelete,
-    CourseManageMembers,
+	CourseList,
+	CourseRead,
+	CourseCreate,
+	CourseDelete,
+	CourseManageMembers,
 
-    BankList,
-    BankRead,
-    BankCreate,
-    BankUpdate,
-    BankDelete,
+	BankList,
+	BankRead,
+	BankCreate,
+	BankUpdate,
+	BankDelete,
 
-    QuizReadManaged,
-    QuizListManaged,
-    QuizCreate,
-    QuizUpdateManaged,
-    QuizManageCollaborators,
-    QuizJoinByCode,
-    QuizViewAttemptResultByCode,
-    QuizDeleteManaged,
-    QuizCloseManaged,
-    QuizPublishResultsManaged,
-    QuizCloseAndPublishManaged,
+	QuizReadManaged,
+	QuizListManaged,
+	QuizCreate,
+	QuizUpdateManaged,
+	QuizManageCollaborators,
+	QuizJoinByCode,
+	QuizViewAttemptResultByCode,
+	QuizDeleteManaged,
+	QuizCloseManaged,
+	QuizPublishResultsManaged,
+	QuizCloseAndPublishManaged,
 
-    AttemptList,
-    AttemptInitialize,
-    AttemptSubmit,
-    AttemptViewResultsManaged,
-    AttemptViewWarnings,
-    AttemptRecordWarning,
+	AttemptList,
+	AttemptInitialize,
+	AttemptSubmit,
+	AttemptViewResultsManaged,
+	AttemptViewWarnings,
+	AttemptRecordWarning,
 
-    UserListAdmin,
-    UserListCollaboratorCandidates,
-    UserManageRole,
+	UserListAdmin,
+	UserListCollaboratorCandidates,
+	UserManageRole,
 }
 
 pub struct AuthzModule;
 
 impl Module for AuthzModule {
-    fn register_components(components: &ComponentRegistry) {
-        components.register::<AuthzService>();
-    }
+	fn register_components(components: &ComponentRegistry) {
+		components.register::<AuthzService>();
+	}
 }

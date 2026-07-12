@@ -9,48 +9,48 @@ use sword::prelude::*;
 
 #[injectable]
 pub struct QuizPolicy {
-    quizzes: Arc<QuizRepository>,
-    courses: Arc<CourseRepository>,
+	quizzes: Arc<QuizRepository>,
+	courses: Arc<CourseRepository>,
 }
 
 impl QuizPolicy {
-    pub async fn check_can_create_quiz(
-        &self,
-        current_user: &User,
-        course_id: &CourseId,
-    ) -> AppResult<bool> {
-        if current_user.role == UserRole::Admin {
-            return Ok(true);
-        }
+	pub async fn check_can_create_quiz(
+		&self,
+		current_user: &User,
+		course_id: &CourseId,
+	) -> AppResult<bool> {
+		if current_user.role == UserRole::Admin {
+			return Ok(true);
+		}
 
-        if !self.courses.is_member(course_id, &current_user.id).await? {
-            Err(QuizError::Forbidden)?;
-        }
+		if !self.courses.is_member(course_id, &current_user.id).await? {
+			Err(QuizError::Forbidden)?;
+		}
 
-        Ok(true)
-    }
+		Ok(true)
+	}
 
-    pub async fn require_managed_quiz(
-        &self,
-        current_user: &User,
-        quiz_id: &QuizId,
-    ) -> AppResult<Quiz> {
-        let Some(quiz) = self.quizzes.find_by_id(quiz_id).await? else {
-            return Err(QuizError::NotFound(*quiz_id))?;
-        };
+	pub async fn require_managed_quiz(
+		&self,
+		current_user: &User,
+		quiz_id: &QuizId,
+	) -> AppResult<Quiz> {
+		let Some(quiz) = self.quizzes.find_by_id(quiz_id).await? else {
+			return Err(QuizError::NotFound(*quiz_id))?;
+		};
 
-        if current_user.role == UserRole::Admin {
-            return Ok(quiz);
-        }
+		if current_user.role == UserRole::Admin {
+			return Ok(quiz);
+		}
 
-        if !self
-            .courses
-            .is_member(&quiz.course_id, &current_user.id)
-            .await?
-        {
-            Err(QuizError::Forbidden)?;
-        }
+		if !self
+			.courses
+			.is_member(&quiz.course_id, &current_user.id)
+			.await?
+		{
+			Err(QuizError::Forbidden)?;
+		}
 
-        Ok(quiz)
-    }
+		Ok(quiz)
+	}
 }
