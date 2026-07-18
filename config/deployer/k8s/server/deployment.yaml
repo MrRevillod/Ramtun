@@ -47,7 +47,7 @@ spec:
                   name: ramtun-secret
                   key: jwt-secret
             - name: LDAP_URL
-              value: ldap://ldap.dvizama.svc.cluster.local:389
+              value: ldap://ldap.ldap.svc.cluster.local:389
             - name: LDAP_BASE_DN
               value: dc=inf,dc=uct,dc=cl
             - name: LDAP_ADMIN_USER
