@@ -5,6 +5,8 @@
 ARG RUST_VERSION=1.97
 FROM rust:${RUST_VERSION}-alpine AS dev
 
+RUN rustup component add rustfmt clippy
+
 RUN apk add --no-cache \
 	wireguard-tools \
 	iproute2 \
