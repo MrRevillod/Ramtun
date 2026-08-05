@@ -1,4 +1,5 @@
 import type { QuestionBank } from "$lib/banks/banks.dtos"
+import { bankToMarkdown } from "$lib/banks/markdown"
 
 type QuestionExport = {
 	prompt: string
@@ -12,21 +13,28 @@ const sanitizeFileName = (name: string) =>
 		.replace(/[\\/:*?"<>|\s]+/g, "_")
 		.replace(/^_+|_+$/g, "") || "banco"
 
-export const exportBankJson = (bank: QuestionBank): void => {
-	const questions: QuestionExport[] = bank.questions.map((question) => ({
+const downloadText = (filename: string, content: string, mime: string): void => {
+	const blob = new Blob([content], { type: mime })
+	const url = URL.createObjectURL(blob)
+	const link = document.createElement("a")
+	link.href = url
+	link.download = filename
+	link.click()
+	URL.revokeObjectURL(url)
+}
+
+const toQuestionExport = (bank: QuestionBank): QuestionExport[] =>
+	bank.questions.map((question) => ({
 		prompt: question.prompt,
 		options: question.options,
 		answerIndex: question.answer_index ?? question.answerIndex ?? 0,
 	}))
 
-	const blob = new Blob([JSON.stringify(questions, null, 2)], {
-		type: "application/json",
-	})
-
-	const url = URL.createObjectURL(blob)
-	const link = document.createElement("a")
-	link.href = url
-	link.download = `${sanitizeFileName(bank.name)}.json`
-	link.click()
-	URL.revokeObjectURL(url)
+export const exportBankMarkdown = (bank: QuestionBank): void => {
+	const questions = toQuestionExport(bank)
+	downloadText(
+		`${sanitizeFileName(bank.name)}.md`,
+		bankToMarkdown(bank.name, questions),
+		"text/markdown"
+	)
 }

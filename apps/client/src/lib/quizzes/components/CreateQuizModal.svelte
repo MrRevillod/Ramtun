@@ -138,7 +138,7 @@
 		}}
 	>
 		<section
-			class="panel-elevated w-full max-w-3xl p-5"
+			class="panel-elevated w-full max-w-xl p-5"
 			role="presentation"
 			tabindex="-1"
 			transition:scale={{ duration: 190, start: 0.98 }}

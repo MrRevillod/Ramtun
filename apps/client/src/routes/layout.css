@@ -234,7 +234,7 @@ body {
 		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-3.5 py-2.5 text-sm font-medium tracking-[0.01em];
 		background: color-mix(in srgb, var(--paper-soft) 92%, white);
 		color: var(--ink);
-		border-color: color-mix(in srgb, var(--ink) 88%, white);
+		border-color: color-mix(in srgb, var(--line-strong) 88%, white);
 		min-height: 40px;
 	}
 
@@ -315,7 +315,7 @@ body {
 	}
 
 	.btn-chip {
-		@apply inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-[4px] border px-2.5 py-1.5 font-mono text-sm;
+		@apply inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-[4px] border px-2 py-1 font-mono text-sm;
 		border-color: color-mix(in srgb, var(--line-strong) 88%, white);
 		background: var(--paper-soft);
 		color: var(--ink-soft);
@@ -358,7 +358,7 @@ body {
 	}
 
 	.icon-btn {
-		@apply inline-flex size-10 items-center justify-center rounded-[4px] border;
+		@apply inline-flex size-9 items-center justify-center rounded-[4px] border;
 		border-color: color-mix(in srgb, var(--line-strong) 82%, white);
 		background: color-mix(in srgb, var(--paper-soft) 90%, white);
 		color: var(--ink-muted);

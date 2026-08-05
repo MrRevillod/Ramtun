@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
-	import { ArrowLeft, Download, Pencil, Save, X } from "lucide-svelte"
+	import { ArrowLeft, FileDown, Pencil, Save, X } from "lucide-svelte"
 	import { resolve } from "$app/paths"
 	import { toast } from "svelte-sonner"
 	import { banksService } from "$lib/banks/banks.service"
-	import { exportBankJson } from "$lib/banks/utils"
+	import { exportBankMarkdown } from "$lib/banks/utils"
 	import { coursesService } from "$lib/courses/service"
 	import Markdown from "$lib/shared/components/Markdown.svelte"
 	import MarkdownEditor from "$lib/shared/components/MarkdownEditor.svelte"
@@ -123,10 +123,10 @@
 				<button
 					class="btn-secondary flex items-center gap-1.5"
 					type="button"
-					onclick={() => exportBankJson(bankQuery.data)}
+					onclick={() => exportBankMarkdown(bankQuery.data)}
 				>
-					<Download size={16} aria-hidden="true" />
-					Descargar JSON
+					<FileDown size={16} aria-hidden="true" />
+					Descargar MD
 				</button>
 			{/if}
 		</div>

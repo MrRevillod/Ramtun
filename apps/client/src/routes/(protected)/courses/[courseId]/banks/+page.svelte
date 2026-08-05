@@ -7,7 +7,7 @@
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import { Download, Plus, Trash2 } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
-	import { exportBankJson } from "$lib/banks/utils"
+	import { exportBankMarkdown } from "$lib/banks/utils"
 	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
@@ -109,11 +109,11 @@
 						<div class="flex shrink-0 items-center gap-1">
 							<button
 								class="icon-btn cursor-pointer"
-								title="Descargar JSON"
+								title="Descargar MD"
 								type="button"
 								onclick={(e) => {
 									e.stopPropagation()
-									exportBankJson(bank)
+									exportBankMarkdown(bank)
 								}}
 							>
 								<Download size={15} aria-hidden="true" />
@@ -160,11 +160,11 @@
 									<div class="flex items-center gap-1">
 										<button
 											class="icon-btn cursor-pointer"
-											title="Descargar JSON"
+											title="Descargar MD"
 											type="button"
 											onclick={(e) => {
 												e.stopPropagation()
-												exportBankJson(bank)
+												exportBankMarkdown(bank)
 											}}
 										>
 											<Download size={15} aria-hidden="true" />
