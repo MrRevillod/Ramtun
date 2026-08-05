@@ -493,7 +493,6 @@ impl AttemptsService {
 				question_id: *question_id,
 				question: question.prompt.clone(),
 				options: question.options.clone(),
-				images: question.images.clone(),
 				answer_index,
 				correct_answer_index: question.answer_index,
 				certainty_level,

@@ -49,14 +49,12 @@
   	{
   	    "prompt": "¿Cuál es la capital de Francia?",
   	    "options": ["París", "Londres", "Berlín"],
-  	    "answerIndex": 0,
-  	    "images": []
+  	    "answerIndex": 0
   	},
    	{
   	    "prompt": "¿Cuánto es 2 + 2?",
   	    "options": ["3", "4", "5", "6"],
-  	    "answerIndex": 1,
-  	    "images": []
+  	    "answerIndex": 1
      }
   ]`
 
@@ -68,8 +66,8 @@
 
 		if (!file) return
 
-		const [parsed, parseError] = await inlineTryAsync<unknown>(
-			() => file.text().then(t => JSON.parse(t))
+		const [parsed, parseError] = await inlineTryAsync<unknown>(() =>
+			file.text().then((t) => JSON.parse(t))
 		)
 
 		if (parseError !== null) {
@@ -86,7 +84,7 @@
 		parsedQuestions = result.output
 	}
 
-	const handleSubmit: SubmitEventHandler<typeof bankUploadFormSchema> = async output => {
+	const handleSubmit: SubmitEventHandler<typeof bankUploadFormSchema> = async (output) => {
 		if (!selectedFile) {
 			toast.error("Selecciona un archivo JSON.")
 			return
@@ -120,7 +118,7 @@
 		aria-modal="true"
 		tabindex="-1"
 		onclick={onclose}
-		onkeydown={e => {
+		onkeydown={(e) => {
 			if (e.key === "Escape") onclose()
 		}}
 	>
@@ -129,7 +127,7 @@
 			role="presentation"
 			tabindex="-1"
 			transition:scale={{ duration: 190, start: 0.98 }}
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h4 class="m-0 text-base text-black">Subir banco de preguntas</h4>
@@ -152,7 +150,9 @@
 											placeholder="Ej: Guía 1 - Mecánica"
 										/>
 										{#if field.errors?.[0]}
-											<span class="text-sm text-red-700">{field.errors[0]}</span>
+											<span class="text-sm text-red-700"
+												>{field.errors[0]}</span
+											>
 										{/if}
 									</label>
 								{/snippet}
@@ -211,7 +211,7 @@
 		aria-modal="true"
 		tabindex="-1"
 		onclick={() => (showFormatModal = false)}
-		onkeydown={e => {
+		onkeydown={(e) => {
 			if (e.key === "Escape") showFormatModal = false
 		}}
 	>
@@ -219,7 +219,7 @@
 			class="w-full max-w-2xl rounded-lg bg-white p-6"
 			role="presentation"
 			tabindex="-1"
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<h4 class="m-0 text-lg text-black">Formato JSON esperado</h4>
 			<p class="mt-2 mb-4 text-sm text-zinc-600">
@@ -231,16 +231,15 @@
 
 			<ul class="mt-4 mb-0 list-inside list-disc text-sm text-zinc-700">
 				<li>
-					<code class="text-zinc-900">prompt</code>: texto de la pregunta (1-1000 caracteres)
+					<code class="text-zinc-900">prompt</code>: texto de la pregunta (1-5000
+					caracteres, soporta Markdown y LaTeX)
 				</li>
 				<li>
 					<code class="text-zinc-900">options</code>: array de 2 a 5 opciones
 				</li>
 				<li>
-					<code class="text-zinc-900">answerIndex</code>: índice de la respuesta correcta (0-based)
-				</li>
-				<li>
-					<code class="text-zinc-900">images</code>: array de URLs de imágenes (opcional, máx 5)
+					<code class="text-zinc-900">answerIndex</code>: índice de la respuesta correcta
+					(0-based)
 				</li>
 			</ul>
 

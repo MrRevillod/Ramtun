@@ -1,4 +1,4 @@
-use crate::banks::{Question, QuestionBank, QuestionBankId};
+use crate::banks::{QuestionBank, QuestionBankId};
 use crate::courses::CourseId;
 use crate::shared::{AppResult, Database, Tx};
 
@@ -37,13 +37,12 @@ impl QuestionBankRepository {
 
 	pub async fn save(&self, tx: &mut Tx<'_>, bank: &QuestionBank) -> AppResult<QuestionBank> {
 		let bank = sqlx::query_as::<_, QuestionBank>(
-			"INSERT INTO question_banks (id, course_id, name, questions, created_at, deleted_at)
-             VALUES ($1, $2, $3, $4, $5, $6)
+			"INSERT INTO question_banks (id, course_id, name, created_at, deleted_at)
+             VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (id)
              DO UPDATE SET
                  course_id = EXCLUDED.course_id,
                  name = EXCLUDED.name,
-                 questions = EXCLUDED.questions,
                  created_at = EXCLUDED.created_at,
                  deleted_at = EXCLUDED.deleted_at
              RETURNING *",
@@ -51,7 +50,6 @@ impl QuestionBankRepository {
 		.bind(bank.id)
 		.bind(bank.course_id)
 		.bind(&bank.name)
-		.bind(&bank.questions)
 		.bind(bank.created_at)
 		.bind(bank.deleted_at)
 		.fetch_one(&mut **tx)
@@ -92,20 +90,5 @@ impl QuestionBankRepository {
 		.await?;
 
 		Ok(count as usize == bank_ids.len())
-	}
-
-	pub async fn list_questions_by_bank_ids(
-		&self,
-		bank_ids: &[QuestionBankId],
-	) -> AppResult<Vec<Question>> {
-		let rows = sqlx::query_scalar::<_, Vec<Question>>(
-			"SELECT qb.questions FROM question_banks qb
-             WHERE qb.id = ANY($1) AND qb.deleted_at IS NULL",
-		)
-		.bind(bank_ids)
-		.fetch_all(self.db.get_pool())
-		.await?;
-
-		Ok(rows.into_iter().flatten().collect())
 	}
 }

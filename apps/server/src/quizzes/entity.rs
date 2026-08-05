@@ -7,7 +7,6 @@ use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
-use uuid::Uuid;
 
 pub type QuizId = Id<Quiz>;
 
@@ -16,7 +15,6 @@ pub struct Quiz {
 	#[builder(default = QuizId::new())]
 	pub id: QuizId,
 	pub course_id: CourseId,
-	pub snapshot_id: Uuid,
 	pub title: String,
 	pub kind: QuizKind,
 	pub join_code: String,

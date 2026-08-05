@@ -4,7 +4,6 @@ type QuestionExport = {
 	prompt: string
 	options: string[]
 	answerIndex: number
-	images: string[]
 }
 
 const sanitizeFileName = (name: string) =>
@@ -18,7 +17,6 @@ export const exportBankJson = (bank: QuestionBank): void => {
 		prompt: question.prompt,
 		options: question.options,
 		answerIndex: question.answer_index ?? question.answerIndex ?? 0,
-		images: question.images,
 	}))
 
 	const blob = new Blob([JSON.stringify(questions, null, 2)], {

@@ -6,16 +6,14 @@ pub use policy::*;
 
 use std::sync::Arc;
 
-use crate::banks::QuestionBankRepository;
+use crate::banks::{QuestionBankRepository, QuestionRepository};
 use crate::courses::{CourseId, CourseRepository, CoursesError};
 use crate::quizzes::*;
 use crate::shared::{AppResult, TransactionManager};
-use crate::snapshots::SnapshotService;
 use crate::users::{User, UserRole};
 
 use chrono::{DateTime, Utc};
 use sword::prelude::*;
-use uuid::Uuid;
 
 #[injectable]
 pub struct QuizService {
@@ -23,9 +21,9 @@ pub struct QuizService {
 	policy: Arc<QuizPolicy>,
 	repository: Arc<QuizRepository>,
 	courses: Arc<CourseRepository>,
-	snapshots: Arc<SnapshotService>,
 	tx: Arc<TransactionManager>,
 	banks: Arc<QuestionBankRepository>,
+	questions: Arc<QuestionRepository>,
 }
 
 impl QuizService {
@@ -117,10 +115,7 @@ impl QuizService {
 			Err(QuizError::InvalidBanksForCourse)?;
 		}
 
-		let questions = self
-			.banks
-			.list_questions_by_bank_ids(&input.bank_ids)
-			.await?;
+		let questions = self.questions.list_by_bank_ids(&input.bank_ids).await?;
 
 		if input.question_count as usize > questions.len() {
 			Err(QuizError::InvalidQuestionCount)?;
@@ -129,8 +124,6 @@ impl QuizService {
 		let starts_at = DateTime::parse_from_rfc3339(&input.starts_at)
 			.map_err(|_| QuizError::InvalidStartTime)?
 			.with_timezone(&Utc);
-
-		let snapshot_id = Uuid::new_v4();
 
 		let max_score = match input.kind {
 			QuizKind::Traditional => input.question_count,
@@ -143,7 +136,6 @@ impl QuizService {
 
 		let quiz = Quiz::builder()
 			.course_id(input.course_id)
-			.snapshot_id(snapshot_id)
 			.title(input.title)
 			.kind(input.kind)
 			.join_code(self.codegen.generate_unique_join_code().await?)
@@ -157,11 +149,12 @@ impl QuizService {
 
 		let mut tx = self.tx.begin().await?;
 
-		self.snapshots
-			.create_snapshot(&mut tx, snapshot_id, &questions)
-			.await?;
-
 		let quiz = self.repository.save(&mut tx, &quiz).await?;
+
+		let question_ids = questions.into_iter().map(|q| q.id).collect::<Vec<_>>();
+		self.repository
+			.set_quiz_questions(&mut tx, &quiz.id, &question_ids)
+			.await?;
 
 		self.repository
 			.set_bank_links(&mut tx, &quiz.id, &input.bank_ids)

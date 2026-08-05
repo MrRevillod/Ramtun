@@ -72,7 +72,6 @@ pub struct QuestionResultView {
 	pub question_id: QuestionId,
 	pub question: String,
 	pub options: Vec<String>,
-	pub images: Vec<String>,
 	pub answer_index: Option<i16>,
 	pub correct_answer_index: i16,
 	pub certainty_level: Option<CertaintyLevel>,

@@ -7,7 +7,6 @@ export type AttemptQuestion = {
 	id: string
 	prompt: string
 	options: string[]
-	images: string[]
 }
 
 export type SavedAnswer = {
@@ -53,7 +52,6 @@ export type QuestionResult = {
 	questionId: string
 	question: string
 	options: string[]
-	images: string[]
 	answerIndex: number | null
 	correctAnswerIndex: number
 	certaintyLevel: CertaintyLevel | null

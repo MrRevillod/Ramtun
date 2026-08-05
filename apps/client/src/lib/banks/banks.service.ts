@@ -1,4 +1,8 @@
-import type { CreateQuestionBankInput, QuestionBank } from "$lib/banks/banks.dtos"
+import type {
+	CreateQuestionBankInput,
+	QuestionBank,
+	UpdateQuestionBankInput,
+} from "$lib/banks/banks.dtos"
 import { http } from "$lib/shared/http/client"
 
 class BanksService {
@@ -20,6 +24,14 @@ class BanksService {
 		return http.request<void>({
 			method: "POST",
 			url: "/banks",
+			data: input,
+		})
+	}
+
+	public update(bankId: string, input: UpdateQuestionBankInput): Promise<void> {
+		return http.request<void>({
+			method: "PATCH",
+			url: `/banks/${bankId}`,
 			data: input,
 		})
 	}

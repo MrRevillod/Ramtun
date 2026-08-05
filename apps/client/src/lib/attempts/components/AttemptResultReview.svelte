@@ -3,6 +3,7 @@
 
 	import { DateValue } from "$lib/shared/value-objects/date.value"
 	import { GradeValue } from "$lib/shared/value-objects/grade.value"
+	import Markdown from "$lib/shared/components/Markdown.svelte"
 	import { User, ChartColumn, CircleCheck, CircleX, Trophy } from "lucide-svelte"
 
 	let { result }: { result: AttemptResult } = $props()
@@ -35,7 +36,11 @@
 			return "border-emerald-700 bg-emerald-50 text-emerald-900"
 		}
 
-		if (answerIndex !== null && optionIndex === answerIndex && answerIndex !== correctAnswerIndex) {
+		if (
+			answerIndex !== null &&
+			optionIndex === answerIndex &&
+			answerIndex !== correctAnswerIndex
+		) {
 			return "border-red-700 bg-red-50 text-red-900"
 		}
 
@@ -85,9 +90,14 @@
 		{#each result.questions as question, index (question.questionId)}
 			<article class="panel-muted p-4 sm:p-5">
 				<div class="flex items-start justify-between gap-3">
-					<p class="m-0 text-base leading-relaxed text-black sm:text-lg">
-						{index + 1}. {question.question}
-					</p>
+					<div class="min-w-0 flex-1">
+						<div class="flex items-start gap-2">
+							<span class="shrink-0 font-medium text-black">{index + 1}.</span>
+							<div class="min-w-0 flex-1">
+								<Markdown content={question.question} />
+							</div>
+						</div>
+					</div>
 					{#if question.isCorrect}
 						<span
 							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-emerald-700"
@@ -95,23 +105,13 @@
 							<CircleCheck size={14} /> Correcta
 						</span>
 					{:else}
-						<span class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700">
+						<span
+							class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-red-700"
+						>
 							<CircleX size={14} /> Incorrecta
 						</span>
 					{/if}
 				</div>
-
-				{#if question.images.length > 0}
-					<div class="mt-4 grid gap-3 sm:grid-cols-2">
-						{#each question.images as imageUrl (imageUrl)}
-							<img
-								class="w-full rounded-sm border border-zinc-300 bg-white"
-								src={imageUrl}
-								alt="Imagen de apoyo"
-							/>
-						{/each}
-					</div>
-				{/if}
 
 				<div class="mt-4 grid gap-2.5">
 					{#each question.options as option, optionIndex (`${question.questionId}-${optionIndex}`)}
@@ -165,7 +165,9 @@
 				{/if}
 
 				{#if question.answerIndex === null}
-					<p class="mt-4 mb-0 text-sm font-bold text-amber-700">Sin respuesta en esta pregunta.</p>
+					<p class="mt-4 mb-0 text-sm font-bold text-amber-700">
+						Sin respuesta en esta pregunta.
+					</p>
 				{/if}
 			</article>
 		{/each}

@@ -1,4 +1,4 @@
-use crate::{banks::Question, courses::CourseId};
+use crate::courses::CourseId;
 
 use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
@@ -9,17 +9,14 @@ use validator::{Validate, ValidationError};
 pub struct QuestionInput {
 	#[validate(length(
 		min = 1,
-		max = 1000,
-		message = "Prompt must be between 1 and 1000 characters"
+		max = 5000,
+		message = "Prompt must be between 1 and 5000 characters"
 	))]
 	pub prompt: String,
 
 	#[validate(length(min = 2, max = 5, message = "There must be between 2 and 5 options"))]
 	pub options: Vec<String>,
 	pub answer_index: usize,
-
-	#[validate(length(max = 5, message = "There can be at most 5 images per question"))]
-	pub images: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -43,6 +40,20 @@ pub struct CreateQuestionBankDto {
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 #[serde(rename_all = "camelCase")]
+pub struct UpdateQuestionInput {
+	#[validate(length(
+		min = 1,
+		max = 5000,
+		message = "Prompt must be between 1 and 5000 characters"
+	))]
+	pub prompt: String,
+
+	#[validate(length(min = 2, max = 5, message = "There must be between 2 and 5 options"))]
+	pub options: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[serde(rename_all = "camelCase")]
 #[validate(schema(function = "validate_update_has_fields", skip_on_field_errors = false))]
 pub struct UpdateQuestionBankDto {
 	#[validate(length(
@@ -57,7 +68,7 @@ pub struct UpdateQuestionBankDto {
 		message = "There must be at least 1 and at most 500 questions"
 	))]
 	#[validate(nested)]
-	pub questions: Option<Vec<QuestionInput>>,
+	pub questions: Option<Vec<UpdateQuestionInput>>,
 }
 
 fn validate_question(question: &QuestionInput) -> Result<(), ValidationError> {
@@ -78,15 +89,4 @@ fn validate_update_has_fields(dto: &UpdateQuestionBankDto) -> Result<(), Validat
 	let mut err = ValidationError::new("empty_update");
 	err.message = Some("At least one field must be provided".into());
 	Err(err)
-}
-
-impl From<&QuestionInput> for Question {
-	fn from(value: &QuestionInput) -> Self {
-		Question::builder()
-			.prompt(value.prompt.clone())
-			.options(value.options.clone())
-			.answer_index(value.answer_index as i16)
-			.images(value.images.clone())
-			.build()
-	}
 }

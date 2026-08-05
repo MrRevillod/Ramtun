@@ -12,16 +12,9 @@ CREATE TYPE certainty_table AS (
     high certainty_score
 );
 
-CREATE TABLE question_bank_snapshots (
-	id UUID PRIMARY KEY,
-	questions question[] NOT NULL,
-	deleted_at TIMESTAMPTZ
-);
-
 CREATE TABLE quizzes (
 	id UUID PRIMARY KEY,
 	course_id UUID NOT NULL REFERENCES courses(id),
-	snapshot_id UUID NOT NULL REFERENCES question_bank_snapshots(id),
 	title TEXT NOT NULL,
 	kind quiz_kind NOT NULL,
 	join_code TEXT NOT NULL UNIQUE,
@@ -41,14 +34,18 @@ CREATE TABLE quiz_question_banks (
 	PRIMARY KEY (quiz_id, question_bank_id)
 );
 
+CREATE TABLE quiz_questions (
+	quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+	question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+	PRIMARY KEY (quiz_id, question_id)
+);
+
 CREATE INDEX idx_quizzes_kind ON quizzes(kind);
 CREATE INDEX idx_quizzes_course_id ON quizzes(course_id);
-CREATE INDEX idx_quizzes_snapshot_id ON quizzes(snapshot_id);
-CREATE INDEX idx_quizzes_join_code ON quizzes(join_code);
 CREATE INDEX idx_quizzes_starts_at ON quizzes(starts_at);
 CREATE INDEX idx_quizzes_deleted_at ON quizzes(deleted_at);
+CREATE INDEX idx_quizzes_results_published_at ON quizzes(results_published_at);
 
 CREATE INDEX idx_quiz_question_banks_quiz_id ON quiz_question_banks(quiz_id);
 CREATE INDEX idx_quiz_question_banks_question_bank_id ON quiz_question_banks(question_bank_id);
-CREATE INDEX idx_question_bank_snapshots_deleted_at ON question_bank_snapshots(deleted_at);
-CREATE INDEX idx_quizzes_results_published_at ON quizzes(results_published_at);
+CREATE INDEX idx_quiz_questions_question_id ON quiz_questions(question_id);

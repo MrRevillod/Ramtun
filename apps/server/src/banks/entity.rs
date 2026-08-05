@@ -6,18 +6,17 @@ use crate::{
 use bon::Builder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Type};
+use sqlx::FromRow;
 
 pub type QuestionId = Id<Question>;
 pub type QuestionBankId = Id<QuestionBank>;
 
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder, PartialEq, Eq, Hash)]
 pub struct QuestionBank {
 	#[builder(default = QuestionBankId::new())]
 	pub id: QuestionBankId,
 	pub course_id: CourseId,
 	pub name: String,
-	pub questions: Vec<Question>,
 	pub created_at: DateTime<Utc>,
 	pub deleted_at: Option<DateTime<Utc>>,
 }
@@ -28,15 +27,21 @@ impl Entity for QuestionBank {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Type, Builder, PartialEq, Hash, Eq)]
-#[sqlx(type_name = "question")]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, Builder, PartialEq, Hash, Eq)]
 pub struct Question {
 	#[builder(default = QuestionId::new())]
 	pub id: QuestionId,
+	#[serde(skip_serializing)]
+	pub bank_id: QuestionBankId,
+	#[serde(skip_serializing)]
+	pub position: i16,
 	pub prompt: String,
 	pub options: Vec<String>,
 	pub answer_index: i16,
-	pub images: Vec<String>,
+	#[serde(skip_serializing)]
+	pub created_at: DateTime<Utc>,
+	#[serde(skip_serializing)]
+	pub deleted_at: Option<DateTime<Utc>>,
 }
 
 impl Entity for Question {
@@ -50,7 +55,6 @@ pub struct QuestionView {
 	pub id: QuestionId,
 	pub prompt: String,
 	pub options: Vec<String>,
-	pub images: Vec<String>,
 }
 
 impl From<Question> for QuestionView {
@@ -59,7 +63,6 @@ impl From<Question> for QuestionView {
 			id: question.id,
 			prompt: question.prompt,
 			options: question.options,
-			images: question.images,
 		}
 	}
 }

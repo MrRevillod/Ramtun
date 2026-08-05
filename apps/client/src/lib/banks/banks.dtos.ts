@@ -3,8 +3,8 @@ import * as v from "valibot"
 const questionInputSchema = v.object({
 	prompt: v.pipe(
 		v.string(),
-		v.minLength(1, "Prompt debe tener entre 1 y 1000 caracteres."),
-		v.maxLength(1000, "Prompt debe tener entre 1 y 1000 caracteres.")
+		v.minLength(1, "Prompt debe tener entre 1 y 5000 caracteres."),
+		v.maxLength(5000, "Prompt debe tener entre 1 y 5000 caracteres.")
 	),
 	options: v.pipe(
 		v.array(v.string()),
@@ -16,16 +16,12 @@ const questionInputSchema = v.object({
 		v.integer("answerIndex debe ser un entero válido."),
 		v.minValue(0, "answerIndex no puede ser negativo.")
 	),
-	images: v.pipe(
-		v.array(v.string()),
-		v.maxLength(5, "No puede haber más de 5 imágenes por pregunta.")
-	),
 })
 
 const questionSchema = v.pipe(
 	questionInputSchema,
 	v.check(
-		q => q.answerIndex < q.options.length,
+		(q) => q.answerIndex < q.options.length,
 		"answerIndex debe ser un índice válido de las opciones."
 	)
 )
@@ -44,7 +40,6 @@ export type Question = {
 	options: string[]
 	answer_index?: number
 	answerIndex?: number
-	images: string[]
 }
 
 export type QuestionBank = {
@@ -66,6 +61,13 @@ export type CreateQuestionBankInput = {
 		prompt: string
 		options: string[]
 		answerIndex: number
-		images: string[]
+	}[]
+}
+
+export type UpdateQuestionBankInput = {
+	name?: string
+	questions: {
+		prompt: string
+		options: string[]
 	}[]
 }

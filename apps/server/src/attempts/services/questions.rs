@@ -1,37 +1,34 @@
 use rand::seq::SliceRandom;
 use std::{collections::HashMap, sync::Arc};
 use sword::prelude::*;
-use uuid::Uuid;
 
 use crate::{
 	attempts::{AttemptError, AttemptRepository},
-	banks::{Question, QuestionId, QuestionView},
+	banks::{Question, QuestionId, QuestionRepository, QuestionView},
 	quizzes::{QuizError, QuizId},
 	shared::AppResult,
-	snapshots::SnapshotRepository,
 };
 
 #[injectable]
 pub struct QuestionService {
-	snapshots: Arc<SnapshotRepository>,
+	questions: Arc<QuestionRepository>,
 	repository: Arc<AttemptRepository>,
 }
 
 impl QuestionService {
-	/// Retrieves all questions associated with a specific quiz.
+	/// Retrieves all questions pinned by a specific quiz, including archived
+	/// versions so attempts and published results keep their original content.
 	pub async fn get_quiz_questions(&self, quiz_id: &QuizId) -> AppResult<Vec<Question>> {
-		self.snapshots.list_questions_for_quiz(quiz_id).await
+		self.questions.list_for_quiz(quiz_id).await
 	}
 
 	/// Retrieves a specific question by its ID for a given quiz.
 	pub async fn get_question_by_id(
 		&self,
 		quiz_id: &QuizId,
-		question_id: &Uuid,
+		question_id: &QuestionId,
 	) -> AppResult<Option<Question>> {
-		self.snapshots
-			.find_question_for_quiz(quiz_id, question_id)
-			.await
+		self.questions.find_for_quiz(quiz_id, question_id).await
 	}
 
 	/// Filters a list of questions based on a provided list of question IDs,
@@ -77,7 +74,7 @@ impl QuestionService {
 		quiz_id: &QuizId,
 		question_number: usize,
 	) -> AppResult<Vec<QuestionId>> {
-		let questions = self.snapshots.list_questions_for_quiz(quiz_id).await?;
+		let questions = self.questions.list_for_quiz(quiz_id).await?;
 
 		if questions.len() < question_number {
 			Err(QuizError::InvalidQuestionCount)?;

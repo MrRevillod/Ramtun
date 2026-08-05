@@ -8,7 +8,6 @@ mod courses;
 mod logger;
 mod quizzes;
 mod shared;
-mod snapshots;
 mod users;
 
 use attempts::AttemptsModule;
@@ -18,7 +17,6 @@ use banks::QuestionBankModule;
 use courses::CoursesModule;
 use quizzes::QuizzesModule;
 use shared::SharedModule;
-use snapshots::SnapshotsModule;
 use users::UsersModule;
 
 use logger::LoggerLayer;
@@ -33,7 +31,6 @@ async fn main() {
 		.with_module::<CoursesModule>()
 		.with_module::<UsersModule>()
 		.with_module::<QuizzesModule>()
-		.with_module::<SnapshotsModule>()
 		.with_module::<SharedModule>()
 		.with_module::<AttemptsModule>()
 		.with_layer(LoggerLayer())

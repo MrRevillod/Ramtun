@@ -36,9 +36,16 @@ pub enum QuestionBankError {
 	InvalidQuestionCountAfterBankUpdate,
 
 	#[http(
-		code = 409,
-		message = "No se encontró la versión del banco para uno de los quizzes vinculados."
+		code = 400,
+		message = "La cantidad de preguntas no puede cambiar al editar el banco."
 	)]
-	#[error("Question bank snapshot not found")]
-	SnapshotNotFound,
+	#[error("Question count cannot change when editing a bank")]
+	QuestionCountMismatch,
+
+	#[http(
+		code = 400,
+		message = "La cantidad de opciones de una pregunta no puede cambiar al editar el banco."
+	)]
+	#[error("Option count cannot change when editing a bank")]
+	OptionsCountMismatch,
 }

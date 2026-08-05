@@ -2,6 +2,7 @@
 	import { Toaster } from "svelte-sonner"
 	import { queryClient } from "$lib/shared/http/tanstack"
 	import { QueryClientProvider } from "@tanstack/svelte-query"
+	import "katex/dist/katex.min.css"
 
 	import "./layout.css"
 

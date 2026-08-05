@@ -14,6 +14,7 @@
 	import CertaintySelector from "$lib/attempts/components/CertaintySelector.svelte"
 	import QuizNavigation from "$lib/attempts/components/QuizNavigation.svelte"
 	import SubmitSuccessModal from "$lib/attempts/components/SubmitSuccessModal.svelte"
+	import Markdown from "$lib/shared/components/Markdown.svelte"
 
 	let { data } = $props()
 
@@ -81,7 +82,9 @@
 	}
 	const firstUnansweredIndex = () => {
 		if (!attemptQuery.data) return -1
-		return attemptQuery.data.questions.findIndex((q) => answers[q.id]?.answerIndex === undefined)
+		return attemptQuery.data.questions.findIndex(
+			(q) => answers[q.id]?.answerIndex === undefined
+		)
 	}
 	const firstCertaintyGapIndex = () => {
 		if (!attemptQuery.data || !isCertaintyQuiz()) return -1
@@ -101,7 +104,10 @@
 	const startTimer = (expiresAt: string) => {
 		clearTimer()
 		const update = () => {
-			const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+			const diff = Math.max(
+				0,
+				Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
+			)
 			remainingSeconds = diff
 			if (diff === 0 && !autoSubmitting && !submitMutation.isPending) {
 				autoSubmitting = true
@@ -256,9 +262,9 @@
 			</header>
 
 			<div class="h-px bg-zinc-300/70"></div>
-			<h4 class="mt-5 mb-0 text-lg leading-relaxed text-black">
-				{currentQuestion.prompt}
-			</h4>
+			<div class="mt-5">
+				<Markdown content={currentQuestion.prompt} />
+			</div>
 
 			<div class="mt-6 grid gap-3">
 				{#each currentQuestion.options as option, optionIndex (optionIndex)}

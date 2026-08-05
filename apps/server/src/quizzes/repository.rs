@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::banks::QuestionBankId;
+use crate::banks::{QuestionBankId, QuestionId};
 use crate::courses::CourseId;
 use crate::quizzes::{Quiz, QuizId};
 use crate::shared::{AppResult, Database, Tx};
@@ -55,7 +55,6 @@ impl QuizRepository {
 			"INSERT INTO quizzes (
                 id,
                 course_id,
-                snapshot_id,
                 title,
                 kind,
                 join_code,
@@ -68,11 +67,10 @@ impl QuizRepository {
                 created_at,
                 deleted_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             ON CONFLICT (id)
             DO UPDATE SET
                 course_id = EXCLUDED.course_id,
-                snapshot_id = EXCLUDED.snapshot_id,
                 title = EXCLUDED.title,
                 kind = EXCLUDED.kind,
                 join_code = EXCLUDED.join_code,
@@ -88,7 +86,6 @@ impl QuizRepository {
 		)
 		.bind(quiz.id)
 		.bind(quiz.course_id)
-		.bind(quiz.snapshot_id)
 		.bind(&quiz.title)
 		.bind(quiz.kind)
 		.bind(&quiz.join_code)
@@ -151,6 +148,33 @@ impl QuizRepository {
 
 		query_builder.push_values(bank_ids.iter(), |mut b, bank_id| {
 			b.push_bind(quiz_id).push_bind(bank_id);
+		});
+
+		query_builder.build().execute(&mut **tx).await?;
+
+		Ok(())
+	}
+
+	pub async fn set_quiz_questions(
+		&self,
+		tx: &mut Tx<'_>,
+		quiz_id: &QuizId,
+		question_ids: &[QuestionId],
+	) -> AppResult<()> {
+		sqlx::query("DELETE FROM quiz_questions WHERE quiz_id = $1")
+			.bind(quiz_id)
+			.execute(&mut **tx)
+			.await?;
+
+		if question_ids.is_empty() {
+			return Ok(());
+		}
+
+		let mut query_builder =
+			sqlx::QueryBuilder::new("INSERT INTO quiz_questions (quiz_id, question_id) ");
+
+		query_builder.push_values(question_ids.iter(), |mut b, question_id| {
+			b.push_bind(quiz_id).push_bind(question_id);
 		});
 
 		query_builder.build().execute(&mut **tx).await?;

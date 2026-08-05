@@ -14,7 +14,7 @@ CREATE TABLE attempts (
 
 CREATE TABLE attempt_answers (
 	attempt_id UUID NOT NULL REFERENCES attempts(id),
-	question_id UUID NOT NULL,
+	question_id UUID NOT NULL REFERENCES questions(id),
 	answer_index SMALLINT NOT NULL,
 	certainty_level certainty_level,
 	is_correct BOOLEAN,

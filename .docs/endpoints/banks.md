@@ -43,17 +43,22 @@
 - Response `data`: none.
 
 ## PATCH `/banks/{bankId}`
-- Summary: Update bank name and/or questions.
+- Summary: Update bank name and/or question texts.
 - Auth: Bearer token required.
 - Roles (AuthzAction::BankUpdate): `admin`, `func`, `student`.
 - Path params:
   - `bankId: uuid`
-- Body (at least one field):
+- Body (at least one field). Editing questions only accepts `prompt` and `options` texts; the correct answer (`answerIndex`) is preserved server-side by position and cannot be changed. The number of questions and options per question must match the current bank.
 
 ```json
 {
   "name": "Banco actualizado",
-  "questions": []
+  "questions": [
+    {
+      "prompt": "Enunciado editado (soporta Markdown)",
+      "options": ["Opción A", "Opción B"]
+    }
+  ]
 }
 ```
 

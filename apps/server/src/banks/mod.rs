@@ -3,8 +3,10 @@ mod dtos;
 mod entity;
 mod errors;
 mod policy;
+mod questions;
 mod repository;
 mod service;
+mod views;
 
 use sword::prelude::*;
 
@@ -13,8 +15,10 @@ pub use dtos::*;
 pub use entity::*;
 pub use errors::*;
 pub use policy::*;
+pub use questions::QuestionRepository;
 pub use repository::*;
 pub use service::*;
+pub use views::*;
 
 pub struct QuestionBankModule;
 
@@ -26,6 +30,7 @@ impl Module for QuestionBankModule {
 	fn register_components(components: &ComponentRegistry) {
 		components.register::<QuestionBankPolicy>();
 		components.register::<QuestionBankRepository>();
+		components.register::<QuestionRepository>();
 		components.register::<QuestionBankService>();
 	}
 }
