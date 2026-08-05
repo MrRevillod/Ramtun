@@ -71,7 +71,7 @@
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h3 class="m-0 text-lg text-black">Crear curso</h3>
-				<button class="btn-tertiary p-1" type="button" onclick={onclose}>
+				<button class="btn-close" type="button" onclick={onclose} aria-label="Cerrar">
 					<X size={18} aria-hidden="true" />
 				</button>
 			</div>

@@ -48,7 +48,7 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Miembros</h3>
-				<p class="mt-2 mb-0 text-zinc-700">Agrega o retira participantes.</p>
+				<p class="mt-2 mb-0 text-sm text-zinc-700">Agrega o retira participantes.</p>
 			</div>
 			<button
 				class="btn-primary flex items-center gap-1.5"
@@ -71,7 +71,32 @@
 		{:else if !membersQuery.data?.length}
 			<p class="notice notice-warn m-0">El curso aún no tiene miembros.</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="grid gap-3 md:hidden">
+				{#each membersQuery.data as member (member.userId)}
+					<div class="panel-surface flex items-center justify-between gap-3 p-4">
+						<div class="min-w-0">
+							<p class="m-0 font-medium text-zinc-900">{member.username}</p>
+							<p class="m-0 mt-0.5 text-sm text-zinc-600">
+								{member.name} · {RoleValue.format(member.role)}
+							</p>
+						</div>
+						{#if member.userId !== authStore.user?.id}
+							<button
+								class="icon-btn icon-btn-danger shrink-0"
+								title="Quitar"
+								type="button"
+								disabled={removeMemberMutation.isPending}
+								onclick={() => {
+									memberToRemove = member
+								}}
+							>
+								<Trash2 size={15} aria-hidden="true" />
+							</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="min-w-full border-collapse text-sm">
 					<thead class="table-head">
 						<tr>
@@ -84,9 +109,13 @@
 					<tbody>
 						{#each membersQuery.data as member (member.userId)}
 							<tr class="table-row">
-								<td class="px-3 py-2 font-medium text-zinc-900">{member.username}</td>
+								<td class="px-3 py-2 font-medium text-zinc-900"
+									>{member.username}</td
+								>
 								<td class="px-3 py-2 text-zinc-800">{member.name}</td>
-								<td class="px-3 py-2 text-zinc-700">{RoleValue.format(member.role)}</td>
+								<td class="px-3 py-2 text-zinc-700"
+									>{RoleValue.format(member.role)}</td
+								>
 								<td class="px-3 py-2">
 									{#if member.userId !== authStore.user?.id}
 										<button

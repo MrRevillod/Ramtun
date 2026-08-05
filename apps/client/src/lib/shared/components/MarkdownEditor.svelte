@@ -7,17 +7,19 @@
 </script>
 
 <div class="grid gap-2">
-	<div class="flex items-center gap-1">
+	<div class="segmented">
 		<button
 			type="button"
-			class={mode === "write" ? "btn-secondary" : "btn-tertiary"}
+			class="segmented-item"
+			data-active={mode === "write"}
 			onclick={() => (mode = "write")}
 		>
 			Escribir
 		</button>
 		<button
 			type="button"
-			class={mode === "preview" ? "btn-secondary" : "btn-tertiary"}
+			class="segmented-item"
+			data-active={mode === "preview"}
 			onclick={() => (mode = "preview")}
 		>
 			Vista previa

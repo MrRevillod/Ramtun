@@ -1,6 +1,19 @@
 @import url("https://fonts.cdnfonts.com/css/palatino");
 @import "tailwindcss";
 
+@theme {
+	--color-zinc-50: #fcfcfb;
+	--color-zinc-100: #f2f1ec;
+	--color-zinc-200: #e4e0d7;
+	--color-zinc-300: #d7d0c8;
+	--color-zinc-400: #b6aa9e;
+	--color-zinc-500: #8b8175;
+	--color-zinc-600: #6b6258;
+	--color-zinc-700: #4a433c;
+	--color-zinc-800: #2c2622;
+	--color-zinc-900: #171412;
+}
+
 :root {
 	--paper: #f8f8f6;
 	--paper-soft: #fcfcfb;
@@ -20,12 +33,21 @@
 	font-family: "Palatino", sans-serif;
 	color: var(--ink);
 	background: var(--paper);
+
+	--shadow-border:
+		0px 0px 0px 1px rgba(0, 0, 0, 0.06), 0px 1px 2px -1px rgba(0, 0, 0, 0.06),
+		0px 2px 4px 0px rgba(0, 0, 0, 0.04);
+	--shadow-border-hover:
+		0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px -1px rgba(0, 0, 0, 0.08),
+		0px 2px 4px 0px rgba(0, 0, 0, 0.06);
+	--shadow-modal:
+		0px 0px 0px 1px rgba(0, 0, 0, 0.08), 0px 10px 30px -10px rgba(0, 0, 0, 0.18),
+		0px 4px 10px -4px rgba(0, 0, 0, 0.08);
 }
 
 html,
 body {
 	height: 100%;
-	zoom: 1.05;
 }
 
 * {
@@ -39,12 +61,12 @@ body {
 		min-height: 100dvh;
 		background: var(--paper);
 		font-family: "Palatino", "Palatino Linotype", "Book Antiqua", serif;
-		font-size: 17px;
+		font-size: 18px;
 		font-weight: 400;
 		line-height: 1.45;
 		text-rendering: optimizeLegibility;
-		-webkit-font-smoothing: auto;
-		-moz-osx-font-smoothing: auto;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 
 	h1,
@@ -54,6 +76,11 @@ body {
 		font-weight: 400;
 		color: var(--ink);
 		letter-spacing: -0.01em;
+		text-wrap: balance;
+	}
+
+	p {
+		text-wrap: pretty;
 	}
 
 	input,
@@ -116,14 +143,14 @@ body {
 	}
 
 	.panel-surface {
-		@apply rounded-md border;
-		border-color: color-mix(in srgb, var(--line) 92%, white);
+		@apply rounded-md;
+		box-shadow: var(--shadow-border);
 		background: color-mix(in srgb, var(--paper-soft) 90%, white);
 	}
 
 	.panel-elevated {
-		@apply rounded-md border;
-		border-color: color-mix(in srgb, var(--line) 84%, white);
+		@apply rounded-md;
+		box-shadow: var(--shadow-modal);
 		background:
 			linear-gradient(
 				180deg,
@@ -134,17 +161,17 @@ body {
 	}
 
 	.panel-muted {
-		@apply rounded-md border;
-		border-color: color-mix(in srgb, var(--line) 92%, white);
+		@apply rounded-md;
+		box-shadow: var(--shadow-border);
 		background: linear-gradient(180deg, var(--paper-soft) 0%, var(--paper-muted) 100%);
 	}
 
 	.input-base {
-		@apply w-full rounded-[4px] border px-3.5 py-2.5 text-[0.97rem] leading-6;
+		@apply w-full rounded-[4px] border px-3.5 py-2 text-sm leading-6;
 		background: color-mix(in srgb, var(--paper-soft) 90%, white);
 		color: var(--ink);
 		border-color: var(--line-strong);
-		min-height: 44px;
+		min-height: 40px;
 	}
 
 	.input-base::placeholder {
@@ -163,8 +190,8 @@ body {
 	}
 
 	.btn-base {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
-		min-height: 42px;
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-3.5 py-2.5 text-sm font-medium tracking-[0.01em];
+		min-height: 40px;
 	}
 
 	.btn-base:active,
@@ -172,7 +199,7 @@ body {
 	.btn-secondary:active,
 	.btn-tertiary:active,
 	.action-tab:active {
-		transform: translateY(1px);
+		transform: scale(0.96);
 	}
 
 	.btn-base:disabled,
@@ -185,14 +212,14 @@ body {
 	}
 
 	.btn-primary {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em] text-white;
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-3.5 py-2.5 text-sm font-medium tracking-[0.01em] text-white;
 		border-color: color-mix(in srgb, var(--accent) 92%, white);
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, var(--accent) 88%, black) 0%,
 			var(--accent) 100%
 		);
-		min-height: 42px;
+		min-height: 40px;
 	}
 
 	.btn-primary:hover:not(:disabled) {
@@ -204,11 +231,11 @@ body {
 	}
 
 	.btn-secondary {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-3.5 py-2.5 text-sm font-medium tracking-[0.01em];
 		background: color-mix(in srgb, var(--paper-soft) 92%, white);
 		color: var(--ink);
 		border-color: color-mix(in srgb, var(--ink) 88%, white);
-		min-height: 42px;
+		min-height: 40px;
 	}
 
 	.btn-secondary:hover:not(:disabled) {
@@ -216,11 +243,11 @@ body {
 	}
 
 	.btn-tertiary {
-		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-4 py-2.5 text-sm font-medium tracking-[0.01em];
+		@apply inline-flex items-center justify-center gap-2 rounded-[4px] border px-3.5 py-2.5 text-sm font-medium tracking-[0.01em];
 		border-color: color-mix(in srgb, var(--line-strong) 70%, white);
 		background: color-mix(in srgb, var(--paper-soft) 92%, white);
 		color: var(--ink-soft);
-		min-height: 42px;
+		min-height: 40px;
 	}
 
 	.btn-tertiary:hover:not(:disabled) {
@@ -228,13 +255,41 @@ body {
 		border-color: color-mix(in srgb, var(--line-strong) 90%, white);
 	}
 
+	.btn-close {
+		@apply inline-flex size-10 shrink-0 items-center justify-center rounded-[4px];
+		background: transparent;
+		color: var(--ink-muted);
+	}
+
+	.btn-close:hover {
+		background: color-mix(in srgb, var(--paper-deep) 55%, white);
+		color: var(--ink);
+	}
+
+	.segmented {
+		@apply inline-flex w-fit items-center gap-0.5 rounded-[4px] p-0.5;
+		background: color-mix(in srgb, var(--paper-deep) 55%, white);
+	}
+
+	.segmented-item {
+		@apply inline-flex min-h-10 items-center gap-1.5 rounded-[2px] border border-transparent px-3 py-1.5 text-sm font-medium;
+		color: var(--ink-muted);
+	}
+
+	.segmented-item[data-active="true"] {
+		background: color-mix(in srgb, var(--paper-soft) 92%, white);
+		color: var(--ink);
+		border-color: color-mix(in srgb, var(--line-strong) 70%, white);
+		box-shadow: var(--shadow-border);
+	}
+
 	.action-tab {
-		@apply inline-flex items-center gap-2 rounded-[4px] border px-3 py-2 text-sm font-medium tracking-[0.005em];
+		@apply inline-flex items-center gap-2 rounded-[4px] border px-3.5 py-2 text-sm font-medium tracking-[0.005em];
 		position: relative;
 		color: var(--ink-soft);
 		border-color: color-mix(in srgb, var(--line-strong) 85%, white);
 		background: color-mix(in srgb, white 88%, var(--paper-soft));
-		min-height: 38px;
+		min-height: 40px;
 		transition:
 			background-color 180ms ease,
 			color 180ms ease;
@@ -259,9 +314,21 @@ body {
 		color: var(--ink-soft);
 	}
 
+	.btn-chip {
+		@apply inline-flex min-h-10 cursor-pointer items-center gap-1 rounded-[4px] border px-2.5 py-1.5 font-mono text-sm;
+		border-color: color-mix(in srgb, var(--line-strong) 88%, white);
+		background: var(--paper-soft);
+		color: var(--ink-soft);
+	}
+
+	.btn-chip:hover {
+		background: var(--paper);
+		border-color: color-mix(in srgb, var(--ink-muted) 50%, white);
+	}
+
 	.stat-card {
-		@apply rounded-md border p-4;
-		border-color: color-mix(in srgb, var(--line) 84%, white);
+		@apply rounded-md p-4;
+		box-shadow: var(--shadow-border);
 		background: linear-gradient(
 			180deg,
 			rgba(255, 255, 255, 0.92) 0%,
@@ -291,7 +358,7 @@ body {
 	}
 
 	.icon-btn {
-		@apply inline-flex items-center justify-center rounded-[4px] border p-1.5;
+		@apply inline-flex size-10 items-center justify-center rounded-[4px] border;
 		border-color: color-mix(in srgb, var(--line-strong) 82%, white);
 		background: color-mix(in srgb, var(--paper-soft) 90%, white);
 		color: var(--ink-muted);
@@ -373,8 +440,8 @@ body {
 		background: linear-gradient(
 			90deg,
 			transparent 0%,
-			color-mix(in srgb, var(--line-strong) 86%, white) 20%,
-			color-mix(in srgb, var(--line-strong) 86%, white) 80%,
+			color-mix(in srgb, var(--line-strong) 86%, white) 0%,
+			color-mix(in srgb, var(--line-strong) 86%, white) 100%,
 			transparent 100%
 		);
 	}

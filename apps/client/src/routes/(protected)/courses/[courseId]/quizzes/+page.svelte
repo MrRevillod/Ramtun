@@ -75,8 +75,9 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Cuestionarios</h3>
-				<p class="m-0 mt-2 text-zinc-700">
-					Programa evaluaciones, monitorea su estado y publica resultados cuando corresponda.
+				<p class="m-0 mt-2 text-sm text-zinc-700">
+					Programa evaluaciones, monitorea su estado y publica resultados cuando
+					corresponda.
 				</p>
 			</div>
 			<button
@@ -100,7 +101,83 @@
 		{:else if !quizzesQuery.data?.length}
 			<p class="m-0 text-zinc-600">Aún no existen cuestionarios para este curso.</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="grid gap-3 md:hidden">
+				{#each quizzesQuery.data as quiz (quiz.id)}
+					<div
+						class="panel-surface flex cursor-pointer flex-col gap-3 p-4"
+						role="button"
+						tabindex="0"
+						onclick={() =>
+							goto(resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`))}
+						onkeydown={(e) => {
+							if (e.key === "Enter")
+								goto(
+									resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)
+								)
+						}}
+					>
+						<div class="flex items-start justify-between gap-3">
+							<div class="min-w-0">
+								<p class="m-0 truncate font-medium text-zinc-900">{quiz.title}</p>
+								<p class="m-0 mt-0.5 text-sm text-zinc-600">
+									{quiz.kind.toDisplay()}
+								</p>
+							</div>
+							<QuizStatusBadge resultsPublishedAt={quiz.resultsPublishedAt} />
+						</div>
+						<div class="flex flex-wrap items-center gap-1.5">
+							<button
+								type="button"
+								class="btn-chip"
+								title="Copiar código"
+								onclick={(e) => {
+									e.stopPropagation()
+									void copyJoinCode(quiz.joinCode)
+								}}
+							>
+								{copiedJoinCode === quiz.joinCode ? "Copiado" : quiz.joinCode}
+							</button>
+							<a
+								class="icon-btn cursor-pointer"
+								title="Ver intentos"
+								href={resolve(
+									`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`
+								)}
+								onclick={(e) => e.stopPropagation()}
+							>
+								<Eye size={15} aria-hidden="true" />
+							</a>
+							{#if !quiz.resultsPublishedAt}
+								<button
+									class="icon-btn cursor-pointer border-amber-300 text-amber-800 hover:bg-amber-50"
+									title="Finalizar y publicar"
+									type="button"
+									onclick={(e) => {
+										e.stopPropagation()
+										closeAndPublishMutation.mutate(quiz.id)
+									}}
+									disabled={isActionPending || !!quiz.resultsPublishedAt}
+								>
+									<CircleStop size={15} aria-hidden="true" />
+								</button>
+							{/if}
+							<button
+								class="icon-btn icon-btn-danger cursor-pointer"
+								title="Eliminar"
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation()
+									quizToDelete = { id: quiz.id, title: quiz.title }
+								}}
+								disabled={isActionPending}
+							>
+								<Trash2 size={15} aria-hidden="true" />
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="min-w-full border-collapse text-sm">
 					<thead class="table-head">
 						<tr>
@@ -116,7 +193,11 @@
 							<tr
 								class="row-hover table-row cursor-pointer"
 								onclick={() =>
-									goto(resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`))}
+									goto(
+										resolve(
+											`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`
+										)
+									)}
 							>
 								<td class="px-3 py-2 text-zinc-900">{quiz.title}</td>
 								<td class="px-3 py-2 text-zinc-700">{quiz.kind.toDisplay()}</td>
@@ -126,14 +207,16 @@
 								<td class="px-3 py-2 text-zinc-700">
 									<button
 										type="button"
-										class="code-chip cursor-pointer"
+										class="btn-chip"
 										title="Copiar código"
 										onclick={(e) => {
 											e.stopPropagation()
 											void copyJoinCode(quiz.joinCode)
 										}}
 									>
-										{copiedJoinCode === quiz.joinCode ? "Copiado" : quiz.joinCode}
+										{copiedJoinCode === quiz.joinCode
+											? "Copiado"
+											: quiz.joinCode}
 									</button>
 								</td>
 								<td class="px-3 py-2">
@@ -142,7 +225,9 @@
 											class="icon-btn cursor-pointer"
 											title="Ver intentos"
 											onclick={(e) => e.stopPropagation()}
-											href={resolve(`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`)}
+											href={resolve(
+												`/courses/${data.courseId}/quizzes/${quiz.id}/attempts`
+											)}
 										>
 											<Eye size={15} aria-hidden="true" /></a
 										>
@@ -155,7 +240,8 @@
 													e.stopPropagation()
 													closeAndPublishMutation.mutate(quiz.id)
 												}}
-												disabled={isActionPending || !!quiz.resultsPublishedAt}
+												disabled={isActionPending ||
+													!!quiz.resultsPublishedAt}
 											>
 												<CircleStop size={15} aria-hidden="true" /></button
 											>

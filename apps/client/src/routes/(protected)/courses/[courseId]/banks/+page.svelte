@@ -58,7 +58,7 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Bancos de preguntas</h3>
-				<p class="m-0 mt-2 text-zinc-700">
+				<p class="m-0 mt-2 text-sm text-zinc-700">
 					Sube y gestiona bancos de preguntas en formato JSON.
 				</p>
 			</div>
@@ -86,7 +86,55 @@
 				</p>
 			</div>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="grid gap-3 md:hidden">
+				{#each banksQuery.data as bank (bank.id)}
+					<div
+						class="panel-surface flex cursor-pointer items-center justify-between gap-3 p-4"
+						role="button"
+						tabindex="0"
+						onclick={() => goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
+						onkeydown={(e) => {
+							if (e.key === "Enter")
+								goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))
+						}}
+					>
+						<div class="min-w-0">
+							<p class="m-0 font-medium text-zinc-900">{bank.name}</p>
+							<p class="m-0 mt-1 text-sm text-zinc-600">
+								{bank.questions.length} preguntas · {DateValue.format(
+									bank.created_at ?? bank.createdAt ?? ""
+								)}
+							</p>
+						</div>
+						<div class="flex shrink-0 items-center gap-1">
+							<button
+								class="icon-btn cursor-pointer"
+								title="Descargar JSON"
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation()
+									exportBankJson(bank)
+								}}
+							>
+								<Download size={15} aria-hidden="true" />
+							</button>
+							<button
+								class="icon-btn icon-btn-danger cursor-pointer"
+								title="Eliminar"
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation()
+									bankToDelete = { id: bank.id, name: bank.name }
+								}}
+								disabled={deleteBankMutation.isPending}
+							>
+								<Trash2 size={15} aria-hidden="true" />
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="min-w-full border-collapse text-sm">
 					<thead class="table-head">
 						<tr>

@@ -31,10 +31,21 @@
 		onclick={copyToClipboard}
 		aria-label="Copiar código"
 	>
-		{#if copied}
-			<Check size={14} class="text-emerald-600" />
-		{:else}
-			<Copy size={14} />
-		{/if}
+		<span class="relative block">
+			<span
+				class="absolute inset-0 flex items-center justify-center transition-[opacity,scale,filter] duration-300 ease-[cubic-bezier(0.2,0,0,1)] {copied
+					? 'blur-0 scale-100 opacity-100'
+					: 'scale-[0.25] opacity-0 blur-[4px]'}"
+			>
+				<Check size={14} class="text-emerald-600" />
+			</span>
+			<span
+				class="block transition-[opacity,scale,filter] duration-300 ease-[cubic-bezier(0.2,0,0,1)] {copied
+					? 'scale-[0.25] opacity-0 blur-[4px]'
+					: 'blur-0 scale-100 opacity-100'}"
+			>
+				<Copy size={14} />
+			</span>
+		</span>
 	</button>
 </div>

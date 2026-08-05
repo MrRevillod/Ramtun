@@ -48,7 +48,7 @@
 <section class="grid gap-5">
 	<header>
 		<h2 class="mt-2 mb-0 text-2xl text-black">Resultados</h2>
-		<p class="mt-2 max-w-3xl text-zinc-700">Busca tu resultado por código.</p>
+		<p class="mt-2 max-w-3xl text-sm text-zinc-700">Busca tu resultado por código.</p>
 	</header>
 
 	<section>
@@ -79,7 +79,7 @@
 				</div>
 
 				<button
-					class="btn-primary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
+					class="btn-primary flex shrink-0 cursor-pointer items-center gap-1.5"
 					type="submit"
 					disabled={byJoinCodeMutation.isPending}
 				>

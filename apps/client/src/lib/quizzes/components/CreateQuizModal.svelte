@@ -146,7 +146,7 @@
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h4 class="m-0 text-base text-black">Crear cuestionario</h4>
-				<button class="btn-tertiary p-1" type="button" onclick={modalOnClose}>
+				<button class="btn-close" type="button" onclick={modalOnClose} aria-label="Cerrar">
 					<X size={18} aria-hidden="true" />
 				</button>
 			</div>
@@ -173,7 +173,11 @@
 						{#snippet children(field)}
 							<label class="grid gap-1.5">
 								<span class="text-sm text-zinc-800">Tipo</span>
-								<select {...field.props} class="input-base" value={field.input ?? "traditional"}>
+								<select
+									{...field.props}
+									class="input-base"
+									value={field.input ?? "traditional"}
+								>
 									<option value="traditional">Tradicional</option>
 									<option value="certainty">Certeza</option>
 								</select>
@@ -220,7 +224,7 @@
 								<input
 									{...field.props}
 									type="datetime-local"
-									class="input-base h-11"
+									class="input-base h-10"
 									value={field.input ?? ""}
 								/>
 								<span
@@ -262,7 +266,11 @@
 					{#snippet children(field)}
 						<div class="grid gap-2">
 							<span class="text-sm text-zinc-800">Bancos fuente</span>
-							<BankSelector {courseId} selectedBankIds={field.input ?? []} onchange={toggleBank} />
+							<BankSelector
+								{courseId}
+								selectedBankIds={field.input ?? []}
+								onchange={toggleBank}
+							/>
 							{#if field.errors?.[0]}
 								<span class="text-sm text-red-700">{field.errors[0]}</span>
 							{/if}
@@ -276,37 +284,47 @@
 							<span class="text-sm text-zinc-800">Tabla de certeza</span>
 							<span class="text-xs text-zinc-500">Puntaje por respuesta</span>
 						</div>
-						<div class="overflow-x-auto">
+						<div class="overflow-x-auto rounded-[4px] border border-zinc-200">
 							<table class="w-full border-collapse text-xs">
-								<thead class="bg-zinc-100/90 text-zinc-700">
-									<tr>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left">Nivel</th>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left">Correcta</th>
-										<th class="border border-zinc-300 px-2 py-1.5 text-left">Incorrecta</th>
+								<thead class="text-zinc-500">
+									<tr class="border-b border-zinc-200">
+										<th class="px-3 py-2 text-left font-medium">Nivel</th>
+										<th class="px-3 py-2 text-left font-medium">Correcta</th>
+										<th class="px-3 py-2 text-left font-medium">Incorrecta</th>
 									</tr>
 								</thead>
 								<tbody>
 									{#each ["low", "medium", "high"] as const as level (level)}
-										<tr>
-											<td class="border border-zinc-300 bg-white px-2 py-1.5">
+										<tr class="border-b border-zinc-200/70 last:border-b-0">
+											<td class="px-3 py-2 text-zinc-700">
 												{CertaintyValue.format(level)}
 											</td>
-											<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<td class="px-2 py-1.5">
 												<input
 													type="number"
-													class="input-base h-8"
-													value={certaintyConfigValue?.[level].correct ?? 0}
+													class="input-base h-10"
+													value={certaintyConfigValue?.[level].correct ??
+														0}
 													oninput={(e) =>
-														updateCertainty(level, "correct", Number(e.currentTarget.value))}
+														updateCertainty(
+															level,
+															"correct",
+															Number(e.currentTarget.value)
+														)}
 												/>
 											</td>
-											<td class="border border-zinc-300 bg-white px-2 py-1.5">
+											<td class="px-2 py-1.5">
 												<input
 													type="number"
-													class="input-base h-8"
-													value={certaintyConfigValue?.[level].incorrect ?? 0}
+													class="input-base h-10"
+													value={certaintyConfigValue?.[level]
+														.incorrect ?? 0}
 													oninput={(e) =>
-														updateCertainty(level, "incorrect", Number(e.currentTarget.value))}
+														updateCertainty(
+															level,
+															"incorrect",
+															Number(e.currentTarget.value)
+														)}
 												/>
 											</td>
 										</tr>
@@ -318,7 +336,9 @@
 				{/if}
 
 				<div class="flex justify-end gap-2">
-					<button class="btn-tertiary" type="button" onclick={modalOnClose}>Cancelar</button>
+					<button class="btn-tertiary" type="button" onclick={modalOnClose}
+						>Cancelar</button
+					>
 					<button
 						class="btn-primary flex items-center gap-1.5"
 						type="submit"

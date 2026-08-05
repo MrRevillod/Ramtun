@@ -11,7 +11,7 @@
 
 <div class="h-1.5 w-56 overflow-hidden rounded-full bg-zinc-200">
 	<div
-		class="h-full rounded-full bg-zinc-900 transition-all duration-200"
+		class="h-full rounded-full bg-zinc-900 transition-[width] duration-200"
 		style={`width: ${percent}%`}
 	></div>
 </div>

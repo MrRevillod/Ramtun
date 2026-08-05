@@ -38,8 +38,10 @@
 <main class="min-h-dvh px-4 py-8 sm:px-6 sm:py-12">
 	<div class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center">
 		<section class="panel-elevated -mt-10 w-full max-w-xl p-8 sm:p-10">
-			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">Iniciar sesión</h1>
-			<p class="mt-3 mb-7 max-w-md text-base leading-relaxed text-zinc-700">
+			<h1 class="m-0 mt-2 text-3xl leading-tight text-black sm:text-[2.15rem]">
+				Iniciar sesión
+			</h1>
+			<p class="mt-3 mb-7 max-w-md text-sm leading-relaxed text-zinc-700">
 				Usa tus credenciales Pillan/LDAP para ingresar.
 			</p>
 
@@ -83,7 +85,7 @@
 				</Field>
 
 				<button
-					class="btn-primary mt-2 flex w-full items-center justify-center gap-1.5 text-base"
+					class="btn-primary mt-2 flex w-full items-center justify-center gap-1.5"
 					type="submit"
 					disabled={mutation.isPending}
 				>

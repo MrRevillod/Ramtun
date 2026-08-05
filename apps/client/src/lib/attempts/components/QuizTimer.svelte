@@ -14,7 +14,11 @@
 	})
 </script>
 
-<div class="notice {remainingSeconds <= 120 ? 'notice-danger' : 'notice-warn'} font-medium">
+<div
+	class="notice {remainingSeconds <= 120
+		? 'notice-danger'
+		: 'notice-warn'} font-medium tabular-nums"
+>
 	<Clock size={14} class="-mt-0.5 mr-0.5 inline-block" aria-hidden="true" />
 	Tiempo restante: {label}
 </div>

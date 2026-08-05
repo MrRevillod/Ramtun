@@ -76,7 +76,7 @@
 			<h3 class="mt-2 mb-0 text-xl text-black">
 				{courseQuery.data?.name ?? "Curso"} - {bankQuery.data?.name ?? "Banco"}
 			</h3>
-			<p class="m-0 mt-2 text-zinc-700">
+			<p class="m-0 mt-2 text-sm text-zinc-700">
 				{bankQuery.data?.questions.length ?? 0} preguntas
 				{#if editing}
 					- modo edición

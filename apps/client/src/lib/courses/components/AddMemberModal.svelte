@@ -70,7 +70,7 @@
 		>
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h4 class="m-0 text-base text-black">Agregar miembro</h4>
-				<button class="btn-tertiary p-1" type="button" onclick={oncancel}>
+				<button class="btn-close" type="button" onclick={oncancel} aria-label="Cerrar">
 					<X size={18} aria-hidden="true" />
 				</button>
 			</div>

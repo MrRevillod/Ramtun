@@ -48,7 +48,7 @@
 				<h2 class="mt-2 mb-0 text-2xl text-black">
 					{authStore.user?.isAdmin() ? "Cursos del Sistema" : "Gestionar Mis Cursos"}
 				</h2>
-				<p class="mt-2 max-w-3xl text-zinc-700">
+				<p class="mt-2 max-w-3xl text-sm text-zinc-700">
 					{authStore.user?.isAdmin()
 						? "Vista general de todos los cursos registrados en la plataforma."
 						: "Crea cursos, organiza participantes y prepara evaluaciones para cada sección."}
@@ -77,7 +77,41 @@
 		{:else if !coursesQuery.data?.length}
 			<p class="notice notice-warn m-0">Aún no tienes cursos creados.</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="grid gap-3 md:hidden">
+				{#each coursesQuery.data as course (course.id)}
+					<div
+						class="panel-surface flex cursor-pointer items-center justify-between gap-3 p-4"
+						role="button"
+						tabindex="0"
+						onclick={() => goto(`/courses/${course.id}/quizzes`)}
+						onkeydown={(e) => {
+							if (e.key === "Enter") goto(`/courses/${course.id}/quizzes`)
+						}}
+					>
+						<div class="min-w-0">
+							<p class="m-0 font-medium text-zinc-900">{course.name}</p>
+							<p class="m-0 mt-1 text-sm text-zinc-600">
+								{course.code} · {course.year} · {course.members.length} miembros
+							</p>
+						</div>
+						{#if canCreateCourse}
+							<button
+								class="icon-btn icon-btn-danger shrink-0"
+								title="Eliminar"
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation()
+									courseToDelete = course
+								}}
+								disabled={deleteCourseMutation.isPending}
+							>
+								<Trash2 size={15} aria-hidden="true" />
+							</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="min-w-full border-collapse text-sm">
 					<thead class="table-head">
 						<tr>

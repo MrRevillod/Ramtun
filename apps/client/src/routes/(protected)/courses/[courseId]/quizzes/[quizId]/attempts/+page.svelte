@@ -54,7 +54,7 @@
 <section class="grid gap-4">
 	<header>
 		<h3 class="mt-2 mb-0 text-xl text-black">{data.quizName} - Intentos</h3>
-		<p class="m-0 mt-2 text-zinc-700">
+		<p class="m-0 mt-2 text-sm text-zinc-700">
 			Revisa los intentos realizados por los estudiantes en este cuestionario.
 		</p>
 	</header>
@@ -67,9 +67,63 @@
 				{attemptsQuery.error?.messageOrDefault ?? ""}
 			</p>
 		{:else if !attemptsQuery.data?.length}
-			<p class="notice notice-warn m-0">Aún no hay intentos registrados para este cuestionario.</p>
+			<p class="notice notice-warn m-0">
+				Aún no hay intentos registrados para este cuestionario.
+			</p>
 		{:else}
-			<div class="overflow-x-auto">
+			<div class="grid gap-3 md:hidden">
+				{#each attemptsQuery.data as attempt (attempt.attemptId)}
+					<div
+						class="panel-surface flex cursor-pointer flex-col gap-3 p-4"
+						role="button"
+						tabindex="0"
+						onclick={() => viewAttempt(attempt.attemptId)}
+						onkeydown={(e) => {
+							if (e.key === "Enter") viewAttempt(attempt.attemptId)
+						}}
+					>
+						<div class="flex items-start justify-between gap-3">
+							<div class="min-w-0">
+								<p class="m-0 font-medium text-zinc-900">{attempt.userName}</p>
+								<p class="m-0 mt-0.5 text-sm text-zinc-600">
+									{DateValue.format(attempt.startedAt)}
+									{#if attempt.submittedAt}
+										· {DateValue.format(attempt.submittedAt)}
+									{/if}
+								</p>
+							</div>
+							{#if attempt.warningCount > 0}
+								<span
+									class="inline-flex shrink-0 items-center justify-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums {warningBadge(
+										attempt.warningCount
+									)}"
+								>
+									{attempt.warningCount}
+								</span>
+							{:else}
+								<span class="shrink-0 text-sm text-zinc-400">-</span>
+							{/if}
+						</div>
+						<div class="flex items-center gap-4 text-sm">
+							<span class="text-zinc-600">
+								Puntos:
+								<span class="font-medium text-zinc-900">
+									{attempt.score !== null ? attempt.score : "-"}
+								</span>
+							</span>
+							<span class="text-zinc-600">
+								Nota:
+								<span class="font-medium text-zinc-900">
+									{attempt.grade !== null
+										? GradeValue.format(attempt.grade)
+										: "-"}
+								</span>
+							</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+			<div class="hidden overflow-x-auto md:block">
 				<table class="min-w-full border-collapse text-sm">
 					<thead class="table-head">
 						<tr>
@@ -87,14 +141,22 @@
 								class="row-hover table-row cursor-pointer"
 								onclick={() => viewAttempt(attempt.attemptId)}
 							>
-								<td class="px-3 py-2 font-medium text-zinc-900">{attempt.userName}</td>
-								<td class="px-3 py-2 text-zinc-700">{DateValue.format(attempt.startedAt)}</td>
-								<td class="px-3 py-2 text-zinc-700">{DateValue.format(attempt.submittedAt)}</td>
+								<td class="px-3 py-2 font-medium text-zinc-900"
+									>{attempt.userName}</td
+								>
+								<td class="px-3 py-2 text-zinc-700"
+									>{DateValue.format(attempt.startedAt)}</td
+								>
+								<td class="px-3 py-2 text-zinc-700"
+									>{DateValue.format(attempt.submittedAt)}</td
+								>
 								<td class="px-3 py-2 text-zinc-700">
 									{attempt.score !== null ? attempt.score : "-"}
 								</td>
 								<td class="px-3 py-2 text-zinc-700">
-									{attempt.grade !== null ? GradeValue.format(attempt.grade) : "-"}
+									{attempt.grade !== null
+										? GradeValue.format(attempt.grade)
+										: "-"}
 								</td>
 								<td class="px-3 py-2">
 									{#if attempt.warningCount > 0}

@@ -21,11 +21,7 @@
 	const showCoursesNav = $derived(user?.isAdmin() || user?.isFunc() || data.hasCourses)
 
 	$effect(() => {
-		if (
-			user?.isStudent() &&
-			!data.hasCourses &&
-			page.url.pathname.startsWith("/courses")
-		) {
+		if (user?.isStudent() && !data.hasCourses && page.url.pathname.startsWith("/courses")) {
 			void goto("/join")
 		}
 	})
@@ -79,7 +75,9 @@
 	<header class="panel-elevated mx-auto w-full p-3 sm:p-4">
 		<div class="flex items-center justify-between gap-4 px-8">
 			<div>
-				<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">INF-UCT: RAMTUN</p>
+				<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
+					INF-UCT: RAMTUN
+				</p>
 				<h1 class="mt-0.5 mb-0 text-xl leading-tight text-black sm:text-2xl">
 					Cuestionarios en línea
 				</h1>
@@ -90,12 +88,20 @@
 					<DoorOpen size={16} aria-hidden="true" />
 					<span class="hidden lg:inline">Unirse</span>
 				</a>
-				<a class="action-tab justify-center" data-active={isActive("/results")} href="/results">
+				<a
+					class="action-tab justify-center"
+					data-active={isActive("/results")}
+					href="/results"
+				>
 					<ClipboardList size={16} aria-hidden="true" />
 					<span class="hidden lg:inline">Resultados</span>
 				</a>
 				{#if showCoursesNav}
-					<a class="action-tab justify-center" data-active={isActive("/courses")} href="/courses">
+					<a
+						class="action-tab justify-center"
+						data-active={isActive("/courses")}
+						href="/courses"
+					>
 						<Layers size={16} aria-hidden="true" />
 						<span class="hidden lg:inline">Cursos</span>
 					</a>
@@ -105,7 +111,7 @@
 
 				<div class="flex shrink-0 items-stretch gap-1.5 sm:gap-2">
 					<div
-						class="flex h-9 min-w-0 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-2.5 text-left sm:h-10 sm:min-w-44 sm:px-3 sm:text-right"
+						class="flex h-10 min-w-0 flex-col justify-center rounded-md border border-zinc-200 bg-zinc-50 px-2.5 text-left sm:min-w-44 sm:px-3 sm:text-right"
 					>
 						<p class="truncate text-sm font-semibold text-zinc-800">
 							{authStore.user?.name}
@@ -113,7 +119,7 @@
 						<p class="text-xs text-zinc-600">{authStore.user?.role.toDisplay()}</p>
 					</div>
 					<button
-						class="inline-flex size-9 cursor-pointer items-center justify-center self-stretch rounded-md border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800 sm:size-10"
+						class="inline-flex size-10 cursor-pointer items-center justify-center self-stretch rounded-[4px] border border-zinc-900 bg-zinc-900 text-white transition-colors duration-200 hover:bg-zinc-800"
 						type="button"
 						onclick={handleLogout}
 						title="Cerrar sesión"

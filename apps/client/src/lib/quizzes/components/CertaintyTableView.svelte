@@ -14,27 +14,23 @@
 	]
 </script>
 
-<table class="w-full border-collapse text-xs">
-	<thead class="table-head">
-		<tr>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left">Nivel</th>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left"> Correcta </th>
-			<th class="border border-zinc-300 px-2 py-1.5 text-left"> Incorrecta </th>
-		</tr>
-	</thead>
-	<tbody>
-		{#each levels as level (level.key)}
-			<tr>
-				<td class="border border-zinc-300 px-2 py-1.5">
-					{level.label}
-				</td>
-				<td class="border border-zinc-300 px-2 py-1.5">
-					{table.get(level.key).correct}
-				</td>
-				<td class="border border-zinc-300 px-2 py-1.5">
-					{table.get(level.key).incorrect}
-				</td>
+<div class="overflow-x-auto rounded-[4px] border border-zinc-200">
+	<table class="w-full border-collapse text-xs">
+		<thead class="text-zinc-500">
+			<tr class="border-b border-zinc-200">
+				<th class="px-3 py-2 text-left font-medium">Nivel</th>
+				<th class="px-3 py-2 text-left font-medium">Correcta</th>
+				<th class="px-3 py-2 text-left font-medium">Incorrecta</th>
 			</tr>
-		{/each}
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			{#each levels as level (level.key)}
+				<tr class="border-b border-zinc-200/70 last:border-b-0">
+					<td class="px-3 py-2 text-zinc-700">{level.label}</td>
+					<td class="px-3 py-2 text-zinc-700">{table.get(level.key).correct}</td>
+					<td class="px-3 py-2 text-zinc-700">{table.get(level.key).incorrect}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+</div>

@@ -65,7 +65,7 @@
 				</div>
 
 				<button
-					class="btn-primary flex h-11 shrink-0 cursor-pointer items-center gap-1.5 px-3 text-xs sm:text-sm"
+					class="btn-primary flex shrink-0 cursor-pointer items-center gap-1.5"
 					type="submit"
 					disabled={mutation.isPending}
 				>
