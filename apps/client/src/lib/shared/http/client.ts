@@ -11,7 +11,10 @@ class HttpClient {
 				const payload = response.data
 
 				if (!ApiResponse.is(payload)) {
-					throw ApiResponse.genericError(response.status, "Respuesta del servidor inválida.")
+					throw ApiResponse.genericError(
+						response.status,
+						"Respuesta del servidor inválida."
+					)
 				}
 
 				if (!payload.success) {
@@ -30,7 +33,10 @@ class HttpClient {
 				}
 
 				if (axiosError.response) {
-					throw ApiResponse.genericError(axiosError.response.status, "Error del servidor.")
+					throw ApiResponse.genericError(
+						axiosError.response.status,
+						"Error del servidor."
+					)
 				}
 
 				if (axiosError.code === "ECONNABORTED") {

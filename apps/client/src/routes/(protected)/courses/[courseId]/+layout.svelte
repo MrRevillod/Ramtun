@@ -30,7 +30,11 @@
 				<FileText size={16} aria-hidden="true" />
 				<span class="truncate">Cuestionarios</span>
 			</a>
-			<a class="action-tab min-w-0 shrink justify-center" data-active={isBanks} href={banksHref}>
+			<a
+				class="action-tab min-w-0 shrink justify-center"
+				data-active={isBanks}
+				href={banksHref}
+			>
 				<Library size={16} aria-hidden="true" />
 				<span class="truncate">Bancos de preguntas</span>
 			</a>

@@ -32,7 +32,7 @@
 		tabindex="-1"
 		transition:fade={{ duration: 180 }}
 		onclick={onCancel}
-		onkeydown={e => {
+		onkeydown={(e) => {
 			if (e.key === "Escape" && !isPending) onCancel()
 		}}
 	>
@@ -41,7 +41,7 @@
 			role="presentation"
 			tabindex="-1"
 			transition:scale={{ duration: 190, start: 0.98 }}
-			onclick={e => e.stopPropagation()}
+			onclick={(e) => e.stopPropagation()}
 		>
 			<h4 class="m-0 text-base text-black">{title}</h4>
 			<p class="mt-2 mb-0 text-sm text-zinc-700">{message}</p>

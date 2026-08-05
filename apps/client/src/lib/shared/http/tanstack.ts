@@ -25,12 +25,7 @@ export const queryClient = new QueryClient({
 })
 
 export function useMutation<TData = unknown, TVariables = void, TContext = unknown>(
-	options: () => CreateMutationOptions<
-		TData,
-		ApiResponse<unknown>,
-		TVariables,
-		TContext
-	>,
+	options: () => CreateMutationOptions<TData, ApiResponse<unknown>, TVariables, TContext>
 ): CreateMutationResult<TData, ApiResponse<unknown>, TVariables, TContext> {
 	return ogCreateMutation(options as never)
 }
@@ -40,12 +35,7 @@ export function useQuery<
 	TData = TQueryFnData,
 	TQueryKey extends QueryKey = QueryKey,
 >(
-	options: () => CreateQueryOptions<
-		TQueryFnData,
-		ApiResponse<unknown>,
-		TData,
-		TQueryKey
-	>,
+	options: () => CreateQueryOptions<TQueryFnData, ApiResponse<unknown>, TData, TQueryKey>
 ): CreateQueryResult<TData, ApiResponse<unknown>> {
 	return ogCreateQuery(options as never)
 }

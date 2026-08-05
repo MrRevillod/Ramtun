@@ -19,7 +19,7 @@
 	}))
 
 	const filteredBanks = $derived(
-		(banksQuery.data ?? []).filter(b => b.name.toLowerCase().includes(search.toLowerCase()))
+		(banksQuery.data ?? []).filter((b) => b.name.toLowerCase().includes(search.toLowerCase()))
 	)
 
 	const selectedCount = $derived(selectedBankIds.length)
@@ -70,7 +70,9 @@
 				</div>
 
 				{#each filteredBanks as bank (bank.id)}
-					<label class="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-zinc-50">
+					<label
+						class="flex cursor-pointer items-center gap-2 px-3 py-2 hover:bg-zinc-50"
+					>
 						<input
 							type="checkbox"
 							checked={selectedBankIds.includes(bank.id)}
@@ -85,7 +87,11 @@
 				{/if}
 			</div>
 
-			<div class="fixed inset-0 z-40" role="presentation" onclick={() => (open = false)}></div>
+			<div
+				class="fixed inset-0 z-40"
+				role="presentation"
+				onclick={() => (open = false)}
+			></div>
 		{/if}
 	</div>
 {/if}

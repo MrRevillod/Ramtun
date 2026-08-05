@@ -1,5 +1,4 @@
-const DEFAULT_ERROR_MESSAGE =
-	"Ocurrió un error inesperado, por favor intente nuevamente más tarde."
+const DEFAULT_ERROR_MESSAGE = "Ocurrió un error inesperado, por favor intente nuevamente más tarde."
 
 export class ApiResponse<T = unknown> {
 	constructor(

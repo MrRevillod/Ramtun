@@ -84,7 +84,9 @@
 
 <section class="flex flex-col gap-4 py-4">
 	<div>
-		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">Unirse a un cuestionario</p>
+		<p class="m-0 text-xs font-semibold tracking-widest text-zinc-500">
+			Unirse a un cuestionario
+		</p>
 		{#if previewQuery.data}
 			<h2 class="mt-0.5 mb-0 text-2xl tracking-tight text-black">
 				{previewQuery.data.title}

@@ -39,7 +39,11 @@ class AttemptsService {
 		})
 	}
 
-	public saveAnswer(attemptId: string, questionId: string, input: SaveAnswerInput): Promise<void> {
+	public saveAnswer(
+		attemptId: string,
+		questionId: string,
+		input: SaveAnswerInput
+	): Promise<void> {
 		return http.request<void>({
 			method: "PUT",
 			url: `/attempts/${attemptId}/answers/${questionId}`,

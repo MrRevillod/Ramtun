@@ -23,8 +23,8 @@
 				<CircleCheck size={32} class="text-emerald-600" aria-hidden="true" />
 				<h3 class="m-0 text-xl text-black">Intento enviado</h3>
 				<p class="m-0 text-center text-sm text-zinc-600">
-					Tu intento fue enviado correctamente. Los resultados estarán disponibles cuando el docente
-					los publique.
+					Tu intento fue enviado correctamente. Los resultados estarán disponibles cuando
+					el docente los publique.
 				</p>
 				<button class="btn-primary mt-2" type="button" onclick={onContinue}>
 					Ir a resultados

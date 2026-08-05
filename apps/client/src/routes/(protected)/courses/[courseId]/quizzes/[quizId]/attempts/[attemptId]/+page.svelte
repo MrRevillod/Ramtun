@@ -148,8 +148,8 @@
 		{:else if resultsQuery.error}
 			{#if resultsErrorMessage.includes("no ha sido enviado")}
 				<p class="m-0 text-zinc-600">
-					El estudiante aún no ha enviado el intento. Los resultados estarán disponibles una vez que
-					lo complete.
+					El estudiante aún no ha enviado el intento. Los resultados estarán disponibles
+					una vez que lo complete.
 				</p>
 			{:else}
 				<p class="m-0 text-red-700">{resultsErrorMessage}</p>
@@ -179,7 +179,9 @@
 					{#each SEVERITY_GROUPS as severity (severity)}
 						{@const Icon = severityIcon(severity)}
 						<div class="rounded-sm border border-zinc-200 bg-white p-2.5">
-							<p class="m-0 flex items-center gap-1.5 text-xs font-semibold text-zinc-700">
+							<p
+								class="m-0 flex items-center gap-1.5 text-xs font-semibold text-zinc-700"
+							>
 								<Icon size={13} />
 								{severityLabel(severity)}
 							</p>
