@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { useQuery } from "$lib/shared/http/tanstack"
-	import { ArrowLeft } from "lucide-svelte"
+	import { ArrowLeft, Download } from "lucide-svelte"
 	import { resolve } from "$app/paths"
 	import { banksService } from "$lib/banks/banks.service"
+	import { exportBankJson } from "$lib/banks/utils"
 	import { coursesService } from "$lib/courses/service"
 
 	let { data } = $props()
@@ -31,13 +32,25 @@
 				{bankQuery.data?.questions.length ?? 0} preguntas
 			</p>
 		</div>
-		<a
-			class="btn-secondary flex items-center gap-1.5"
-			href={resolve(`/courses/${data.courseId}/banks`)}
-		>
-			<ArrowLeft size={16} aria-hidden="true" />
-			Volver a Bancos de preguntas
-		</a>
+		<div class="flex flex-wrap items-center gap-1.5">
+			<a
+				class="btn-secondary flex items-center gap-1.5"
+				href={resolve(`/courses/${data.courseId}/banks`)}
+			>
+				<ArrowLeft size={16} aria-hidden="true" />
+				Volver a Bancos de preguntas
+			</a>
+			{#if bankQuery.data}
+				<button
+					class="btn-secondary flex items-center gap-1.5"
+					type="button"
+					onclick={() => exportBankJson(bankQuery.data)}
+				>
+					<Download size={16} aria-hidden="true" />
+					Descargar JSON
+				</button>
+			{/if}
+		</div>
 	</header>
 
 	<section>
@@ -56,7 +69,10 @@
 						</h4>
 						<div class="grid gap-2">
 							{#each question.options as option, optionIndex (optionIndex)}
-								<div class="quiz-option" data-active={optionIndex === correctIndex(question)}>
+								<div
+									class="quiz-option"
+									data-active={optionIndex === correctIndex(question)}
+								>
 									{option}
 								</div>
 							{/each}

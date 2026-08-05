@@ -6,7 +6,7 @@ license = "MIT"
 authors = ["Luciano Revillod"]
 
 [dependencies]
-sword = { git = "https://github.com/sword-web/sword.git", features = [
+sword = { version = "0.3.0", features = [
     "web",
     "socketio",
     "validation-validator",

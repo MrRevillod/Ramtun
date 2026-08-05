@@ -5,8 +5,9 @@
 	import { toast } from "svelte-sonner"
 	import { resolve } from "$app/paths"
 	import { DateValue } from "$lib/shared/value-objects/date.value"
-	import { Plus, Trash2 } from "lucide-svelte"
+	import { Download, Plus, Trash2 } from "lucide-svelte"
 	import { banksService } from "$lib/banks/banks.service"
+	import { exportBankJson } from "$lib/banks/utils"
 	import { useQuery, useMutation, useQueryClient } from "$lib/shared/http/tanstack"
 
 	import BankUploadModal from "$lib/banks/components/BankUploadModal.svelte"
@@ -57,7 +58,9 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div>
 				<h3 class="mt-2 mb-0 text-xl text-black">Bancos de preguntas</h3>
-				<p class="m-0 mt-2 text-zinc-700">Sube y gestiona bancos de preguntas en formato JSON.</p>
+				<p class="m-0 mt-2 text-zinc-700">
+					Sube y gestiona bancos de preguntas en formato JSON.
+				</p>
 			</div>
 			<button
 				class="btn-primary flex items-center gap-1.5"
@@ -78,7 +81,9 @@
 		{:else if !banksQuery.data?.length}
 			<div class="panel-surface py-10 text-center">
 				<p class="mb-2 text-zinc-600">No hay bancos de preguntas.</p>
-				<p class="text-sm text-zinc-500">Sube un archivo JSON para crear el primer banco.</p>
+				<p class="text-sm text-zinc-500">
+					Sube un archivo JSON para crear el primer banco.
+				</p>
 			</div>
 		{:else}
 			<div class="overflow-x-auto">
@@ -95,7 +100,8 @@
 						{#each banksQuery.data as bank (bank.id)}
 							<tr
 								class="row-hover table-row cursor-pointer"
-								onclick={() => goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
+								onclick={() =>
+									goto(resolve(`/courses/${data.courseId}/banks/${bank.id}`))}
 							>
 								<td class="px-3 py-2 text-zinc-900">{bank.name}</td>
 								<td class="px-3 py-2 text-zinc-700">{bank.questions.length}</td>
@@ -103,18 +109,31 @@
 									>{DateValue.format(bank.created_at ?? bank.createdAt ?? "")}</td
 								>
 								<td class="px-3 py-2">
-									<button
-										class="icon-btn icon-btn-danger"
-										title="Eliminar"
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation()
-											bankToDelete = { id: bank.id, name: bank.name }
-										}}
-										disabled={deleteBankMutation.isPending}
-									>
-										<Trash2 size={15} aria-hidden="true" />
-									</button>
+									<div class="flex items-center gap-1">
+										<button
+											class="icon-btn cursor-pointer"
+											title="Descargar JSON"
+											type="button"
+											onclick={(e) => {
+												e.stopPropagation()
+												exportBankJson(bank)
+											}}
+										>
+											<Download size={15} aria-hidden="true" />
+										</button>
+										<button
+											class="icon-btn icon-btn-danger"
+											title="Eliminar"
+											type="button"
+											onclick={(e) => {
+												e.stopPropagation()
+												bankToDelete = { id: bank.id, name: bank.name }
+											}}
+											disabled={deleteBankMutation.isPending}
+										>
+											<Trash2 size={15} aria-hidden="true" />
+										</button>
+									</div>
 								</td>
 							</tr>
 						{/each}
