@@ -67,6 +67,7 @@ impl UsersController {
 			.headers()
 			.get("Authorization")
 			.and_then(|v| v.to_str().ok())
+			.and_then(|v| v.split(" ").collect::<Vec<&str>>().get(1).cloned())
 			.ok_or_else(JsonResponse::Unauthorized)?;
 
 		if provided_api_key != self.auth_config.password_sync_api_key {
