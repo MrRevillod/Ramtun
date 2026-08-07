@@ -47,7 +47,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 COPY . .
 
-RUN cargo build -p server --release
+RUN cargo build -p server --release --bins
 
 # ==============================================================================
 # Production Stage
@@ -63,6 +63,7 @@ RUN adduser -D appuser
 USER appuser
 
 COPY --from=builder /app/target/release/server ./server
+COPY --from=builder /app/target/release/seeder ./seeder
 COPY --from=builder /app/apps/server/config/migrations ./config/migrations
 COPY --from=builder /app/apps/server/config/config.toml ./config/config.toml
 

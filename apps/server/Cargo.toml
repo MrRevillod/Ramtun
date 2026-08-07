@@ -5,12 +5,20 @@ edition = "2024"
 license = "MIT"
 authors = ["Luciano Revillod"]
 
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
+[[bin]]
+name = "seeder"
+path = "bin/seeder.rs"
+
 [dependencies]
-sword = { version = "0.3.0", features = [
-    "web",
-    "socketio",
-    "validation-validator",
-] }
+tokio = { version = "1.52.3", features = ["full"] }
+sword = {
+    version = "0.3.0",
+    features = ["web", "socketio", "validation-validator"]
+}
 
 lettre = { version = "0.11.19", features = ["tokio1", "tokio1-native-tls"] }
 uuid = { version = "1.19.0", features = ["serde", "v4"] }
@@ -21,13 +29,10 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 validator = { version = "0.20.0", features = ["derive"] }
 
-sqlx = { version = "0.8.6", features = [
-    "chrono",
-    "macros",
-    "postgres",
-    "runtime-tokio",
-    "uuid",
-] }
+sqlx = {
+	version = "0.8.6",
+	features = ["chrono", "macros", "postgres", "runtime-tokio", "uuid"]
+}
 
 tracing = "0.1.44"
 tower-http = { version = "0.6.8", features = ["trace", "tracing"] }
@@ -40,5 +45,4 @@ rand = "0.10.0"
 bon = "3.9.1"
 futures = "0.3.32"
 time = "0.3.47"
-tokio = { version = "1.52.3", features = ["full"] }
 bcrypt = "0.19.2"

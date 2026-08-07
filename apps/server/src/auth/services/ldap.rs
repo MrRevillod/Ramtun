@@ -13,6 +13,7 @@ pub struct LdapClient {
 	config: AuthConfig,
 }
 
+#[derive(Debug)]
 pub struct LdapUserInfo {
 	pub email: String,
 	pub name: String,

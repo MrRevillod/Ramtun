@@ -28,10 +28,9 @@ impl AuthService {
 		let LoginDto { username, password } = input;
 
 		let mut user = match self.users.find_by_username(username).await? {
-			Some(mut user) => {
+			Some(user) => {
 				if !self.hasher.verify(password, &user.password_hash).await? {
-					self.ldap.authenticate(username, password).await?;
-					user.password_hash = self.hasher.hash(password).await?;
+					Err(AuthError::InvalidCredentials)?;
 				}
 
 				user

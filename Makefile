@@ -74,3 +74,6 @@ npmci:
 deployer:
 	docker build -f config/deployer/Dockerfile -t questions-deployer:local .
 	docker run --rm $(docker_tty) --cap-add=NET_ADMIN --device=/dev/net/tun --env-file .env.prod -v "$(PWD)":/workspace -v "$$HOME/.kube":/root/.kube:ro questions-deployer:local $(cmd) $(args)
+
+seed:
+	cargo run -p server --bin seeder
